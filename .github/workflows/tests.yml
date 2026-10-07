@@ -1,0 +1,37 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: tribe_test
+          MARIADB_USER: tribe
+          MARIADB_PASSWORD: tribe
+          MARIADB_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, pdo_mysql, zip
+          coverage: none
+
+      - run: composer install --no-interaction --no-progress --prefer-dist
+
+      - run: cp .env.example .env && php artisan key:generate
+
+      - run: composer check
+
+      - run: composer audit
