@@ -14,46 +14,51 @@ SSH, backups) are in Bowls Buddy's `docs/DEPLOY-AFRIHOST.md`. No passwords or ke
 
 ## First install
 
-Everything below works in **cPanel > Terminal** (no SSH or South African IP needed).
+Composer isn't available in Afrihost's jailed Terminal, so Tribe ships as a zip with its packages
+included, built by `scripts/build-afrihost.sh` (output: `build/afrihost/tribe.zip`). The Terminal is used
+only for `php artisan` commands.
 
-1. **Code:** in the Terminal, clone the repository into `~/tribe`:
-   `cd ~ && git clone https://github.com/DawiePieterse/tribe-app.git tribe`
-   (A private repository needs a GitHub token or deploy key; the simplest is to make the clone over HTTPS
-   with a fine-grained token that can only read this one repository.)
-2. **Composer:** `cd ~/tribe && curl -sS https://getcomposer.org/installer | php` then
-   `php composer.phar install --no-dev --optimize-autoloader`.
-3. **Subdomain:** cPanel > Domains > Create A New Domain: `tribe.bowlsbuddy.co.za`, untick **Share document
-   root**, document root `tribe/public`. Do this after step 1, so cPanel doesn't create the folder first.
-4. **PHP:** cPanel > MultiPHP Manager: tick the subdomain, choose PHP 8.3, Apply (check it didn't jump back).
-5. **Database:** cPanel > Database Wizard: database `tribe`, user `tribe`, **ALL PRIVILEGES**. Note the full
-   names (with the `bowlsbg5n9w0_` prefix) and the password.
-6. **Mailbox:** cPanel > Email Accounts: create `tribe@bowlsbuddy.co.za`. Its **Connect Devices** page shows
-   the SMTP server and port for `.env`.
-7. **Settings:** `cp .env.afrihost.example .env`, fill in the database, mail and `TRIBE_ADMIN_*` values
-   (File Manager > Edit, or `nano .env`), then `php artisan key:generate`.
-8. **Tables and the first admin:** `php artisan migrate --force && php artisan db:seed --force`.
-9. **HTTPS:** wait until cPanel > SSL/TLS Status shows a real (not self-signed) certificate for the
-   subdomain, then turn on **Force HTTPS Redirect** for it in cPanel > Domains. Logins need HTTPS.
-10. **First login:** `php artisan tribe:invite <admin email>` prints a link. Open it on your iPhone in
-    Safari, then add Tribe to the Home Screen. Add the other households and people in the app
-    (Meer › Familie) and send them invites from there, on WhatsApp.
+1. **Files:** cPanel > File Manager, in your home folder (not `public_html`): create the folder `tribe`,
+   open it, Upload `tribe.zip`, then select it and Extract it there. Delete the zip afterwards.
+2. **Subdomain:** cPanel > Domains > Create A New Domain: `tribe.bowlsbuddy.co.za`, untick **Share document
+   root**, document root `tribe/public`.
+3. **PHP:** cPanel > MultiPHP Manager: tick the subdomain, choose PHP 8.3 (ea-php83), Apply (check it
+   didn't jump back).
+4. **Database:** cPanel > Database Wizard: database `tribe`, user `tribe`, **ALL PRIVILEGES**. The full
+   names become `bowlsbg5n9w0_tribe`. Keep the password.
+5. **Mailbox:** cPanel > Email Accounts > Create: `tribe@bowlsbuddy.co.za`. Its **Connect Devices** page
+   shows the outgoing (SMTP) server and port.
+6. **Settings and tables:** cPanel > Terminal:
 
-11. **Scheduled jobs:** cPanel > Cron Jobs, add one running every minute (Common Settings: Once Per Minute):
-    `cd ~/tribe && /usr/local/bin/ea-php83 artisan schedule:run >> /dev/null 2>&1`
-    This syncs subscribed calendars hourly. (Check the PHP path in cPanel > MultiPHP or with `which php`.)
-12. **Stuur na Tribe with Claude (optional):** create an API key at console.anthropic.com and set
-    `ANTHROPIC_API_KEY` in `.env`. Without it Tribe uses its built-in reader. Only messages people choose
-    to share are sent. Each person then sets up the Shortcut from Meer › Stuur na Tribe in the app.
+   ```bash
+   cd ~/tribe
+   php -v                              # must say 8.3; otherwise use /opt/cpanel/ea-php83/root/usr/bin/php
+   cp .env.afrihost.example .env
+   nano .env                           # DB_PASSWORD, MAIL_PASSWORD, TRIBE_ADMIN_NAME, TRIBE_ADMIN_EMAIL
+   php artisan key:generate --force
+   php artisan migrate --force
+   php artisan db:seed --force         # the first household and its admin, from .env
+   php artisan config:cache
+   ```
+
+   In nano: Ctrl+O, Enter to save, Ctrl+X to leave.
+7. **HTTPS:** cPanel > SSL/TLS Status: wait for a real (not self-signed) certificate for the subdomain
+   (Run AutoSSL if offered). Then cPanel > Domains: **Force HTTPS Redirect** on for the subdomain.
+8. **Scheduled jobs:** cPanel > Cron Jobs, Once Per Minute:
+   `cd ~/tribe && /opt/cpanel/ea-php83/root/usr/bin/php artisan schedule:run >> /dev/null 2>&1`
+   This syncs subscribed calendars hourly.
+9. **First login:** in the Terminal, `php artisan tribe:invite <admin email>` prints a link. Open it on your
+   iPhone in Safari and add Tribe to the Home Screen. Add the other households and people in the app
+   (Meer › Familie) and send them invites from there.
+10. **Claude for Stuur na Tribe (optional):** an API key from console.anthropic.com in `.env` as
+    `ANTHROPIC_API_KEY`, then `php artisan config:cache`. Without it Tribe uses its built-in reader.
 
 ## Updates
 
-```bash
-cd ~/tribe
-git pull
-php composer.phar install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
-```
+1. Build a new zip (`scripts/build-afrihost.sh`).
+2. Upload it to `~/tribe` and Extract, replacing the old files. `.env` and `storage/` are kept (the zip
+   has neither a `.env` nor any stored files).
+3. In the Terminal: `cd ~/tribe && php artisan migrate --force && php artisan config:cache && php artisan view:clear`
 
 ## Backups
 
