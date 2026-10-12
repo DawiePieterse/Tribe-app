@@ -38,6 +38,13 @@ Everything below works in **cPanel > Terminal** (no SSH or South African IP need
     Safari, then add Tribe to the Home Screen. Add the other households and people in the app
     (Meer › Familie) and send them invites from there, on WhatsApp.
 
+11. **Scheduled jobs:** cPanel > Cron Jobs, add one running every minute (Common Settings: Once Per Minute):
+    `cd ~/tribe && /usr/local/bin/ea-php83 artisan schedule:run >> /dev/null 2>&1`
+    This syncs subscribed calendars hourly. (Check the PHP path in cPanel > MultiPHP or with `which php`.)
+12. **Stuur na Tribe with Claude (optional):** create an API key at console.anthropic.com and set
+    `ANTHROPIC_API_KEY` in `.env`. Without it Tribe uses its built-in reader. Only messages people choose
+    to share are sent. Each person then sets up the Shortcut from Meer › Stuur na Tribe in the app.
+
 ## Updates
 
 ```bash

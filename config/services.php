@@ -14,6 +14,13 @@ return [
     |
     */
 
+    // "Stuur na Tribe" reads dates out of chat messages with Claude when a key is set; without one a
+    // simpler built-in reader is used.
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

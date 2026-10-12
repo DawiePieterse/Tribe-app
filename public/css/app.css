@@ -38,6 +38,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -133,7 +135,8 @@ input[type=tel], select, textarea {
 }
 textarea { min-height: 96px; resize: vertical; }
 input:focus, select:focus, textarea:focus { border-color: var(--action); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--action) 25%, transparent); }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+input, select, textarea { min-width: 0; max-width: 100%; }
 .check { display: flex; align-items: center; gap: 10px; font-weight: 400; }
 .check input { width: 24px; height: 24px; accent-color: var(--action); }
 .error { color: var(--danger); font-weight: 400; font-size: 0.9em; }
@@ -187,7 +190,7 @@ legend { font-weight: 600; margin-bottom: 6px; }
 
 /* Month strip on the calendar. */
 .month-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.month-nav h1 { font-size: 1.5em; text-transform: capitalize; }
+.month-nav h1 { font-size: 1.5em; }
 .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; margin-bottom: 16px; font-size: 0.85em; }
 .grid .wd { color: var(--ink-soft); font-size: 0.85em; padding-bottom: 4px; }
 .grid a, .grid span.cell { display: block; padding: 7px 0; border-radius: 8px; text-decoration: none; color: inherit; position: relative; }
@@ -215,7 +218,7 @@ legend { font-weight: 600; margin-bottom: 6px; }
 .item .title { flex: 1; min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
 .item.is-done .title > span:first-child { text-decoration: line-through; color: var(--ink-soft); }
 .item .meta { font-size: 0.8em; color: var(--ink-soft); }
-.item .remove { background: none; color: var(--ink-soft); min-height: 40px; padding: 0 6px; }
+button.remove { background: none; color: var(--ink-soft); min-height: 40px; padding: 0 6px; }
 .item.is-pending .title::after { content: attr(data-pending); font-size: 0.75em; color: var(--ink-soft); }
 .add-item { display: flex; gap: 8px; margin: 12px 0 18px; }
 .add-item input { flex: 1; }
@@ -285,3 +288,52 @@ dl.facts dd.notes, .notes { white-space: pre-line; }
 }
 
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Lyste / Weekmenu / Resepte switch. */
+.segments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--surface); border-radius: 12px; margin-bottom: 18px; }
+.segments a { display: flex; align-items: center; justify-content: center; min-height: 40px; border-radius: 9px; text-decoration: none; color: var(--ink); font-size: 0.9em; }
+.segments a.is-active { background: var(--page); font-weight: 600; box-shadow: 0 1px 2px rgba(22, 50, 79, 0.15); }
+
+/* Recipes. */
+.search { display: flex; gap: 8px; margin-bottom: 16px; }
+.search input { flex: 1; }
+.recipe-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-soft); margin: 6px 0 14px; }
+.ingredients { list-style: none; margin: 0; padding: 0; }
+.ingredients li { border-bottom: 1px solid var(--line); }
+.ingredients label { display: flex; align-items: center; gap: 12px; min-height: 48px; font-weight: 400; }
+.ingredients input { width: 22px; height: 22px; accent-color: var(--action); flex: none; }
+ol.method { padding-left: 1.4em; display: grid; gap: 10px; }
+ol.method li::marker { font-family: var(--serif); font-weight: 600; color: var(--action); }
+
+/* Week menu. */
+.week { list-style: none; margin: 0; padding: 0; }
+.week > li { padding: 12px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 3.4em 1fr; gap: 12px; }
+.week > li.is-today .date b { color: var(--action); }
+.meals { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; }
+.meal { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border-radius: var(--radius); padding: 6px 6px 6px 12px; }
+.meal a { color: inherit; }
+.meal .slot { color: var(--ink-soft); font-size: 0.8em; display: block; }
+.meal form { margin: 0; }
+.add-meal summary { color: var(--action); cursor: pointer; font-size: 0.9em; padding: 4px 0; }
+.add-meal form { margin-top: 8px; display: grid; gap: 8px; }
+
+/* Find a date. */
+.poll { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.poll > li { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; }
+.poll > li.is-best { border: 2px solid var(--action); }
+.poll-date { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.poll-date strong { font-family: var(--serif); font-size: 1.1em; }
+.tag { background: var(--action); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 0.8em; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .tag { color: #0B1724; } }
+.poll-votes { display: grid; gap: 2px; font-size: 0.85em; color: var(--ink-soft); }
+.vote-yes { color: var(--ok); }
+.vote-no { color: var(--danger); }
+
+/* Shared messages waiting on the home screen. */
+.inbox-item { display: flex; align-items: center; gap: 6px; }
+.inbox-item .entry { flex: 1; }
+.inbox-item form { margin: 0; }
+.steps { padding-left: 1.3em; display: grid; gap: 10px; }
+.steps li::marker { font-family: var(--serif); font-weight: 600; color: var(--action); }
+.steps code, .keybox code { font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+.keybox { border: 2px solid var(--action); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }

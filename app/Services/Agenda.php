@@ -25,13 +25,16 @@ class Agenda
 
         $events = Event::query()
             ->visibleTo($viewer)
-            ->with(['member.household', 'household', 'hostHousehold'])
-            ->where(function ($q) use ($from, $to): void {
-                $q->where('yearly', true)
-                    ->orWhere(function ($q) use ($from, $to): void {
-                        $q->where('starts_on', '<=', $to->toDateString())
-                            ->whereRaw('COALESCE(ends_on, starts_on) >= ?', [$from->toDateString()]);
-                    });
+            ->with(['member.household', 'household', 'hostHousehold', 'feed'])
+            ->where('starts_on', '<=', $to->toDateString())
+            ->where(function ($q) use ($from): void {
+                $q->where(function ($q) use ($from): void {
+                    $q->where('repeats', Event::ONCE)
+                        ->whereRaw('COALESCE(ends_on, starts_on) >= ?', [$from->toDateString()]);
+                })->orWhere(function ($q) use ($from): void {
+                    $q->where('repeats', '!=', Event::ONCE)
+                        ->where(fn ($q) => $q->whereNull('repeat_until')->orWhere('repeat_until', '>=', $from->toDateString()));
+                });
             })
             ->get();
 
@@ -42,8 +45,8 @@ class Agenda
                 continue;
             }
 
-            if ($event->yearly) {
-                foreach ($this->yearlyDates($event->starts_on, $from, $to) as $date) {
+            if ($event->repeats()) {
+                foreach ($this->repeatDates($event, $from, $to) as $date) {
                     $years = (int) $event->starts_on->diffInYears($date);
                     $occurrences->push(new Occurrence(
                         date: $date,
@@ -52,7 +55,9 @@ class Agenda
                         colour: $event->colour(),
                         event: $event,
                         time: $event->timeLabel(),
-                        detail: $years > 0 ? trans_choice(':count jaar|:count jaar', $years) : null,
+                        detail: $event->kind === Event::ANNIVERSARY && $years > 0
+                            ? trans_choice(':count jaar|:count jaar', $years)
+                            : $event->location,
                     ));
                 }
 
@@ -94,6 +99,52 @@ class Agenda
         }
 
         return $occurrences->sortBy(fn (Occurrence $o) => $o->sortKey())->values();
+    }
+
+    /**
+     * The days in [$from, $to] on which a repeating event happens, up to its repeat_until date.
+     *
+     * @return list<CarbonImmutable>
+     */
+    public function repeatDates(Event $event, CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $origin = $event->starts_on->startOfDay();
+
+        if ($event->repeat_until !== null && $event->repeat_until->lessThan($to)) {
+            $to = $event->repeat_until->startOfDay();
+        }
+
+        if ($event->repeats === Event::YEARLY) {
+            return $this->yearlyDates($origin, $from, $to);
+        }
+
+        $dates = [];
+
+        if ($event->repeats === Event::MONTHLY) {
+            // Months are counted from the start, so 31 January falls on 28 February, then 31 March.
+            $n = max(0, ($from->year - $origin->year) * 12 + $from->month - $origin->month - 1);
+            for (; ; $n++) {
+                $date = $origin->addMonthsNoOverflow($n);
+                if ($date->greaterThan($to)) {
+                    break;
+                }
+                if ($date->greaterThanOrEqualTo($from)) {
+                    $dates[] = $date;
+                }
+            }
+
+            return $dates;
+        }
+
+        $step = $event->repeats === Event::FORTNIGHTLY ? 14 : 7;
+        // Jump straight to the first occurrence on or after $from.
+        $skip = $from->greaterThan($origin) ? (int) ceil($origin->diffInDays($from) / $step) : 0;
+
+        for ($date = $origin->addDays($skip * $step); $date->lessThanOrEqualTo($to); $date = $date->addDays($step)) {
+            $dates[] = $date;
+        }
+
+        return $dates;
     }
 
     /**

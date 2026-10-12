@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * Everyone in the family. Adults with an email address can log in; children are profiles only.
@@ -30,6 +31,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $allergies
  * @property string|null $wishlist
  * @property CarbonImmutable|null $last_login_at
+ * @property string|null $calendar_token
+ * @property string|null $share_token_hash
  * @property-read Household $household
  */
 class Member extends Model implements AuthenticatableContract
@@ -45,7 +48,7 @@ class Member extends Model implements AuthenticatableContract
         'clothes_size', 'shoe_size', 'favourites', 'allergies', 'wishlist',
     ];
 
-    protected $hidden = ['remember_token'];
+    protected $hidden = ['remember_token', 'calendar_token', 'share_token_hash'];
 
     /** @var array<string, mixed> */
     protected $attributes = ['kind' => self::ADULT, 'is_admin' => false, 'large_text' => false];
@@ -107,6 +110,16 @@ class Member extends Model implements AuthenticatableContract
     public function canEditProfileOf(Member $child): bool
     {
         return $this->is_admin || $this->household_id === $child->household_id;
+    }
+
+    /** The secret part of this member's calendar link; made on first use. */
+    public function calendarToken(): string
+    {
+        if ($this->calendar_token === null) {
+            $this->forceFill(['calendar_token' => Str::random(40)])->save();
+        }
+
+        return (string) $this->calendar_token;
     }
 
     public function displayColour(): string

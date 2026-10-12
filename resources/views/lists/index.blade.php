@@ -1,4 +1,5 @@
 <x-layout :title="__('Lyste')">
+    @include('partials.food-tabs')
     <h1>{{ __('Lyste') }}</h1>
 
     <h2>{{ __('Ons huis') }}</h2>

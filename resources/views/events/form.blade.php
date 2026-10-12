@@ -3,7 +3,7 @@
     $kind = old('kind', $event->kind);
     $share = old('share', $event->household_id === null && $editing ? 'family' : ($event->household_id === null && in_array($kind, ['anniversary', 'school', 'gathering']) ? 'family' : 'household'));
     $kinds = [
-        'event' => __('Afspraak of uitstappie'),
+        'event' => __('Afspraak, uitstappie of vaste program'),
         'gathering' => __('Byeenkoms (met wie kom en wie bring wat)'),
         'anniversary' => __('Herdenking (elke jaar)'),
         'school' => __('Skoolvakansie of kwartaal'),
@@ -12,10 +12,15 @@
 <x-layout :title="$editing ? __('Wysig') : __('Nuwe inskrywing')">
     <a class="back" href="{{ $editing ? route('events.show', $event) : route('calendar') }}">@include('partials.icon', ['name' => 'back']) {{ __('Terug') }}</a>
     <h1>{{ $editing ? __('Wysig') : __('Nuwe inskrywing') }}</h1>
+    @if (! empty($fromMessage))
+        <p class="flash" role="status">{{ __('Tribe het die boodskap gelees en dit ingevul. Kyk veral of die datum en tyd reg is, en stoor dan.') }}</p>
+    @endif
 
     <form method="post" action="{{ $editing ? route('events.update', $event) : route('events.store') }}" class="stack" style="margin-top: 16px">
         @csrf
         @if ($editing) @method('put') @endif
+        @if (! empty($pollId))<input type="hidden" name="poll_id" value="{{ $pollId }}">@endif
+        @if (! empty($inboxId))<input type="hidden" name="inbox_id" value="{{ $inboxId }}">@endif
 
         <fieldset>
             <legend>{{ __('Wat is dit?') }}</legend>
@@ -56,6 +61,22 @@
                 {{ __('Tot') }}
                 <input type="time" name="end_time" value="{{ old('end_time', $event->end_time ? substr($event->end_time, 0, 5) : '') }}">
                 @error('end_time')<span class="error">{{ $message }}</span>@enderror
+            </label>
+        </div>
+
+        <div class="row" data-hide-for="anniversary">
+            <label>
+                {{ __('Herhaal') }}
+                <select name="repeats" data-repeats>
+                    @foreach (['none' => __('Nie'), 'weekly' => __('Elke week'), 'fortnightly' => __('Elke twee weke'), 'monthly' => __('Elke maand'), 'yearly' => __('Elke jaar')] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('repeats', $event->repeats ?? 'none') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label>
+                {{ __('Tot wanneer') }} <span class="hint">{{ __('los oop vir altyd') }}</span>
+                <input type="date" name="repeat_until" value="{{ old('repeat_until', $event->repeat_until?->toDateString()) }}">
+                @error('repeat_until')<span class="error">{{ $message }}</span>@enderror
             </label>
         </div>
 

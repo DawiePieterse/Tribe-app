@@ -4,6 +4,29 @@
         <p>{{ $today->translatedFormat('l j F') }}</p>
     </header>
 
+    @if ($inbox->isNotEmpty())
+        <section class="panel">
+            <h2>{{ __('Gestuur na Tribe') }}</h2>
+            <ul>
+                @foreach ($inbox as $item)
+                    @php($s = $item->suggestion ?? [])
+                    <li class="inbox-item">
+                        <a class="entry" href="{{ route('inbox.open', $item) }}">
+                            <strong>{{ $s['title'] ?? __('Nuwe plan') }}</strong>
+                            <span class="meta">
+                                @if (! empty($s['starts_on'])){{ \Carbon\CarbonImmutable::parse($s['starts_on'])->translatedFormat('l j F') }}@if (! empty($s['start_time'])) {{ $s['start_time'] }}@endif · @endif{{ __('tik om te bevestig') }}
+                            </span>
+                        </a>
+                        <form method="post" action="{{ route('inbox.discard', $item) }}">
+                            @csrf @method('delete')
+                            <button type="submit" class="remove" aria-label="{{ __('Gooi weg') }}">@include('partials.icon', ['name' => 'trash'])</button>
+                        </form>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     @if ($birthdaysSoon->isNotEmpty())
         <section class="panel">
             <h2>{{ __('Verjaar binnekort') }}</h2>
@@ -30,6 +53,22 @@
                         <a class="entry" style="--c: {{ $event->hostHousehold->colour ?? '#1F5C99' }}" href="{{ route('events.show', $event) }}">
                             <strong>{{ $event->title }}</strong>
                             <span class="meta">{{ $event->starts_on->translatedFormat('l j F') }}</span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
+    @if ($polls->isNotEmpty())
+        <section class="panel">
+            <h2>{{ __('Watter datums werk vir julle?') }}</h2>
+            <ul>
+                @foreach ($polls as $poll)
+                    <li>
+                        <a class="entry" href="{{ route('polls.show', $poll) }}">
+                            <strong>{{ $poll->title }}</strong>
+                            <span class="meta">{{ trans_choice(':count datum om te merk|:count datums om te merk', $poll->options->count()) }}</span>
                         </a>
                     </li>
                 @endforeach

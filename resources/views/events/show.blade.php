@@ -10,7 +10,9 @@
             <p class="muted small"><span class="dot" style="--c: {{ $event->colour() }}"></span> {{ $kindLabel[$event->kind] ?? '' }} · {{ $event->isFamilyWide() ? __('Hele familie') : __('Net ons huis') }}</p>
             <h1>{{ $event->title }}</h1>
         </div>
-        <a class="button quiet small" href="{{ route('events.edit', $event) }}">{{ __('Wysig') }}</a>
+        @unless ($event->isFromFeed())
+            <a class="button quiet small" href="{{ route('events.edit', $event) }}">{{ __('Wysig') }}</a>
+        @endunless
     </div>
 
     <dl class="facts">
@@ -21,7 +23,9 @@
                 {{ __('tot :date', ['date' => $event->ends_on->translatedFormat('l j F')]) }}
             @endif
             @if ($event->timeLabel()) <br>{{ $event->timeLabel() }} @endif
-            @if ($event->yearly) <br><span class="muted">{{ __('Elke jaar') }}</span> @endif
+            @if ($event->repeats())
+                <br><span class="muted">{{ ['weekly' => __('Elke week'), 'fortnightly' => __('Elke twee weke'), 'monthly' => __('Elke maand'), 'yearly' => __('Elke jaar')][$event->repeats] ?? '' }}@if ($event->repeat_until) {{ __('tot :date', ['date' => $event->repeat_until->translatedFormat('j F Y')]) }}@endif</span>
+            @endif
         </dd>
         @if ($event->isGathering() && $event->hostHousehold)
             <dt>{{ __('By') }}</dt><dd>{{ $event->hostHousehold->name }}</dd>
@@ -31,6 +35,9 @@
         @endif
         @if ($event->member)
             <dt>{{ __('Vir') }}</dt><dd>{{ $event->member->name }}</dd>
+        @endif
+        @if ($event->isFromFeed())
+            <dt>{{ __('Uit') }}</dt><dd>{{ $event->feed->name ?? '' }} <span class="muted small">({{ __('ingetekende kalender') }})</span></dd>
         @endif
         @if ($event->notes)
             <dt>{{ __('Notas') }}</dt><dd class="notes">{{ $event->notes }}</dd>

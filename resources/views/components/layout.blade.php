@@ -38,8 +38,9 @@
                 ['more', 'Meer', 'more'],
             ] as [$route, $label, $icon])
                 @php($active = request()->routeIs($route) || request()->routeIs(explode('.', $route)[0].'.*')
-                    || ($route === 'calendar' && request()->routeIs('events.*'))
-                    || ($route === 'more' && request()->routeIs('contacts.*', 'family.*', 'settings')))
+                    || ($route === 'calendar' && request()->routeIs('events.*', 'polls.*', 'inbox.*'))
+                    || ($route === 'lists.index' && request()->routeIs('meals.*', 'recipes.*'))
+                    || ($route === 'more' && request()->routeIs('contacts.*', 'family.*', 'settings', 'feeds.*', 'share.*')))
                 <a href="{{ route($route) }}" @class(['tab', 'is-active' => $active]) @if ($active) aria-current="page" @endif>
                     @include('partials.icon', ['name' => $icon])
                     <span>{{ __($label) }}</span>

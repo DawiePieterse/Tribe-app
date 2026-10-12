@@ -3,6 +3,8 @@
     <p class="muted">{{ $me->name }} · {{ $me->household->name }}</p>
 
     <ul class="menu">
+        <li><a href="{{ route('share.setup') }}">@include('partials.icon', ['name' => 'share']) {{ __('Stuur na Tribe') }}</a></li>
+        <li><a href="{{ route('feeds.index') }}">@include('partials.icon', ['name' => 'calendar']) {{ __('Kalenders') }}</a></li>
         <li><a href="{{ route('contacts.index') }}">@include('partials.icon', ['name' => 'book']) {{ __('Belangrike nommers') }}</a></li>
         @if ($me->is_admin)
             <li><a href="{{ route('family.index') }}">@include('partials.icon', ['name' => 'people']) {{ __('Familie en uitnodigings') }}</a></li>

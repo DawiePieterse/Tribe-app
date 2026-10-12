@@ -65,3 +65,16 @@
         });
     });
 })();
+
+// "+ Nog ’n datum": copies the last empty date row.
+document.addEventListener('click', (e) => {
+    const button = e.target.closest('[data-add-row]');
+    if (!button) return;
+    const rows = button.closest('fieldset').querySelector('[data-rows]');
+    const last = rows.querySelector('[data-row]:last-child');
+    if (!last || rows.children.length >= 12) return;
+    const row = last.cloneNode(true);
+    row.querySelectorAll('input').forEach((input) => { input.value = ''; });
+    rows.appendChild(row);
+    row.querySelector('input').focus();
+});

@@ -25,7 +25,7 @@ it('puts a 29 February birthday on 28 February in other years', function () {
 
 it('repeats anniversaries yearly and counts the years', function () {
     $me = adult(household());
-    Event::query()->create(['kind' => Event::ANNIVERSARY, 'title' => 'Troudag', 'starts_on' => '1984-06-02', 'yearly' => true]);
+    Event::query()->create(['kind' => Event::ANNIVERSARY, 'title' => 'Troudag', 'starts_on' => '1984-06-02', 'repeats' => Event::YEARLY]);
 
     $items = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-06-01'), CarbonImmutable::parse('2026-06-30'));
     expect($items->first()->detail)->toBe('42 jaar');
@@ -47,4 +47,42 @@ it('filters to one household', function () {
 
     $items = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-05-01'), CarbonImmutable::parse('2026-05-31'), ['household' => $ours->id]);
     expect($items)->toHaveCount(1);
+});
+
+it('repeats weekly from the first day, up to the end date', function () {
+    $me = adult(household());
+    Event::query()->create(['title' => 'Swem', 'starts_on' => '2026-09-01', 'repeats' => Event::WEEKLY, 'repeat_until' => '2026-10-20']);
+
+    $dates = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-10-01'), CarbonImmutable::parse('2026-10-31'))
+        ->map(fn ($o) => $o->date->toDateString())->all();
+
+    expect($dates)->toBe(['2026-10-06', '2026-10-13', '2026-10-20']);
+});
+
+it('repeats every two weeks', function () {
+    $me = adult(household());
+    Event::query()->create(['title' => 'Kerkkoor', 'starts_on' => '2026-10-04', 'repeats' => Event::FORTNIGHTLY]);
+
+    $dates = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-10-05'), CarbonImmutable::parse('2026-11-30'))
+        ->map(fn ($o) => $o->date->toDateString())->all();
+
+    expect($dates)->toBe(['2026-10-18', '2026-11-01', '2026-11-15', '2026-11-29']);
+});
+
+it('repeats monthly without spilling into the next month', function () {
+    $me = adult(household());
+    Event::query()->create(['title' => 'Huur', 'starts_on' => '2026-01-31', 'repeats' => Event::MONTHLY]);
+
+    $dates = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-02-01'), CarbonImmutable::parse('2026-04-30'))
+        ->map(fn ($o) => $o->date->toDateString())->all();
+
+    expect($dates)->toBe(['2026-02-28', '2026-03-31', '2026-04-30']);
+});
+
+it('does not show a weekly event before it starts', function () {
+    $me = adult(household());
+    Event::query()->create(['title' => 'Nuut', 'starts_on' => '2026-10-20', 'repeats' => Event::WEEKLY]);
+
+    $items = app(Agenda::class)->between($me, CarbonImmutable::parse('2026-10-01'), CarbonImmutable::parse('2026-10-25'));
+    expect($items->pluck('date')->map->toDateString()->all())->toBe(['2026-10-20']);
 });

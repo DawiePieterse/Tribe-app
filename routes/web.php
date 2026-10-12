@@ -3,18 +3,31 @@
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DatePollController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\GatheringController;
 use App\Http\Controllers\GrandchildController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IcsController;
 use App\Http\Controllers\ListController;
 use App\Http\Controllers\ListItemController;
+use App\Http\Controllers\MealController;
+use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ShareController;
+use App\Http\Controllers\ShoppingController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 // Afrikaans paths, since people will see them in the address bar and in shared links.
+
+// Record ids are numbers, so /kalender/nuut and /kalender/<token>.ics never reach a record route.
+foreach (['event', 'item', 'list', 'member', 'milestone', 'contact', 'household', 'recipe', 'meal', 'feed', 'poll', 'option', 'inboxItem'] as $parameter) {
+    Route::pattern($parameter, '[0-9]+');
+}
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/aanmeld', [LoginController::class, 'show'])->name('login');
@@ -22,6 +35,15 @@ Route::middleware('guest')->group(function (): void {
     Route::get('/aanmeld/kode', [LoginController::class, 'showCode'])->name('login.code');
     Route::post('/aanmeld/kode', [LoginController::class, 'verify'])->middleware('throttle:login-verify')->name('login.verify');
 });
+
+// The calendar feed for the iPhone Calendar app: the secret in the link is the key.
+Route::get('/kalender/{token}.ics', IcsController::class)->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:60,1')->name('ics');
+
+// "Stuur na Tribe" from the iPhone share sheet: an Apple Shortcut posts the message with the member's key.
+Route::post('/api/stuur', [ShareController::class, 'receive'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->middleware('throttle:20,1')
+    ->name('share.receive');
 
 Route::get('/uitnodiging/{token}', [InviteController::class, 'accept'])->middleware('throttle:login-verify')->name('invite');
 
@@ -43,6 +65,14 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/bring/{item}/ons', [GatheringController::class, 'claimItem'])->name('gatherings.items.claim');
     Route::delete('/bring/{item}', [GatheringController::class, 'removeItem'])->name('gatherings.items.destroy');
 
+    Route::get('/datums', [DatePollController::class, 'index'])->name('polls.index');
+    Route::get('/datums/nuut', [DatePollController::class, 'create'])->name('polls.create');
+    Route::post('/datums', [DatePollController::class, 'store'])->name('polls.store');
+    Route::get('/datums/{poll}', [DatePollController::class, 'show'])->name('polls.show');
+    Route::post('/datums/{poll}/keuses', [DatePollController::class, 'vote'])->name('polls.vote');
+    Route::post('/datums/opsie/{option}/kies', [DatePollController::class, 'choose'])->name('polls.choose');
+    Route::delete('/datums/{poll}', [DatePollController::class, 'destroy'])->name('polls.destroy');
+
     Route::get('/lyste', [ListController::class, 'index'])->name('lists.index');
     Route::post('/lyste', [ListController::class, 'store'])->name('lists.store');
     Route::get('/lyste/{list}', [ListController::class, 'show'])->name('lists.show');
@@ -52,6 +82,22 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/lyste/{list}/items', [ListItemController::class, 'store'])->name('items.store');
     Route::post('/items/{item}/afmerk', [ListItemController::class, 'toggle'])->name('items.toggle');
     Route::delete('/items/{item}', [ListItemController::class, 'destroy'])->name('items.destroy');
+
+    Route::get('/resepte', [RecipeController::class, 'index'])->name('recipes.index');
+    Route::get('/resepte/nuut', [RecipeController::class, 'create'])->name('recipes.create');
+    Route::post('/resepte/invoer', [RecipeController::class, 'import'])->middleware('throttle:10,1')->name('recipes.import');
+    Route::post('/resepte', [RecipeController::class, 'store'])->name('recipes.store');
+    Route::get('/resepte/{recipe}', [RecipeController::class, 'show'])->name('recipes.show');
+    Route::get('/resepte/{recipe}/wysig', [RecipeController::class, 'edit'])->name('recipes.edit');
+    Route::put('/resepte/{recipe}', [RecipeController::class, 'update'])->name('recipes.update');
+    Route::delete('/resepte/{recipe}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
+
+    Route::get('/weekmenu', [MealController::class, 'week'])->name('meals.week');
+    Route::post('/weekmenu', [MealController::class, 'store'])->name('meals.store');
+    Route::delete('/weekmenu/{meal}', [MealController::class, 'destroy'])->name('meals.destroy');
+    Route::get('/weekmenu/inkopies', [MealController::class, 'shopping'])->name('meals.shopping');
+
+    Route::post('/inkopies', [ShoppingController::class, 'add'])->name('shopping.add');
 
     Route::get('/kleinkinders', [GrandchildController::class, 'index'])->name('grandchildren.index');
     Route::get('/kleinkinders/{member}', [GrandchildController::class, 'show'])->name('grandchildren.show');
@@ -66,6 +112,19 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/kontakte/{contact}/wysig', [ContactController::class, 'edit'])->name('contacts.edit');
     Route::put('/kontakte/{contact}', [ContactController::class, 'update'])->name('contacts.update');
     Route::delete('/kontakte/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+
+    Route::get('/kalenders', [CalendarFeedController::class, 'index'])->name('feeds.index');
+    Route::post('/kalenders', [CalendarFeedController::class, 'store'])->middleware('throttle:10,1')->name('feeds.store');
+    Route::post('/kalenders/nuwe-skakel', [CalendarFeedController::class, 'newLink'])->name('feeds.new-link');
+    Route::post('/kalenders/{feed}/sinkroniseer', [CalendarFeedController::class, 'sync'])->middleware('throttle:10,1')->name('feeds.sync');
+    Route::delete('/kalenders/{feed}', [CalendarFeedController::class, 'destroy'])->name('feeds.destroy');
+
+    Route::get('/stuur', [ShareController::class, 'paste'])->name('share.paste');
+    Route::post('/stuur', [ShareController::class, 'read'])->middleware('throttle:20,1')->name('share.read');
+    Route::get('/stuur/opstel', [ShareController::class, 'setup'])->name('share.setup');
+    Route::post('/stuur/sleutel', [ShareController::class, 'newKey'])->name('share.key');
+    Route::get('/inkassie/{inboxItem}', [ShareController::class, 'open'])->name('inbox.open');
+    Route::delete('/inkassie/{inboxItem}', [ShareController::class, 'discard'])->name('inbox.discard');
 
     Route::get('/meer', [SettingsController::class, 'more'])->name('more');
     Route::get('/instellings', [SettingsController::class, 'edit'])->name('settings');

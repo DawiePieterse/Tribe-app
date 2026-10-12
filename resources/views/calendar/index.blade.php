@@ -48,7 +48,11 @@
 
     <div class="head">
         <h2>{{ __('Hierdie maand') }}</h2>
-        <a class="button small" href="{{ route('events.create') }}">@include('partials.icon', ['name' => 'plus']) {{ __('Nuwe') }}</a>
+        <span class="actions">
+            <a class="button quiet small" href="{{ route('share.paste') }}">{{ __('Plak') }}</a>
+            <a class="button quiet small" href="{{ route('polls.index') }}">{{ __('Vind ’n datum') }}</a>
+            <a class="button small" href="{{ route('events.create') }}">@include('partials.icon', ['name' => 'plus']) {{ __('Nuwe') }}</a>
+        </span>
     </div>
 
     @if ($days->isEmpty())
