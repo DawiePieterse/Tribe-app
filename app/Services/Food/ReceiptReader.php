@@ -6,16 +6,20 @@ use App\Support\Claude;
 
 /**
  * Reads what was bought from a photo of a till slip, a screenshot of a Sixty60 order or its VAT
- * invoice (PDF), with Claude. Pasted text is read with the built-in ingredient list instead. Only
- * the food comes back, as plain ingredient names; the picture itself is not kept.
+ * invoice (PDF), with Claude. (Pasted text goes through `Ingredients::fromText()` instead.) Only the
+ * food comes back, as plain ingredient names; the picture itself is not kept.
  */
 final class ReceiptReader
 {
     public const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+    /** A slip reads fine at this many pixels on the long side; Claude takes images up to 5 MB. */
+    private const MAX_SIDE = 1600;
+
     /** @return list<string> */
     public function fromFile(string $contents, string $mime): array
     {
+        [$contents, $mime] = $this->shrink($contents, $mime);
         $source = ['type' => 'base64', 'media_type' => $mime, 'data' => base64_encode($contents)];
         $block = $mime === 'application/pdf'
             ? ['type' => 'document', 'source' => $source]
@@ -40,29 +44,40 @@ final class ReceiptReader
             60,
         );
 
-        return self::tidy(array_map('strval', array_filter((array) ($input['items'] ?? []), 'is_string')));
-    }
-
-    /** @return list<string> */
-    public function fromText(string $text): array
-    {
-        return Ingredients::fromText($text);
+        return Ingredients::uniqueTidy((array) ($input['items'] ?? []));
     }
 
     /**
-     * @param  list<string>  $names
-     * @return list<string>
+     * Big phone photos are made smaller before they go to Claude (the browser usually does this
+     * first; this covers the rest).
+     *
+     * @return array{0: string, 1: string}
      */
-    private static function tidy(array $names): array
+    private function shrink(string $contents, string $mime): array
     {
-        $out = [];
-        foreach ($names as $name) {
-            $name = Ingredients::tidy($name);
-            if ($name !== '' && ! in_array($name, $out, true)) {
-                $out[] = $name;
-            }
+        if ($mime === 'application/pdf' || ! function_exists('imagecreatefromstring')) {
+            return [$contents, $mime];
         }
 
-        return array_slice($out, 0, 80);
+        $size = @getimagesizefromstring($contents);
+        if ($size === false || (strlen($contents) < 3_500_000 && max($size[0], $size[1]) <= self::MAX_SIDE)) {
+            return [$contents, $mime];
+        }
+
+        $image = @imagecreatefromstring($contents);
+        if ($image === false) {
+            return [$contents, $mime];
+        }
+
+        $scale = min(1, self::MAX_SIDE / max($size[0], $size[1]));
+        $small = imagescale($image, max(1, (int) round($size[0] * $scale)), max(1, (int) round($size[1] * $scale)));
+        if ($small === false) {
+            return [$contents, $mime];
+        }
+
+        ob_start();
+        imagejpeg($small, null, 85);
+
+        return [(string) ob_get_clean(), 'image/jpeg'];
     }
 }

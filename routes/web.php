@@ -21,6 +21,7 @@ use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShareController;
 use App\Http\Controllers\ShoppingController;
+use App\Models\CalendarConnection;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -99,12 +100,12 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/weekmenu/{meal}', [MealController::class, 'destroy'])->name('meals.destroy');
     Route::get('/weekmenu/inkopies', [MealController::class, 'shopping'])->name('meals.shopping');
 
-    Route::get('/kosidees', [MealIdeaController::class, 'index'])->name('meals.ideas');
-    Route::post('/kosidees', [MealIdeaController::class, 'suggest'])->middleware('throttle:20,1')->name('meals.ideas.suggest');
-    Route::post('/kosidees/{idea}/resep', [MealIdeaController::class, 'saveRecipe'])->name('meals.ideas.recipe');
-    Route::post('/kosidees/{idea}/weekmenu', [MealIdeaController::class, 'addToWeek'])->name('meals.ideas.week');
-    Route::post('/kosidees/gekoop', [MealIdeaController::class, 'readBought'])->middleware('throttle:10,1')->name('meals.ideas.bought');
-    Route::delete('/kosidees/gekoop', [MealIdeaController::class, 'forgetBought'])->name('meals.ideas.forget');
+    Route::get('/kosidees', [MealIdeaController::class, 'index'])->name('ideas.index');
+    Route::post('/kosidees', [MealIdeaController::class, 'suggest'])->middleware('throttle:20,1')->name('ideas.suggest');
+    Route::post('/kosidees/{idea}/resep', [MealIdeaController::class, 'saveRecipe'])->name('ideas.recipe');
+    Route::post('/kosidees/{idea}/weekmenu', [MealIdeaController::class, 'addToWeek'])->name('ideas.week');
+    Route::post('/kosidees/gekoop', [MealIdeaController::class, 'readBought'])->middleware('throttle:10,1')->name('ideas.bought');
+    Route::delete('/kosidees/gekoop', [MealIdeaController::class, 'forgetBought'])->name('ideas.forget');
 
     Route::post('/inkopies', [ShoppingController::class, 'add'])->name('shopping.add');
 
@@ -130,8 +131,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/kalenders/koppel/icloud', [CalendarConnectionController::class, 'icloud'])->name('connections.icloud');
     Route::post('/kalenders/koppel/icloud', [CalendarConnectionController::class, 'storeICloud'])->middleware('throttle:10,1')->name('connections.icloud.store');
-    Route::get('/kalenders/koppel/{provider}', [CalendarConnectionController::class, 'connect'])->whereIn('provider', ['google', 'outlook'])->name('connections.connect');
-    Route::get('/kalenders/koppel/{provider}/terug', [CalendarConnectionController::class, 'callback'])->whereIn('provider', ['google', 'outlook'])->name('connections.callback');
+    Route::get('/kalenders/koppel/{provider}', [CalendarConnectionController::class, 'connect'])->whereIn('provider', CalendarConnection::OAUTH)->name('connections.connect');
+    Route::get('/kalenders/koppel/{provider}/terug', [CalendarConnectionController::class, 'callback'])->whereIn('provider', CalendarConnection::OAUTH)->name('connections.callback');
     Route::get('/kalenders/koppelings/{connection}', [CalendarConnectionController::class, 'edit'])->name('connections.edit');
     Route::put('/kalenders/koppelings/{connection}', [CalendarConnectionController::class, 'update'])->name('connections.update');
     Route::post('/kalenders/koppelings/{connection}/sinkroniseer', [CalendarConnectionController::class, 'sync'])->middleware('throttle:10,1')->name('connections.sync');

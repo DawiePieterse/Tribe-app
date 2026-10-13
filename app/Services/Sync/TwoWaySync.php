@@ -30,9 +30,6 @@ class TwoWaySync
     /** New events sent out in one run, so a first sync can't run past the server's time limit. */
     private const MAX_NEW = 300;
 
-    /** True while a sync writes Tribe events, so those writes don't ask for another sync. */
-    public static bool $running = false;
-
     public function __construct(private ProviderFactory $providers) {}
 
     /** @return bool whether it worked; the reason it didn't is kept on the connection. */
@@ -43,17 +40,14 @@ class TwoWaySync
         }
 
         $connection->loadMissing('member');
-        self::$running = true;
 
         try {
-            $this->run($connection, $this->providers->for($connection->provider));
+            SyncSoon::quietly(fn () => $this->run($connection, $this->providers->for($connection->provider)));
         } catch (\Throwable $e) {
             report($e);
             $connection->update(['last_error' => mb_substr($e->getMessage(), 0, 250)]);
 
             return false;
-        } finally {
-            self::$running = false;
         }
 
         $connection->update(['synced_at' => now(), 'last_error' => null]);
@@ -96,13 +90,14 @@ class TwoWaySync
         $links = $connection->links()->with('event')->get();
         $byRemote = $links->whereNotNull('remote_id')->keyBy('remote_id');
         $seen = [];
+        $arrived = [];
 
         // 1. What their calendar has.
         foreach ($remote as $id => $theirs) {
             $link = $byRemote->get($id);
 
             if ($link === null) {
-                $this->arrived($connection, $provider, $theirs);
+                $arrived[] = $theirs;
 
                 continue;
             }
@@ -133,11 +128,15 @@ class TwoWaySync
 
         // 2. Links whose event is no longer in their calendar.
         foreach ($links as $link) {
-            if (isset($seen[$link->id]) || $link->remote_id === null) {
-                if ($link->remote_id === null && $link->event === null) {
+            if ($link->remote_id === null) {
+                // They took it out of their calendar earlier; once it's gone in Tribe too, nothing is left to remember.
+                if ($link->event === null) {
                     $link->delete();
                 }
 
+                continue;
+            }
+            if (isset($seen[$link->id])) {
                 continue;
             }
 
@@ -156,14 +155,15 @@ class TwoWaySync
             }
         }
 
-        // 3. Tribe events their calendar doesn't have yet.
+        // 3. Events in their calendar that this connection hasn't linked yet.
+        $this->arrived($connection, $provider, $arrived, $links);
+
+        // 4. Tribe events their calendar doesn't have yet.
         $linked = $connection->links()->whereNotNull('event_id')->pluck('event_id');
         $new = Event::query()->visibleTo($member)
             ->whereNull('feed_id')
             ->whereNotIn('id', $linked)
-            ->where('starts_on', '<=', $to)
-            ->where(fn ($q) => $q->where(fn ($r) => $r->where('repeats', '!=', Event::ONCE)->where(fn ($u) => $u->whereNull('repeat_until')->orWhere('repeat_until', '>=', $from)))
-                ->orWhereRaw('COALESCE(ends_on, starts_on) >= ?', [$from]))
+            ->between($from, $to)
             ->when($connection->send === CalendarConnection::SEND_OURS, fn ($q) => $q->where(fn ($r) => $r
                 ->where('household_id', $member->household_id)
                 ->orWhere('host_household_id', $member->household_id)
@@ -176,81 +176,72 @@ class TwoWaySync
         foreach ($new as $event) {
             $data = EventData::fromEvent($event);
             $created = $provider->create($connection, $data, $event->id);
-            EventLink::query()->create([
-                'connection_id' => $connection->id,
-                'event_id' => $event->id,
-                'remote_id' => $created->id,
-                'remote_version' => $created->version,
-                'local_hash' => $data->hash(),
-                'origin' => EventLink::FROM_TRIBE,
-            ]);
+            $this->link($connection, $event, $created->id, $created->version, $data->hash(), EventLink::FROM_TRIBE);
         }
     }
 
-    /** An event in their calendar that this connection hasn't linked yet. */
-    private function arrived(CalendarConnection $connection, CalendarProvider $provider, RemoteEvent $theirs): void
+    /**
+     * Events in their calendar that this connection hasn't linked yet: a copy Tribe made earlier (or
+     * the same shared calendar connected by someone else) is linked and Tribe's version stands;
+     * anything else is new to Tribe.
+     *
+     * @param  list<RemoteEvent>  $arrived
+     * @param  Collection<int, EventLink>  $links
+     */
+    private function arrived(CalendarConnection $connection, CalendarProvider $provider, array $arrived, Collection $links): void
     {
-        $member = $connection->member;
-        $event = $this->alreadyInTribe($connection, $theirs);
-
-        if ($event !== null) {
-            // A copy Tribe made earlier (or the same shared calendar connected by someone else): link,
-            // and let Tribe's version stand.
-            $ours = EventData::fromEvent($event);
-            $version = $theirs->version;
-            if ($ours->hash() !== $theirs->data->hash()) {
-                $version = $provider->update($connection, $theirs, $ours, $event->id)->version;
-            }
-            EventLink::query()->create([
-                'connection_id' => $connection->id,
-                'event_id' => $event->id,
-                'remote_id' => $theirs->id,
-                'remote_version' => $version,
-                'local_hash' => $ours->hash(),
-                'origin' => EventLink::FROM_TRIBE,
-            ]);
-
+        if ($arrived === []) {
             return;
         }
 
-        DB::transaction(function () use ($connection, $member, $theirs): void {
-            $event = Event::query()->create($theirs->data->attributes() + [
-                'kind' => Event::EVENT,
-                'household_id' => $connection->household_id,
-                'member_id' => $member->id,
-                'created_by' => $member->id,
-            ]);
-            EventLink::query()->create([
-                'connection_id' => $connection->id,
-                'event_id' => $event->id,
-                'remote_id' => $theirs->id,
-                'remote_version' => $theirs->version,
-                'local_hash' => EventData::fromEvent($event)->hash(),
-                'origin' => EventLink::FROM_REMOTE,
-            ]);
-        });
-    }
+        $member = $connection->member;
+        $linkedHere = array_fill_keys($links->whereNotNull('event_id')->pluck('event_id')->all(), true);
 
-    private function alreadyInTribe(CalendarConnection $connection, RemoteEvent $theirs): ?Event
-    {
-        $linkedHere = fn (int $eventId) => $connection->links()->where('event_id', $eventId)->exists();
-
-        if ($theirs->tribeId !== null) {
-            $event = Event::query()->find($theirs->tribeId);
-            if ($event !== null && $event->isVisibleTo($connection->member) && ! $event->isFromFeed() && ! $linkedHere($event->id)) {
-                return $event;
-            }
-        }
-
-        $other = EventLink::query()->with('event')
-            ->where('remote_id', $theirs->id)
+        // One query each for the two ways a remote event can already be in Tribe.
+        $marked = Event::query()->findMany(array_filter(array_map(fn (RemoteEvent $e) => $e->tribeId, $arrived)))->keyBy('id');
+        $siblings = EventLink::query()->with('event')
+            ->whereIn('remote_id', array_map(fn (RemoteEvent $e) => $e->id, $arrived))
             ->where('connection_id', '!=', $connection->id)
             ->whereHas('connection', fn ($q) => $q->where('provider', $connection->provider)->where('calendar_id', $connection->calendar_id))
-            ->first();
+            ->get()->keyBy('remote_id');
 
-        $event = $other?->event;
+        foreach ($arrived as $theirs) {
+            $event = $marked->get($theirs->tribeId) ?? $siblings->get($theirs->id)?->event;
+            if ($event !== null && (isset($linkedHere[$event->id]) || ! $event->isVisibleTo($member) || $event->isFromFeed())) {
+                $event = null;
+            }
 
-        return $event !== null && $event->isVisibleTo($connection->member) && ! $linkedHere($event->id) ? $event : null;
+            if ($event !== null) {
+                $ours = EventData::fromEvent($event);
+                $version = $ours->hash() === $theirs->data->hash() ? $theirs->version : $provider->update($connection, $theirs, $ours, $event->id)->version;
+                $this->link($connection, $event, $theirs->id, $version, $ours->hash(), EventLink::FROM_TRIBE);
+                $linkedHere[$event->id] = true;
+
+                continue;
+            }
+
+            DB::transaction(function () use ($connection, $member, $theirs): void {
+                $event = Event::query()->create($theirs->data->attributes() + [
+                    'kind' => Event::EVENT,
+                    'household_id' => $connection->household_id,
+                    'member_id' => $member->id,
+                    'created_by' => $member->id,
+                ]);
+                $this->link($connection, $event, $theirs->id, $theirs->version, EventData::fromEvent($event)->hash(), EventLink::FROM_REMOTE);
+            });
+        }
+    }
+
+    private function link(CalendarConnection $connection, Event $event, string $remoteId, string $version, string $hash, string $origin): EventLink
+    {
+        return EventLink::query()->create([
+            'connection_id' => $connection->id,
+            'event_id' => $event->id,
+            'remote_id' => $remoteId,
+            'remote_version' => $version,
+            'local_hash' => $hash,
+            'origin' => $origin,
+        ]);
     }
 
     private function isLater(RemoteEvent $theirs, Event $event): bool

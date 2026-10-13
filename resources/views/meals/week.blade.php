@@ -9,7 +9,7 @@
     </div>
 
     <p class="actions">
-        <a class="button" href="{{ route('meals.ideas') }}">{{ __('Wat maak ons vanaand?') }}</a>
+        <a class="button" href="{{ route('ideas.index') }}">{{ __('Wat maak ons vanaand?') }}</a>
         <a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
     </p>
 

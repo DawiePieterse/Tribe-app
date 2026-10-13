@@ -150,12 +150,7 @@ class CalendarConnectionController extends Controller
         $this->ensureMine($connection);
 
         $imported = $connection->links()->where('origin', EventLink::FROM_REMOTE)->whereNotNull('event_id')->pluck('event_id');
-        TwoWaySync::$running = true;
-        try {
-            Event::query()->whereIn('id', $imported)->get()->each->delete();
-        } finally {
-            TwoWaySync::$running = false;
-        }
+        Event::query()->whereIn('id', $imported)->delete();
         $connection->delete();
 
         return redirect()->route('feeds.index')->with('status', __('Die kalender is ontkoppel.'));

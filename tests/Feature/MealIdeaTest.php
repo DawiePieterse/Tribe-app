@@ -46,16 +46,16 @@ it('suggests children’s meals built on what they have, at the chosen time', fu
 });
 
 it('shows ideas from the page and saves one to the week menu as a recipe', function () {
-    $this->get(route('meals.ideas'))->assertOk()->assertSee(__('Wat maak ons vanaand?'));
+    $this->get(route('ideas.index'))->assertOk()->assertSee(__('Wat maak ons vanaand?'));
 
-    $this->post(route('meals.ideas.suggest'), ['have' => ['Chicken', 'pasta', ''], 'level' => 'medium', 'from' => 'typed'])
-        ->assertRedirect(route('meals.ideas').'#idees');
+    $this->post(route('ideas.suggest'), ['have' => ['Chicken', 'pasta', ''], 'level' => 'medium', 'from' => 'typed'])
+        ->assertRedirect(route('ideas.index').'#idees');
 
-    $page = $this->get(route('meals.ideas'))->assertOk()->assertSee('Hoender à la king met rys');
+    $page = $this->get(route('ideas.index'))->assertOk()->assertSee('Hoender à la king met rys');
     $ideas = session('meal_ideas.ideas');
     $index = collect($ideas)->search(fn ($i) => $i['title'] === 'Hoender à la king met rys');
 
-    $this->post(route('meals.ideas.week', $index), ['date' => today()->toDateString()])->assertRedirect();
+    $this->post(route('ideas.week', $index), ['date' => today()->toDateString()])->assertRedirect();
 
     $recipe = Recipe::query()->sole();
     expect($recipe->title)->toBe('Hoender à la king met rys')
@@ -64,32 +64,32 @@ it('shows ideas from the page and saves one to the week menu as a recipe', funct
         ->and(Meal::query()->sole()->recipe_id)->toBe($recipe->id);
 
     // Saving it as a recipe too doesn't make a second one.
-    $this->post(route('meals.ideas.recipe', $index))->assertRedirect(route('recipes.show', $recipe));
+    $this->post(route('ideas.recipe', $index))->assertRedirect(route('recipes.show', $recipe));
     expect(Recipe::query()->count())->toBe(1);
 });
 
 it('asks for at least one ingredient', function () {
-    $this->post(route('meals.ideas.suggest'), ['have' => ['', ''], 'level' => 'quick', 'from' => 'typed'])->assertSessionHasErrors('have');
-    $this->post(route('meals.ideas.week', 0), ['date' => today()->toDateString()])->assertNotFound();
+    $this->post(route('ideas.suggest'), ['have' => ['', ''], 'level' => 'quick', 'from' => 'typed'])->assertSessionHasErrors('have');
+    $this->post(route('ideas.week', 0), ['date' => today()->toDateString()])->assertNotFound();
 });
 
 it('reads what was bought from pasted text and suggests from it', function () {
-    $this->post(route('meals.ideas.bought'), ['text' => "Beef Mince 500g\nPotatoes 2kg\nFrozen Peas\nCheddar 400g"])
-        ->assertRedirect(route('meals.ideas'));
+    $this->post(route('ideas.bought'), ['text' => "Beef Mince 500g\nPotatoes 2kg\nFrozen Peas\nCheddar 400g"])
+        ->assertRedirect(route('ideas.index'));
 
     expect(Grocery::query()->recentFor($this->me)->pluck('name')->sort()->values()->all())->toBe(['aartappels', 'ertjies', 'kaas', 'maalvleis']);
 
-    $this->post(route('meals.ideas.suggest'), ['level' => 'long', 'from' => 'bought'])->assertRedirect();
-    $this->get(route('meals.ideas'))->assertSee('Cottage pie')->assertSee(__('Uit wat julle gekoop het'));
+    $this->post(route('ideas.suggest'), ['level' => 'long', 'from' => 'bought'])->assertRedirect();
+    $this->get(route('ideas.index'))->assertSee('Cottage pie')->assertSee(__('Uit wat julle gekoop het'));
 
-    $this->delete(route('meals.ideas.forget'));
+    $this->delete(route('ideas.forget'));
     expect(Grocery::query()->count())->toBe(0);
 });
 
 it('keeps each household’s groceries to itself', function () {
     Grocery::record(adult(household('Ander')), ['hoender']);
 
-    $this->post(route('meals.ideas.suggest'), ['level' => 'quick', 'from' => 'bought'])->assertSessionHasErrors('have');
+    $this->post(route('ideas.suggest'), ['level' => 'quick', 'from' => 'bought'])->assertSessionHasErrors('have');
 });
 
 it('reads a till slip photo with Claude', function () {
@@ -98,8 +98,8 @@ it('reads a till slip photo with Claude', function () {
         ['type' => 'tool_use', 'name' => 'groceries', 'input' => ['items' => ['hoenderborsies', 'pasta', 'mozzarella', 'tamatiesous']]],
     ]])]);
 
-    $this->post(route('meals.ideas.bought'), ['slip' => UploadedFile::fake()->image('strokie.jpg', 800, 1600)])
-        ->assertRedirect(route('meals.ideas'));
+    $this->post(route('ideas.bought'), ['slip' => UploadedFile::fake()->image('strokie.jpg', 800, 1600)])
+        ->assertRedirect(route('ideas.index'));
 
     expect(Grocery::query()->pluck('name')->sort()->values()->all())->toBe(['hoender', 'kaas', 'pasta', 'tamatiesous']);
     Http::assertSent(fn (Request $r) => $r['messages'][0]['content'][0]['type'] === 'image'
@@ -117,19 +117,19 @@ it('asks Claude for ideas when it is set up, and falls back to the cookbook when
         ]]]]]])
         ->push('error', 500);
 
-    $this->post(route('meals.ideas.suggest'), ['have' => ['hoender'], 'level' => 'quick', 'from' => 'typed']);
-    $this->get(route('meals.ideas'))->assertSee('Hoender-en-kaas-jaffels')->assertSee('8 snye brood');
+    $this->post(route('ideas.suggest'), ['have' => ['hoender'], 'level' => 'quick', 'from' => 'typed']);
+    $this->get(route('ideas.index'))->assertSee('Hoender-en-kaas-jaffels')->assertSee('8 snye brood');
 
-    $this->post(route('meals.ideas.suggest'), ['have' => ['hoender'], 'level' => 'quick', 'from' => 'typed']);
-    $this->get(route('meals.ideas'))->assertSee('Hoender-wraps met kaas en mielies')->assertSee(__('Uit Tribe se eie resepteboek.'));
+    $this->post(route('ideas.suggest'), ['have' => ['hoender'], 'level' => 'quick', 'from' => 'typed']);
+    $this->get(route('ideas.index'))->assertSee('Hoender-wraps met kaas en mielies')->assertSee(__('Uit Tribe se eie resepteboek.'));
 });
 
 it('offers the missing ingredients for a shopping list and to share', function () {
     TodoList::query()->create(['name' => 'Inkopies', 'kind' => TodoList::SHOPPING, 'household_id' => $this->me->household_id]);
 
-    $this->post(route('meals.ideas.suggest'), ['have' => ['hoender', 'wraps', 'kaas'], 'level' => 'quick', 'from' => 'typed']);
+    $this->post(route('ideas.suggest'), ['have' => ['hoender', 'wraps', 'kaas'], 'level' => 'quick', 'from' => 'typed']);
 
-    $this->get(route('meals.ideas'))
+    $this->get(route('ideas.index'))
         ->assertSee(__('Koop wat kort'))
         ->assertSee(__('Deel vir Sixty60'))
         ->assertSee('value="1 blikkie mielies (410 g), gedreineer"', false);

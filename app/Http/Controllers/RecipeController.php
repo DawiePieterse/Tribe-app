@@ -91,8 +91,7 @@ class RecipeController extends Controller
     /** @return Collection<int, TodoList> */
     private function shoppingLists()
     {
-        return TodoList::query()->visibleTo($this->me())->where('kind', TodoList::SHOPPING)
-            ->orderByRaw('household_id IS NULL')->orderBy('name')->get();
+        return TodoList::query()->shoppingFor($this->me())->get();
     }
 
     /** @return array<string, mixed> */

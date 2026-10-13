@@ -2,6 +2,7 @@
 
 namespace App\Services\Messages;
 
+use App\Support\Claude;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
@@ -11,11 +12,10 @@ class MessageReader
     public function read(string $text, ?CarbonImmutable $today = null): Suggestion
     {
         $today ??= CarbonImmutable::today();
-        $key = (string) config('services.anthropic.key');
 
-        if ($key !== '') {
+        if (Claude::available()) {
             try {
-                return (new ClaudeReader($key, (string) config('services.anthropic.model')))->read($text, $today);
+                return (new ClaudeReader)->read($text, $today);
             } catch (\Throwable $e) {
                 Log::warning('Stuur na Tribe: falling back to the simple reader. '.$e->getMessage());
             }
@@ -26,6 +26,6 @@ class MessageReader
 
     public function usesClaude(): bool
     {
-        return (string) config('services.anthropic.key') !== '';
+        return Claude::available();
     }
 }

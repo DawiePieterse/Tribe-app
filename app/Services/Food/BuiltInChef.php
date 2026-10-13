@@ -5,11 +5,13 @@ namespace App\Services\Food;
 /** Picks meals from Tribe's own cookbook (cookbook.php) by what the family has. */
 final class BuiltInChef
 {
+    private const COUNT = 5;
+
     /**
      * @param  list<string>  $have  ingredient names (see Ingredients)
      * @return list<MealIdea>
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false, int $count = 5): array
+    public function suggest(array $have, string $level, bool $fromPantry = false): array
     {
         /** @var list<array{title: string, minutes: int, kids: string, ingredients: list<array{0: string, 1: string|null}>, method: list<string>}> $cookbook */
         $cookbook = require __DIR__.'/cookbook.php';
@@ -46,6 +48,6 @@ final class BuiltInChef
         $atLevel = array_values(array_filter($scored, fn ($s) => $s['level'] === 1));
         $pick = count($atLevel) >= 3 ? $atLevel : $scored;
 
-        return array_map(fn ($s) => $s['idea'], array_slice($pick, 0, $count));
+        return array_map(fn ($s) => $s['idea'], array_slice($pick, 0, self::COUNT));
     }
 }

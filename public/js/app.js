@@ -38,19 +38,23 @@
             apply();
         }
 
+        // Copy text and say so on the button for a moment (data-copied holds the words).
+        const copyAndFlash = async (button, text, fallback) => {
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                if (!fallback) return;
+                fallback();
+            }
+            const label = button.innerHTML;
+            button.textContent = button.dataset.copied;
+            setTimeout(() => { button.innerHTML = label; }, 2000);
+        };
+
         document.querySelectorAll('[data-copy]').forEach((button) => {
-            button.addEventListener('click', async () => {
+            button.addEventListener('click', () => {
                 const input = document.querySelector(button.dataset.copy);
-                if (!input) return;
-                try {
-                    await navigator.clipboard.writeText(input.value);
-                } catch {
-                    input.select();
-                    document.execCommand('copy');
-                }
-                const label = button.textContent;
-                button.textContent = button.dataset.copied;
-                setTimeout(() => { button.textContent = label; }, 2000);
+                if (input) copyAndFlash(button, input.value, () => { input.select(); document.execCommand('copy'); });
             });
         });
 
@@ -61,12 +65,7 @@
                 if (navigator.share) {
                     try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
                 }
-                try {
-                    await navigator.clipboard.writeText(text);
-                    const label = button.innerHTML;
-                    button.textContent = button.dataset.shared;
-                    setTimeout(() => { button.innerHTML = label; }, 2000);
-                } catch { /* nothing more to try */ }
+                copyAndFlash(button, text);
             });
         });
 

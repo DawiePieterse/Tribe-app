@@ -50,11 +50,8 @@ final class Ingredients
         'botter' => ['\bbotter\b', '\bbutter\b'],
     ];
 
-    /** Slip lines that look like food words but aren't cooking ingredients. */
-    private const NOT_INGREDIENTS = ['ice ?cream', 'roomys', 'crisps', '\\bchips\\b', 'simba', '\\blays\\b', '\\bsweets\\b', 'lekkers', 'cream soda', 'shampoo', 'tandepasta', 'toothpaste', 'dog food', 'cat food', 'hondekos', 'katkos'];
-
-    /** Things nearly every kitchen has, never put on a shopping list for a suggestion. */
-    public const STAPLES = ['olie', 'sout', 'peper', 'botter', 'meel', 'suiker', 'water', 'kruie'];
+    /** Slip lines that look like food words but aren't cooking ingredients (slap chips are). */
+    private const NOT_INGREDIENTS = ['ice ?cream', 'roomys', 'crisps', '(?<!slap )\\bchips\\b', 'simba', '\\blays\\b', '\\bsweets\\b', 'lekkers', 'cream soda', 'shampoo', 'tandepasta', 'toothpaste', 'dog food', 'cat food', 'hondekos', 'katkos'];
 
     /** @return list<string> */
     public static function known(): array
@@ -71,7 +68,7 @@ final class Ingredients
         }
 
         foreach (self::NOT_INGREDIENTS as $pattern) {
-            if (preg_match('/'.$pattern.'/u', $text) === 1 && ! preg_match('/slap ?chips|sweet ?potato/u', $text)) {
+            if (preg_match('/'.$pattern.'/u', $text) === 1) {
                 return null;
             }
         }
@@ -109,5 +106,24 @@ final class Ingredients
     public static function tidy(string $text): string
     {
         return self::canonical($text) ?? mb_substr(mb_strtolower(trim($text)), 0, 60);
+    }
+
+    /**
+     * Several typed or read names, tidied, blanks dropped, once each in the order given.
+     *
+     * @param  iterable<mixed>  $texts
+     * @return list<string>
+     */
+    public static function uniqueTidy(iterable $texts, int $max = 80): array
+    {
+        $out = [];
+        foreach ($texts as $text) {
+            $name = is_string($text) ? self::tidy($text) : '';
+            if ($name !== '' && ! in_array($name, $out, true)) {
+                $out[] = $name;
+            }
+        }
+
+        return array_slice($out, 0, $max);
     }
 }

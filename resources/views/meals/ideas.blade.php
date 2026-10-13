@@ -9,7 +9,7 @@
     <h1>{{ __('Wat maak ons vanaand?') }}</h1>
     <p class="muted" style="margin-top: 8px">{{ __('Tik twee of drie dinge wat julle het, kies hoeveel tyd daar is, en kry kos wat kinders eet.') }}</p>
 
-    <form method="post" action="{{ route('meals.ideas.suggest') }}" class="panel stack">
+    <form method="post" action="{{ route('ideas.suggest') }}" class="panel stack">
         @csrf
         <fieldset>
             <legend>{{ __('Wat het julle?') }}</legend>
@@ -83,7 +83,7 @@
                         <summary>{{ __('Bestanddele en metode') }}</summary>
                         <ul class="ingredients">
                             @foreach ($idea->ingredients as $ingredient)
-                                <li @class(['need' => ! $ingredient['have']])><span>{{ $ingredient['line'] }}</span>@unless ($ingredient['have'])<span class="tag-buy">{{ __('koop') }}</span>@endunless</li>
+                                <li><span>{{ $ingredient['line'] }}</span>@unless ($ingredient['have'])<span class="tag-buy">{{ __('koop') }}</span>@endunless</li>
                             @endforeach
                         </ul>
                         <ol class="method">
@@ -94,7 +94,7 @@
                     </details>
 
                     <div class="actions">
-                        <form method="post" action="{{ route('meals.ideas.week', $index) }}" class="actions">
+                        <form method="post" action="{{ route('ideas.week', $index) }}" class="actions">
                             @csrf
                             <label class="visually-hidden" for="date{{ $index }}">{{ __('Watter dag?') }}</label>
                             <select id="date{{ $index }}" name="date">
@@ -104,7 +104,7 @@
                             </select>
                             <button type="submit" class="small">{{ __('Op die weekmenu') }}</button>
                         </form>
-                        <form method="post" action="{{ route('meals.ideas.recipe', $index) }}">
+                        <form method="post" action="{{ route('ideas.recipe', $index) }}">
                             @csrf
                             <button type="submit" class="quiet small">{{ __('Stoor resep') }}</button>
                         </form>
@@ -115,7 +115,7 @@
                             <summary>{{ __('Koop wat kort') }}</summary>
                             @include('partials.to-list', ['lines' => $missing, 'lists' => $lists])
                             <p>
-                                <button type="button" class="quiet small" data-share="{{ $shareText }}" data-shared="{{ __('Gekopieer') }}">
+                                <button type="button" class="quiet small" data-share="{{ $shareText }}" data-copied="{{ __('Gekopieer') }}">
                                     @include('partials.icon', ['name' => 'share']) {{ __('Deel vir Sixty60') }}
                                 </button>
                             </p>
@@ -131,7 +131,7 @@
     <p>{{ __('Laat Tribe weet wat in die kas is, dan stel dit kos voor uit wat julle reeds het.') }}</p>
 
     @if ($claude)
-        <form method="post" action="{{ route('meals.ideas.bought') }}" enctype="multipart/form-data" class="panel stack">
+        <form method="post" action="{{ route('ideas.bought') }}" enctype="multipart/form-data" class="panel stack">
             @csrf
             <label>{{ __('Foto van die strokie of Sixty60-bestelling') }}
                 <input type="file" name="slip" accept="image/*,application/pdf" required data-shrink>
@@ -142,7 +142,7 @@
         </form>
     @endif
 
-    <form method="post" action="{{ route('meals.ideas.bought') }}" class="stack" @if ($claude) style="margin-top: 4px" @endif>
+    <form method="post" action="{{ route('ideas.bought') }}" class="stack" @if ($claude) style="margin-top: 4px" @endif>
         @csrf
         <details @if (! $claude) open @endif>
             <summary class="link">{{ $claude ? __('Of plak die lys as teks') : __('Plak die strokie of bestelling as teks') }}</summary>
@@ -159,7 +159,7 @@
 
     @if ($bought->isNotEmpty())
         <p class="muted small" style="margin-top: 14px">{{ __('Tribe onthou :days dae lank wat gekoop is:', ['days' => \App\Models\Grocery::KEEP_DAYS]) }} {{ $bought->implode(', ') }}.</p>
-        <form method="post" action="{{ route('meals.ideas.forget') }}" data-confirm="{{ __('Vergeet alles wat julle gekoop het?') }}">
+        <form method="post" action="{{ route('ideas.forget') }}" data-confirm="{{ __('Vergeet alles wat julle gekoop het?') }}">
             @csrf @method('delete')
             <button type="submit" class="link small">{{ __('Vergeet dit') }}</button>
         </form>

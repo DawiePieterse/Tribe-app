@@ -3,6 +3,7 @@
 namespace App\Services\Sync;
 
 use App\Models\CalendarConnection;
+use App\Support\Dates;
 use App\Support\Ics\IcsParser;
 use App\Support\Ics\IcsWriter;
 use Carbon\CarbonImmutable;
@@ -66,8 +67,8 @@ class ICloudCalendar implements CalendarProvider
 
     public function events(CalendarConnection $connection, string $from, string $to): array
     {
-        $start = CarbonImmutable::parse($from, EventData::ZONE)->utc()->format('Ymd\THis\Z');
-        $end = CarbonImmutable::parse($to, EventData::ZONE)->endOfDay()->utc()->format('Ymd\THis\Z');
+        $start = CarbonImmutable::parse($from, Dates::ZONE)->utc()->format('Ymd\THis\Z');
+        $end = CarbonImmutable::parse($to, Dates::ZONE)->endOfDay()->utc()->format('Ymd\THis\Z');
 
         $body = '<?xml version="1.0" encoding="utf-8"?>'
             .'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
@@ -132,8 +133,8 @@ class ICloudCalendar implements CalendarProvider
         $ics->add([
             'uid' => 'event-'.TwoWaySync::marker($tribeId),
             'title' => $data->title,
-            'date' => CarbonImmutable::parse($data->startsOn, EventData::ZONE),
-            'end_date' => $data->endsOn !== null ? CarbonImmutable::parse($data->endsOn, EventData::ZONE) : null,
+            'date' => CarbonImmutable::parse($data->startsOn, Dates::ZONE),
+            'end_date' => $data->endsOn !== null ? CarbonImmutable::parse($data->endsOn, Dates::ZONE) : null,
             'start_time' => $data->startTime,
             'end_time' => $data->endTime,
             'location' => $data->location,

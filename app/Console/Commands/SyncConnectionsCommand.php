@@ -15,7 +15,7 @@ class SyncConnectionsCommand extends Command
 
     public function handle(TwoWaySync $sync): int
     {
-        foreach (CalendarConnection::query()->whereNotNull('calendar_id')->with('member')->orderBy('id')->get() as $connection) {
+        foreach (CalendarConnection::query()->ready()->with('member')->orderBy('id')->get() as $connection) {
             $ok = $sync->sync($connection);
             $this->line(($ok ? 'ok   ' : 'fail ').$connection->providerName().' '.$connection->account.($ok ? '' : ': '.$connection->last_error));
         }

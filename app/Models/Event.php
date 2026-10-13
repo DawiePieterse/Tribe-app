@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HouseholdScoped;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -108,6 +109,26 @@ class Event extends Model
     public function feed(): BelongsTo
     {
         return $this->belongsTo(CalendarFeed::class, 'feed_id');
+    }
+
+    /**
+     * Entries that fall, or still repeat, between the two dates (Y-m-d, both inclusive). The same rule
+     * in memory is `Services\Sync\EventData::overlaps()`.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeBetween(Builder $query, string $from, string $to): Builder
+    {
+        return $query->where('starts_on', '<=', $to)
+            ->where(function (Builder $q) use ($from): void {
+                $q->where(function (Builder $q) use ($from): void {
+                    $q->where('repeats', self::ONCE)->whereRaw('COALESCE(ends_on, starts_on) >= ?', [$from]);
+                })->orWhere(function (Builder $q) use ($from): void {
+                    $q->where('repeats', '!=', self::ONCE)
+                        ->where(fn (Builder $q) => $q->whereNull('repeat_until')->orWhere('repeat_until', '>=', $from));
+                });
+            });
     }
 
     public function repeats(): bool

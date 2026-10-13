@@ -42,7 +42,7 @@
 
     <div class="actions" style="margin-top: 14px">
         @foreach ($providers as $provider)
-            <a class="button {{ $loop->first ? '' : 'quiet' }}" href="{{ $provider === 'icloud' ? route('connections.icloud') : route('connections.connect', $provider) }}">
+            <a class="button {{ $loop->first ? '' : 'quiet' }}" href="{{ \App\Models\CalendarConnection::connectUrl($provider) }}">
                 @include('partials.icon', ['name' => 'plus']) {{ __('Koppel :provider', ['provider' => \App\Models\CalendarConnection::label($provider)]) }}
             </a>
         @endforeach

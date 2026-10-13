@@ -2,6 +2,7 @@
 
 namespace App\Support\Ics;
 
+use App\Support\Dates;
 use Carbon\CarbonImmutable;
 
 /**
@@ -17,18 +18,10 @@ final class IcsWriter
     {
         $this->lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tribe//Familie//AF', 'CALSCALE:GREGORIAN'];
 
-        if ($name === null) {
-            return;
+        if ($name !== null) {
+            array_push($this->lines, 'METHOD:PUBLISH', 'X-WR-CALNAME:'.$this->escape($name), 'X-WR-TIMEZONE:'.Dates::ZONE,
+                'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H');
         }
-
-        $this->lines = [
-            ...$this->lines,
-            'METHOD:PUBLISH',
-            'X-WR-CALNAME:'.$this->escape($name),
-            'X-WR-TIMEZONE:Africa/Johannesburg',
-            'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
-            'X-PUBLISHED-TTL:PT1H',
-        ];
     }
 
     /**
@@ -79,7 +72,7 @@ final class IcsWriter
 
     private function at(CarbonImmutable $date, string $time): CarbonImmutable
     {
-        return CarbonImmutable::parse($date->toDateString().' '.substr($time, 0, 5), 'Africa/Johannesburg')->utc();
+        return CarbonImmutable::parse($date->toDateString().' '.substr($time, 0, 5), Dates::ZONE)->utc();
     }
 
     private function escape(string $text): string

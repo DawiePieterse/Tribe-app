@@ -2,6 +2,7 @@
 
 namespace App\Support\Ics;
 
+use App\Support\Dates;
 use Carbon\CarbonImmutable;
 
 /**
@@ -12,8 +13,6 @@ use Carbon\CarbonImmutable;
  */
 final class IcsParser
 {
-    private const ZONE = 'Africa/Johannesburg';
-
     /**
      * @return list<array{uid: string, title: string, starts_on: string, ends_on: string|null, start_time: string|null, end_time: string|null, location: string|null, notes: string|null, repeats: string, repeat_until: string|null}>
      */
@@ -142,18 +141,18 @@ final class IcsParser
 
         try {
             if (($prop['params']['VALUE'] ?? '') === 'DATE' || preg_match('/^\d{8}$/', $value)) {
-                return [CarbonImmutable::createFromFormat('!Ymd', substr($value, 0, 8), self::ZONE) ?: throw new \Exception, true];
+                return [CarbonImmutable::createFromFormat('!Ymd', substr($value, 0, 8), Dates::ZONE) ?: throw new \Exception, true];
             }
 
             if (str_ends_with($value, 'Z')) {
                 $at = CarbonImmutable::createFromFormat('Ymd\THis\Z', $value, 'UTC');
             } else {
-                $zone = $prop['params']['TZID'] ?? self::ZONE;
+                $zone = $prop['params']['TZID'] ?? Dates::ZONE;
                 try {
                     new \DateTimeZone($zone);
                 } catch (\Throwable) {
                     // Outlook's "South Africa Standard Time" and the like: assume local time.
-                    $zone = self::ZONE;
+                    $zone = Dates::ZONE;
                 }
                 $at = CarbonImmutable::createFromFormat('Ymd\THis', $value, $zone);
             }
@@ -161,7 +160,7 @@ final class IcsParser
             return null;
         }
 
-        return $at ? [$at->setTimezone(self::ZONE), false] : null;
+        return $at ? [$at->setTimezone(Dates::ZONE), false] : null;
     }
 
     /** @return array{0: string, 1: string|null} [repeats, repeat_until] */
@@ -200,7 +199,7 @@ final class IcsParser
 
         $until = null;
         if (isset($rule['UNTIL']) && preg_match('/^(\d{8})/', $rule['UNTIL'], $m)) {
-            $until = CarbonImmutable::createFromFormat('!Ymd', $m[1], self::ZONE)?->toDateString();
+            $until = CarbonImmutable::createFromFormat('!Ymd', $m[1], Dates::ZONE)?->toDateString();
         } elseif (isset($rule['COUNT']) && (int) $rule['COUNT'] > 0) {
             $n = (int) $rule['COUNT'] - 1;
             $last = match ($repeats) {

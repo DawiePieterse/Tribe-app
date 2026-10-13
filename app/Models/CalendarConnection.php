@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HouseholdScoped;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,6 +37,9 @@ class CalendarConnection extends Model
 
     public const PROVIDERS = [self::GOOGLE, self::OUTLOOK, self::ICLOUD];
 
+    /** Those that sign in with OAuth (and so need an app registered with them); iCloud uses a password. */
+    public const OAUTH = [self::GOOGLE, self::OUTLOOK];
+
     /** Send everything the member sees in Tribe, or only their own household's events. */
     public const SEND_ALL = 'all';
 
@@ -51,6 +55,17 @@ class CalendarConnection extends Model
     protected function casts(): array
     {
         return ['credentials' => 'encrypted:array', 'synced_at' => 'immutable_datetime'];
+    }
+
+    /**
+     * Connections that are set up (a calendar chosen) and so take part in syncs.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeReady(Builder $query): Builder
+    {
+        return $query->whereNotNull('calendar_id');
     }
 
     /** @return BelongsTo<Member, $this> */
@@ -72,13 +87,19 @@ class CalendarConnection extends Model
 
     public static function label(string $provider): string
     {
-        return ['google' => 'Google', 'outlook' => 'Outlook', 'icloud' => 'iCloud'][$provider] ?? $provider;
+        return [self::GOOGLE => 'Google', self::OUTLOOK => 'Outlook', self::ICLOUD => 'iCloud'][$provider] ?? $provider;
     }
 
-    /** Google and Outlook need an app registered with them first (see docs/DEPLOY-AFRIHOST.md). */
+    /** OAuth providers need an app registered with them first (see docs/DEPLOY-AFRIHOST.md). */
     public static function isAvailable(string $provider): bool
     {
-        return $provider === self::ICLOUD
+        return ! in_array($provider, self::OAUTH, true)
             || (filled(config("services.{$provider}.client_id")) && filled(config("services.{$provider}.client_secret")));
+    }
+
+    /** Where "Koppel …" takes someone: off to sign in, or to the iCloud password form. */
+    public static function connectUrl(string $provider): string
+    {
+        return in_array($provider, self::OAUTH, true) ? route('connections.connect', $provider) : route('connections.icloud');
     }
 }

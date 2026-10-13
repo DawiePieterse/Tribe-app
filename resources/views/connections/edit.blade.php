@@ -20,11 +20,12 @@
             </div>
         </fieldset>
 
+        @php($share = old('share', $connection->isFamilyWide() ? 'family' : 'household'))
         <fieldset>
             <legend>{{ __('Wie sien wat daarvandaan in Tribe kom?') }}</legend>
             <div class="choice">
-                <label><input type="radio" name="share" value="household" @checked(old('share', $connection->isFamilyWide() ? 'family' : 'household') === 'household')><span>{{ __('Net ons huis') }}</span></label>
-                <label><input type="radio" name="share" value="family" @checked(old('share', $connection->isFamilyWide() ? 'family' : 'household') === 'family')><span>{{ __('Hele familie') }}</span></label>
+                <label><input type="radio" name="share" value="household" @checked($share === 'household')><span>{{ __('Net ons huis') }}</span></label>
+                <label><input type="radio" name="share" value="family" @checked($share === 'family')><span>{{ __('Hele familie') }}</span></label>
             </div>
         </fieldset>
 

@@ -22,6 +22,6 @@ class Chef
             }
         }
 
-        return ['ideas' => (new BuiltInChef)->suggest(array_map([Ingredients::class, 'tidy'], $have), $level, $fromPantry), 'source' => 'cookbook'];
+        return ['ideas' => (new BuiltInChef)->suggest($have, $level, $fromPantry), 'source' => 'cookbook'];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -25,6 +26,12 @@ class Meal extends Model
     protected $attributes = ['slot' => 'dinner'];
 
     protected $fillable = ['household_id', 'date', 'slot', 'title', 'recipe_id', 'created_by'];
+
+    /** The week page, scrolled to that day. */
+    public static function weekUrl(CarbonImmutable $date): string
+    {
+        return route('meals.week', ['week' => $date->startOfWeek(CarbonInterface::MONDAY)->toDateString()]).'#d'.$date->toDateString();
+    }
 
     protected function casts(): array
     {

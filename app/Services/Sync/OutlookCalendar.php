@@ -4,6 +4,7 @@ namespace App\Services\Sync;
 
 use App\Models\CalendarConnection;
 use App\Models\Event;
+use App\Support\Dates;
 use App\Support\Ics\IcsParser;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
@@ -126,11 +127,7 @@ class OutlookCalendar extends OAuthProvider
 
     public function delete(CalendarConnection $connection, string $remoteId): void
     {
-        $response = $this->http($connection)->delete(self::API.'/me/events/'.rawurlencode($remoteId));
-
-        if ($response->status() !== 404) {
-            $this->check($response);
-        }
+        $this->check($this->http($connection)->delete(self::API.'/me/events/'.rawurlencode($remoteId)), [404, 410]);
     }
 
     /** @param  array<string, mixed>  $item */
@@ -148,11 +145,11 @@ class OutlookCalendar extends OAuthProvider
             return null;
         }
         if ($allDay) {
-            $start = CarbonImmutable::parse($start->toDateString(), EventData::ZONE);
-            $end = $end === null ? null : CarbonImmutable::parse($end->toDateString(), EventData::ZONE);
+            $start = CarbonImmutable::parse($start->toDateString(), Dates::ZONE);
+            $end = $end === null ? null : CarbonImmutable::parse($end->toDateString(), Dates::ZONE);
         }
 
-        [$repeats, $until] = $this->parser->rule($this->rrule($item['recurrence'] ?? null), $start->setTimezone(EventData::ZONE));
+        [$repeats, $until] = $this->parser->rule($this->rrule($item['recurrence'] ?? null), $start->setTimezone(Dates::ZONE));
 
         $marker = null;
         foreach ($item['singleValueExtendedProperties'] ?? [] as $property) {
@@ -174,7 +171,7 @@ class OutlookCalendar extends OAuthProvider
     private function moment(array $moment): CarbonImmutable
     {
         $zone = $moment['timeZone'] ?? self::ZONE;
-        $zone = $zone === self::ZONE ? EventData::ZONE : $zone;
+        $zone = $zone === self::ZONE ? Dates::ZONE : $zone;
 
         try {
             new \DateTimeZone($zone);

@@ -62,9 +62,16 @@ abstract class OAuthProvider implements CalendarProvider
         return Http::timeout(20)->acceptJson()->withToken($this->accessToken($connection));
     }
 
-    /** @throws \RuntimeException with a readable reason when the calendar says no */
-    protected function check(Response $response): Response
+    /**
+     * @param  list<int>  $alsoFine  statuses that count as done (a delete of something already gone)
+     *
+     * @throws \RuntimeException with a readable reason when the calendar says no
+     */
+    protected function check(Response $response, array $alsoFine = []): Response
     {
+        if (in_array($response->status(), $alsoFine, true)) {
+            return $response;
+        }
         if ($response->status() === 401 || $response->status() === 403) {
             throw new \RuntimeException(__(':provider het toegang geweier. Koppel die kalender weer.', ['provider' => CalendarConnection::label($this->key())]));
         }

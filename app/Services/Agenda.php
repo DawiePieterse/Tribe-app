@@ -26,16 +26,7 @@ class Agenda
         $events = Event::query()
             ->visibleTo($viewer)
             ->with(['member.household', 'household', 'hostHousehold', 'feed'])
-            ->where('starts_on', '<=', $to->toDateString())
-            ->where(function ($q) use ($from): void {
-                $q->where(function ($q) use ($from): void {
-                    $q->where('repeats', Event::ONCE)
-                        ->whereRaw('COALESCE(ends_on, starts_on) >= ?', [$from->toDateString()]);
-                })->orWhere(function ($q) use ($from): void {
-                    $q->where('repeats', '!=', Event::ONCE)
-                        ->where(fn ($q) => $q->whereNull('repeat_until')->orWhere('repeat_until', '>=', $from->toDateString()));
-                });
-            })
+            ->between($from->toDateString(), $to->toDateString())
             ->get();
 
         $occurrences = collect();

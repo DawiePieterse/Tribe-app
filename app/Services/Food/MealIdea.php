@@ -25,14 +25,9 @@ final readonly class MealIdea
         public array $method,
     ) {}
 
-    public static function levelFor(int $minutes): string
-    {
-        return $minutes <= 20 ? self::QUICK : ($minutes <= 40 ? self::MEDIUM : self::LONG);
-    }
-
     public function level(): string
     {
-        return self::levelFor($this->minutes);
+        return $this->minutes <= 20 ? self::QUICK : ($this->minutes <= 40 ? self::MEDIUM : self::LONG);
     }
 
     /** @return list<string> */
@@ -45,6 +40,23 @@ final readonly class MealIdea
     public function toArray(): array
     {
         return ['title' => $this->title, 'minutes' => $this->minutes, 'kids' => $this->kids, 'ingredients' => $this->ingredients, 'method' => $this->method];
+    }
+
+    /**
+     * The usable ideas in a list of raw arrays (from Claude, or the session).
+     *
+     * @return list<self>
+     */
+    public static function manyFromArray(mixed $raws): array
+    {
+        $ideas = [];
+        foreach ((array) $raws as $raw) {
+            if (is_array($raw) && ($idea = self::fromArray($raw)) !== null) {
+                $ideas[] = $idea;
+            }
+        }
+
+        return $ideas;
     }
 
     /** @param  array<string, mixed>  $a */

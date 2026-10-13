@@ -65,12 +65,7 @@ final class ClaudeChef
             'required' => ['ideas'],
         ], 4000, 60);
 
-        $ideas = [];
-        foreach ((array) ($input['ideas'] ?? []) as $raw) {
-            if (is_array($raw) && ($idea = MealIdea::fromArray($raw)) !== null) {
-                $ideas[] = $idea;
-            }
-        }
+        $ideas = MealIdea::manyFromArray($input['ideas'] ?? []);
 
         if ($ideas === []) {
             throw new \RuntimeException('Claude gave no usable meal ideas');

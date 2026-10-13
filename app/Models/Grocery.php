@@ -38,18 +38,24 @@ class Grocery extends Model
     }
 
     /** @param  list<string>  $names */
-    public static function record(Member $member, array $names): int
+    public static function record(Member $member, array $names): void
     {
+        $today = CarbonImmutable::today()->toDateString();
+
         static::query()->where('household_id', $member->household_id)
             ->where('bought_on', '<', CarbonImmutable::today()->subDays(self::KEEP_DAYS * 3)->toDateString())->delete();
 
-        foreach ($names as $name) {
-            static::query()->updateOrCreate(
-                ['household_id' => $member->household_id, 'name' => mb_substr($name, 0, 60)],
-                ['bought_on' => CarbonImmutable::today()->toDateString(), 'created_by' => $member->id],
-            );
-        }
-
-        return count($names);
+        static::query()->upsert(
+            array_map(fn (string $name) => [
+                'household_id' => $member->household_id,
+                'name' => mb_substr($name, 0, 60),
+                'bought_on' => $today,
+                'created_by' => $member->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], $names),
+            ['household_id', 'name'],
+            ['bought_on', 'created_by', 'updated_at'],
+        );
     }
 }

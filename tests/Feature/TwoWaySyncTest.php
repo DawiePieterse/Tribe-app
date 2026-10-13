@@ -54,22 +54,23 @@ class FakeCalendar implements CalendarProvider
     }
 }
 
+/** Hands every provider name the same fake calendar. */
+class FakeProviders extends ProviderFactory
+{
+    public function __construct(private CalendarProvider $fake) {}
+
+    public function for(string $provider): CalendarProvider
+    {
+        return $this->fake;
+    }
+}
+
 beforeEach(function () {
     $this->ours = household('Ons');
     $this->other = household('Ander', '#C2185B');
     $this->me = adult($this->ours);
     $this->calendar = new FakeCalendar;
-
-    $fake = $this->calendar;
-    app()->instance(ProviderFactory::class, new class($fake) extends ProviderFactory
-    {
-        public function __construct(private FakeCalendar $fake) {}
-
-        public function for(string $provider): CalendarProvider
-        {
-            return $this->fake;
-        }
-    });
+    app()->instance(ProviderFactory::class, new FakeProviders($this->calendar));
 
     $this->connection = CalendarConnection::query()->create([
         'member_id' => $this->me->id, 'provider' => 'google', 'credentials' => ['access_token' => 'x'],
@@ -207,15 +208,7 @@ it('keeps the reason when a sync fails', function () {
             throw new RuntimeException('Google het toegang geweier.');
         }
     };
-    app()->instance(ProviderFactory::class, new class($this->calendar) extends ProviderFactory
-    {
-        public function __construct(private CalendarProvider $fake) {}
-
-        public function for(string $provider): CalendarProvider
-        {
-            return $this->fake;
-        }
-    });
+    app()->instance(ProviderFactory::class, new FakeProviders($this->calendar));
 
     expect(($this->sync)())->toBeFalse()
         ->and($this->connection->fresh()->last_error)->toBe('Google het toegang geweier.');

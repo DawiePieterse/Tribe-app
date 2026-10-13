@@ -3,6 +3,7 @@
 namespace App\Services\Sync;
 
 use App\Models\Event;
+use App\Support\Dates;
 use Carbon\CarbonImmutable;
 
 /**
@@ -11,8 +12,6 @@ use Carbon\CarbonImmutable;
  */
 final readonly class EventData
 {
-    public const ZONE = 'Africa/Johannesburg';
-
     public function __construct(
         public string $title,
         public string $startsOn,
@@ -71,8 +70,8 @@ final readonly class EventData
         string $title, CarbonImmutable $start, ?CarbonImmutable $end, bool $allDay,
         ?string $location, ?string $notes, string $repeats = Event::ONCE, ?string $repeatUntil = null,
     ): self {
-        $start = $allDay ? $start : $start->setTimezone(self::ZONE);
-        $end = $end === null ? null : ($allDay ? $end->subDay() : $end->setTimezone(self::ZONE));
+        $start = $allDay ? $start : $start->setTimezone(Dates::ZONE);
+        $end = $end === null ? null : ($allDay ? $end->subDay() : $end->setTimezone(Dates::ZONE));
         $sameDay = $end !== null && $end->toDateString() === $start->toDateString();
 
         return self::make(
@@ -116,14 +115,14 @@ final readonly class EventData
 
     public function start(): CarbonImmutable
     {
-        return CarbonImmutable::parse($this->startsOn.' '.($this->startTime ?? '00:00'), self::ZONE);
+        return CarbonImmutable::parse($this->startsOn.' '.($this->startTime ?? '00:00'), Dates::ZONE);
     }
 
     /** All-day: the day after the last day. Timed without an end: an hour. */
     public function end(): CarbonImmutable
     {
         if ($this->isAllDay()) {
-            return CarbonImmutable::parse($this->endsOn ?? $this->startsOn, self::ZONE)->addDay();
+            return CarbonImmutable::parse($this->endsOn ?? $this->startsOn, Dates::ZONE)->addDay();
         }
 
         $start = $this->start();
@@ -131,7 +130,7 @@ final readonly class EventData
             return $start->addHour();
         }
 
-        $end = CarbonImmutable::parse(($this->endsOn ?? $this->startsOn).' '.$this->endTime, self::ZONE);
+        $end = CarbonImmutable::parse(($this->endsOn ?? $this->startsOn).' '.$this->endTime, Dates::ZONE);
 
         return $end->greaterThan($start) ? $end : $start->addHour();
     }
@@ -148,7 +147,7 @@ final readonly class EventData
         };
 
         if ($rule !== null && $this->repeatUntil !== null) {
-            $until = CarbonImmutable::parse($this->repeatUntil, self::ZONE);
+            $until = CarbonImmutable::parse($this->repeatUntil, Dates::ZONE);
             // UNTIL has the same kind of value as the start: a date for all-day, else a UTC moment.
             $rule .= ';UNTIL='.($this->isAllDay() ? $until->format('Ymd') : $until->endOfDay()->utc()->format('Ymd\THis\Z'));
         }

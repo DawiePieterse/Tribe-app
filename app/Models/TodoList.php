@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HouseholdScoped;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -34,6 +35,17 @@ class TodoList extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ListItem::class, 'list_id');
+    }
+
+    /**
+     * The shopping lists a member can add to, their own household's first.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeShoppingFor(Builder $query, Member $member): Builder
+    {
+        return $query->visibleTo($member)->where('kind', self::SHOPPING)->orderByRaw('household_id IS NULL')->orderBy('name');
     }
 
     public function isShopping(): bool

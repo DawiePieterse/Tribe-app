@@ -4,6 +4,7 @@ namespace App\Services\Sync;
 
 use App\Models\CalendarConnection;
 use App\Models\Event;
+use App\Support\Dates;
 use App\Support\Ics\IcsParser;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
@@ -67,8 +68,8 @@ class GoogleCalendar extends OAuthProvider
 
         do {
             $response = $this->check($this->http($connection)->get($this->eventsUrl($connection), array_filter([
-                'timeMin' => CarbonImmutable::parse($from, EventData::ZONE)->toIso8601String(),
-                'timeMax' => CarbonImmutable::parse($to, EventData::ZONE)->endOfDay()->toIso8601String(),
+                'timeMin' => CarbonImmutable::parse($from, Dates::ZONE)->toIso8601String(),
+                'timeMax' => CarbonImmutable::parse($to, Dates::ZONE)->endOfDay()->toIso8601String(),
                 // Repeating events once each, with their rule, rather than every occurrence.
                 'singleEvents' => 'false',
                 'maxResults' => 250,
@@ -108,11 +109,7 @@ class GoogleCalendar extends OAuthProvider
 
     public function delete(CalendarConnection $connection, string $remoteId): void
     {
-        $response = $this->http($connection)->delete($this->eventsUrl($connection).'/'.rawurlencode($remoteId));
-
-        if (! in_array($response->status(), [404, 410], true)) {
-            $this->check($response);
-        }
+        $this->check($this->http($connection)->delete($this->eventsUrl($connection).'/'.rawurlencode($remoteId)), [404, 410]);
     }
 
     private function eventsUrl(CalendarConnection $connection): string
@@ -128,8 +125,8 @@ class GoogleCalendar extends OAuthProvider
         $allDay = isset($start['date']);
 
         try {
-            $startAt = $allDay ? CarbonImmutable::parse($start['date'], EventData::ZONE) : CarbonImmutable::parse($start['dateTime'] ?? '');
-            $endAt = isset($end['date']) ? CarbonImmutable::parse($end['date'], EventData::ZONE)
+            $startAt = $allDay ? CarbonImmutable::parse($start['date'], Dates::ZONE) : CarbonImmutable::parse($start['dateTime'] ?? '');
+            $endAt = isset($end['date']) ? CarbonImmutable::parse($end['date'], Dates::ZONE)
                 : (isset($end['dateTime']) ? CarbonImmutable::parse($end['dateTime']) : null);
         } catch (\Throwable) {
             return null;
@@ -141,7 +138,7 @@ class GoogleCalendar extends OAuthProvider
                 $rrule = substr((string) $line, 6);
             }
         }
-        [$repeats, $until] = $this->parser->rule($rrule, $startAt->setTimezone(EventData::ZONE));
+        [$repeats, $until] = $this->parser->rule($rrule, $startAt->setTimezone(Dates::ZONE));
 
         $marker = $item['extendedProperties']['private']['tribe'] ?? null;
 
@@ -165,10 +162,10 @@ class GoogleCalendar extends OAuthProvider
             'description' => $data->notes ?? '',
             'start' => $data->isAllDay()
                 ? ['date' => $data->startsOn]
-                : ['dateTime' => $data->start()->format('Y-m-d\TH:i:s'), 'timeZone' => EventData::ZONE],
+                : ['dateTime' => $data->start()->format('Y-m-d\TH:i:s'), 'timeZone' => Dates::ZONE],
             'end' => $data->isAllDay()
                 ? ['date' => $data->end()->toDateString()]
-                : ['dateTime' => $data->end()->format('Y-m-d\TH:i:s'), 'timeZone' => EventData::ZONE],
+                : ['dateTime' => $data->end()->format('Y-m-d\TH:i:s'), 'timeZone' => Dates::ZONE],
             'recurrence' => $rule === null ? [] : ['RRULE:'.$rule],
             'extendedProperties' => ['private' => ['tribe' => TwoWaySync::marker($tribeId)]],
         ];

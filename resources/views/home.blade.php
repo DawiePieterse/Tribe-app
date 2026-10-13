@@ -32,7 +32,7 @@
             <h2>{{ __('Verjaar binnekort') }}</h2>
             <ul>
                 @foreach ($birthdaysSoon as $o)
-                    <li>
+                    <li class="line">
                         <span class="dot" style="--c: {{ $o->colour }}"></span>
                         <strong>{{ $o->member->name }}</strong>
                         <span class="muted">
@@ -50,7 +50,7 @@
             <ul>
                 @foreach ($toAnswer as $event)
                     <li>
-                        <a class="entry" style="--c: {{ $event->hostHousehold->colour ?? '#2F5BD3' }}" href="{{ route('events.show', $event) }}">
+                        <a class="entry" @if ($event->hostHousehold) style="--c: {{ $event->hostHousehold->colour }}" @endif href="{{ route('events.show', $event) }}">
                             <strong>{{ $event->title }}</strong>
                             <span class="meta">{{ $event->starts_on->translatedFormat('l j F') }}</span>
                         </a>
@@ -78,7 +78,7 @@
 
     @if ($shopping)
         <p>
-            <a class="card" href="{{ route('lists.show', $shopping) }}">
+            <a class="card plain" href="{{ route('lists.show', $shopping) }}">
                 <span>@include('partials.icon', ['name' => 'list']) <strong>{{ $shopping->name }}</strong></span>
                 <span class="badge" aria-label="{{ trans_choice(':count item oop|:count items oop', $shopping->open_count) }}">{{ $shopping->open_count }}</span>
             </a>

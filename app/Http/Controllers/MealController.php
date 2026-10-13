@@ -60,9 +60,7 @@ class MealController extends Controller
             'created_by' => $me->id,
         ]);
 
-        $date = CarbonImmutable::parse($data['date']);
-
-        return redirect()->to(route('meals.week', ['week' => $date->startOfWeek(CarbonInterface::MONDAY)->toDateString()]).'#d'.$date->toDateString());
+        return redirect()->to(Meal::weekUrl(CarbonImmutable::parse($data['date'])));
     }
 
     public function destroy(Meal $meal): RedirectResponse
@@ -91,8 +89,7 @@ class MealController extends Controller
         return view('meals.shopping', [
             'monday' => $monday,
             'recipes' => $meals->pluck('recipe')->filter()->unique('id')->values(),
-            'lists' => TodoList::query()->visibleTo($me)->where('kind', TodoList::SHOPPING)
-                ->orderByRaw('household_id IS NULL')->orderBy('name')->get(),
+            'lists' => TodoList::query()->shoppingFor($me)->get(),
         ]);
     }
 
