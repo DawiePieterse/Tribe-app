@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HouseholdScoped;
+use App\Services\Food\Portions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -56,6 +57,25 @@ class Recipe extends Model
     public function ingredientLines(): array
     {
         return self::lines($this->ingredients);
+    }
+
+    /** The number in "6 porsies" or "Vir 4", if there is one, so the quantities can be scaled. */
+    public function servingsCount(): ?int
+    {
+        return preg_match('/\d+/', (string) $this->servings, $m) === 1 && (int) $m[0] > 0 ? (int) $m[0] : null;
+    }
+
+    /**
+     * The ingredients for this many people (quantities scaled from the recipe's own serving count).
+     *
+     * @return list<string>
+     */
+    public function ingredientLinesFor(int $people): array
+    {
+        $written = $this->servingsCount();
+
+        return $written === null ? $this->ingredientLines()
+            : array_map(fn (string $line) => Portions::scale($line, $written, $people), $this->ingredientLines());
     }
 
     /** @return list<string> */

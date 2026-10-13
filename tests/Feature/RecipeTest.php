@@ -137,3 +137,15 @@ it('keeps another household’s recipe out of reach of the heart', function () {
 
     $this->actingAs($this->me)->post(route('recipes.favourite', $recipe))->assertNotFound();
 });
+
+it('scales a saved recipe’s ingredients for guests', function () {
+    $recipe = Recipe::query()->create(['title' => 'Bobotie', 'servings' => '4 porsies', 'ingredients' => "500 g maalvleis\n2 eiers\nSout", 'household_id' => $this->me->household_id]);
+
+    // The household's usual number by default (one member here), then whatever is asked.
+    $this->actingAs($this->me)->get(route('recipes.show', $recipe))->assertSee('125 g maalvleis')->assertSee(__('Die resep is vir :written geskryf; die hoeveelhede is vir :people aangepas.', ['written' => 4, 'people' => 1]));
+    $this->actingAs($this->me)->get(route('recipes.show', ['recipe' => $recipe, 'vir' => 8]))->assertSee('value="1000 g maalvleis"', false)->assertSee('4 eiers')->assertSee('Sout');
+
+    // A recipe without a serving count isn't scaled.
+    $recipe->update(['servings' => null]);
+    $this->actingAs($this->me)->get(route('recipes.show', ['recipe' => $recipe, 'vir' => 8]))->assertSee('500 g maalvleis')->assertDontSee('name="vir"', false);
+});

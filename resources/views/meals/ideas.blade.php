@@ -40,10 +40,11 @@
         @endif
 
         <label class="people">
-            {{ __('Vir hoeveel mense?') }}
+            {{ __('Vir hoeveel mense?') }} <span class="hint">{{ __('julle gewone getal; verander dit as daar gaste is') }}</span>
             <input type="number" name="people" min="1" max="{{ $maxPeople }}" inputmode="numeric" required value="{{ $people }}">
             @error('people')<span class="error">{{ $message }}</span>@enderror
         </label>
+        <label class="check small"><input type="checkbox" name="remember" value="1" @checked(old('remember'))> {{ __('Onthou dit as ons gewone getal') }}</label>
 
         <fieldset>
             <legend>{{ __('Hoeveel tyd is daar?') }}</legend>

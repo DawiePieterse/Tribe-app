@@ -477,6 +477,8 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .idea select { width: auto; min-width: 0; flex: 1; min-height: 36px; padding-top: 6px; padding-bottom: 6px; font-size: 0.9em; }
 details > summary.link { display: inline; font-size: 0.9em; }
 .people { grid-template-columns: 1fr auto; align-items: center; }
+.people .hint { grid-column: 1; grid-row: 2; }
+.people input { grid-column: 2; grid-row: 1 / 3; }
 .people input { width: 5.5em; text-align: center; }
 
 /* Favourite recipes. */
@@ -485,3 +487,5 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .fav .icon { width: 22px; height: 22px; }
 .fav-mark { display: inline-block; color: #FF375F; vertical-align: -3px; margin-right: 4px; }
 .fav-mark .icon { width: 1em; height: 1em; color: inherit; }
+.for-people { gap: 6px; flex-wrap: nowrap; }
+.for-people input { width: 4.2em; min-height: 36px; padding: 4px 8px; text-align: center; }

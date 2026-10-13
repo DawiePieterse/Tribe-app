@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Household;
 use App\Models\Recipe;
 use App\Models\TodoList;
 use App\Services\RecipeImporter;
@@ -56,12 +57,19 @@ class RecipeController extends Controller
         return redirect()->route('recipes.show', $recipe)->with('status', __('Resep gestoor.'));
     }
 
-    public function show(Recipe $recipe): View
+    public function show(Request $request, Recipe $recipe): View
     {
         $this->ensureVisible($recipe);
 
+        // Quantities for the number at the table: the household's usual number, or what was asked (?vir=8).
+        $written = $recipe->servingsCount();
+        $people = $written === null ? null : max(1, min(Household::MAX_PEOPLE, $request->integer('vir') ?: $this->me()->household->peopleEating()));
+
         return view('recipes.show', [
             'recipe' => $recipe,
+            'people' => $people,
+            'lines' => $people === null ? $recipe->ingredientLines() : $recipe->ingredientLinesFor($people),
+            'maxPeople' => Household::MAX_PEOPLE,
             'favourite' => $recipe->isFavouriteOf($this->me()),
             'lists' => $this->shoppingLists(),
         ]);

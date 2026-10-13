@@ -18,9 +18,22 @@
         <span>{{ $recipe->isFamilyWide() ? __('Hele familie') : __('Net ons huis') }}</span>
     </p>
 
-    @if ($recipe->ingredientLines())
-        <h2>{{ __('Bestanddele') }}</h2>
-        @include('partials.to-list', ['lines' => $recipe->ingredientLines(), 'lists' => $lists])
+    @if ($lines)
+        <div class="head">
+            <h2>{{ __('Bestanddele') }}</h2>
+            @if ($people !== null)
+                <form method="get" action="{{ route('recipes.show', $recipe) }}" class="actions for-people">
+                    <label for="vir" class="small muted">{{ __('vir') }}</label>
+                    <input id="vir" type="number" name="vir" min="1" max="{{ $maxPeople }}" inputmode="numeric" value="{{ $people }}" data-autosubmit aria-label="{{ __('Vir hoeveel mense') }}">
+                    <span class="small muted">{{ trans_choice('mens|mense', $people) }}</span>
+                    <noscript><button type="submit" class="quiet small">{{ __('Wys') }}</button></noscript>
+                </form>
+            @endif
+        </div>
+        @if ($people !== null && $people !== $recipe->servingsCount())
+            <p class="muted small">{{ __('Die resep is vir :written geskryf; die hoeveelhede is vir :people aangepas.', ['written' => $recipe->servingsCount(), 'people' => $people]) }}</p>
+        @endif
+        @include('partials.to-list', ['lines' => $lines, 'lists' => $lists])
     @endif
 
     @if ($recipe->methodSteps())

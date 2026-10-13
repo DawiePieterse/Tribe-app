@@ -145,10 +145,15 @@ it('scales the meals to how many the household cooks for, and remembers it', fun
     child($this->me->household);
     expect($this->me->household->peopleEating())->toBe(2);
 
+    // Guests tonight: scaled for six, but the household's usual number stays as it was.
     $this->post(route('ideas.suggest'), ['people' => 6, 'have' => ['maalvleis', 'pasta'], 'level' => 'medium', 'from' => 'typed']);
+    expect($this->me->household->fresh()->people)->toBeNull();
+    $this->get(route('ideas.index'))->assertSee('750 g maalvleis')->assertSee('vir 6 mense')->assertSee('value="2"', false);
 
+    // Asked to remember it.
+    $this->post(route('ideas.suggest'), ['people' => 6, 'remember' => 1, 'have' => ['maalvleis'], 'level' => 'medium', 'from' => 'typed']);
     expect($this->me->household->fresh()->people)->toBe(6);
-    $this->get(route('ideas.index'))->assertSee('750 g maalvleis')->assertSee('vir 6 mense')->assertSee('value="6"', false);
+    $this->get(route('ideas.index'))->assertSee('value="6"', false);
 
     $index = collect(session('meal_ideas.ideas'))->search(fn ($i) => $i['title'] === 'Spaghetti bolognaise');
     $this->post(route('ideas.recipe', $index));

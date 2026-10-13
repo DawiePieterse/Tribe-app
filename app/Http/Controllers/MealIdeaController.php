@@ -58,10 +58,13 @@ class MealIdeaController extends Controller
             'level' => ['required', Rule::in(MealIdea::LEVELS)],
             'from' => ['nullable', Rule::in(['typed', 'bought'])],
             'people' => ['required', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
+            'remember' => ['nullable', 'boolean'],
         ]);
 
-        // How many they cook for is remembered for the household.
-        $this->me()->household->update(['people' => $data['people']]);
+        // The household's usual number is the default; guests change it for tonight only, unless asked to keep it.
+        if ($request->boolean('remember')) {
+            $this->me()->household->update(['people' => $data['people']]);
+        }
 
         $fromPantry = ($data['from'] ?? 'typed') === 'bought';
         $have = Ingredients::uniqueTidy($fromPantry

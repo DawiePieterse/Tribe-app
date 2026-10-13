@@ -21,6 +21,9 @@ final class Portions
         'pita' => 'pitas', 'botterskorsie' => 'botterskorsies', 'suurlemoen' => 'suurlemoene', 'taco-dop' => 'taco-doppe',
     ];
 
+    /** Things that can't be halved: never fewer than one, always a whole number. */
+    private const WHOLE = ['eier', 'eiers', 'egg', 'eggs', 'wrap', 'wraps', 'pita', 'pitas', 'sny', 'snye', 'rolletjie', 'rolletjies', 'worsie', 'worsies', 'hoenderboudjie', 'hoenderboudjies'];
+
     private const FRACTIONS = ['¼' => 0.25, '½' => 0.5, '¾' => 0.75, '⅓' => 1 / 3, '⅔' => 2 / 3];
 
     /**
@@ -51,6 +54,10 @@ final class Portions
         if (in_array($unit, self::MEASURED, true)) {
             $scaled = self::tidyMeasure($scaled, $unit);
             $text = self::number($scaled);
+        } elseif (in_array(rtrim($unit, ',.;:'), self::WHOLE, true)) {
+            $scaled = max(1, round($scaled));
+            $text = self::number($scaled);
+            $rest = self::agree($rest, $amount, $scaled);
         } else {
             $scaled = $scaled < 1 ? max(0.25, round($scaled * 4) / 4) : round($scaled * 2) / 2;
             $text = self::number($scaled);
