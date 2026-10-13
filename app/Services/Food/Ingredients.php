@@ -22,7 +22,7 @@ final class Ingredients
         'hoender' => ['hoender', 'chicken', 'drumstick', 'boudjie'],
         'maalvleis' => ['maalvleis', 'mince'],
         'wors' => ['wors', 'sausage', 'vienna', 'russian', 'frankfurter'],
-        'spek' => ['\bspek', 'bacon'],
+        'spek' => ['\bspek\b', 'bacon'],
         'ham' => ['\bham\b'],
         'tuna' => ['tuna'],
         'vis' => ['\bvis\b', 'visfilet', 'stokvis', 'hake', '\bfish', 'viskoek'],
@@ -48,10 +48,23 @@ final class Ingredients
         'room' => ['\broom\b', '\bcream\b'],
         'jogurt' => ['jogurt', 'yog(h)?urt'],
         'botter' => ['\bbotter\b', '\bbutter\b'],
+        // Pantry things that turn up on Sixty60 invoices and in the cookbook.
+        'kerriepoeier' => ['kerrie', 'curry'],
+        'souspoeier' => ['souspoeier', 'sous-poeier', 'bruinsous', 'gravy'],
+        'koeksoda' => ['koeksoda', 'bicarb'],
+        'sojasous' => ['soja', '\bsoy'],
+        'heuning' => ['heuning', 'honey'],
+        'mayonnaise' => ['mayo'],
+        'broodkrummels' => ['broodkrummel', 'breadcrumb'],
+        'tamatiepuree' => ['tamatiepuree', 'tomato paste', 'tomato puree'],
     ];
 
     /** Slip lines that look like food words but aren't cooking ingredients (slap chips are). */
-    private const NOT_INGREDIENTS = ['ice ?cream', 'roomys', 'crisps', '(?<!slap )\\bchips\\b', 'simba', '\\blays\\b', '\\bsweets\\b', 'lekkers', 'cream soda', 'shampoo', 'tandepasta', 'toothpaste', 'dog food', 'cat food', 'hondekos', 'katkos'];
+    private const NOT_INGREDIENTS = [
+        'ice ?cream', 'roomys', 'crisps', '(?<!slap )\bchips\b', 'simba', '\blays\b', '\bsweets\b', 'lekkers', 'cream soda',
+        '\bbeer\b', '\bbier\b', '\bwine\b', '\bwyn\b', 'cider', 'brandy', 'brandewyn', 'whisk', 'vodka', '\bgin\b', 'sigaret', 'cigarette',
+        'shampoo', 'tandepasta', 'toothpaste', 'dog food', 'cat food', 'hondekos', 'katkos',
+    ];
 
     /** @return list<string> */
     public static function known(): array

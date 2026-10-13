@@ -15,7 +15,7 @@ return [
         'title' => 'Hoender-wraps met kaas en mielies',
         'minutes' => 15,
         'kids' => 'Elkeen rol sy eie; niks skerp nie.',
-        'ingredients' => [['4 wraps', 'wraps'], ['2 koppies gaar hoender (oorskiet of ’n rotisserie-hoender)', 'hoender'], ['1 koppie gerasperde kaas', 'kaas'], ['1 blikkie mielies (410 g), gedreineer', 'mielies'], ['3 e mayonnaise', null], ['Blaarslaai of komkommer', null]],
+        'ingredients' => [['4 wraps', 'wraps'], ['2 koppies gaar hoender (oorskiet of ’n rotisserie-hoender)', 'hoender'], ['1 koppie gerasperde kaas', 'kaas'], ['1 blikkie mielies (410 g), gedreineer', 'mielies'], ['3 e mayonnaise', 'mayonnaise'], ['Blaarslaai of komkommer', null]],
         'method' => ['Trek die hoender in repies en meng met die mayonnaise.', 'Verhit die wraps 20 sekondes in die mikrogolf of droë pan.', 'Skep hoender, mielies, kaas en slaai op elke wrap en rol toe.', 'Rooster dit 1 minuut per kant in die pan sodat die kaas smelt.'],
     ],
     [
@@ -57,7 +57,7 @@ return [
         'title' => 'Hoender-noedels met groente',
         'minutes' => 15,
         'kids' => 'Slurp-noedels met min groente wat skaars opval.',
-        'ingredients' => [['3 pakkies 2-minuut-noedels (hoendergeur)', 'noedels'], ['2 hoenderborsies, in dun repies', 'hoender'], ['2 koppies bevrore roerbraai-groente of ertjies', 'ertjies'], ['2 e soja- of sweet-chilli-sous', null], ['Olie', 'staple']],
+        'ingredients' => [['3 pakkies 2-minuut-noedels (hoendergeur)', 'noedels'], ['2 hoenderborsies, in dun repies', 'hoender'], ['2 koppies bevrore roerbraai-groente of ertjies', 'ertjies'], ['2 e soja- of sweet-chilli-sous', 'sojasous'], ['Olie', 'staple']],
         'method' => ['Roerbraai die hoender in ’n bietjie olie tot gaar, 5–6 minute.', 'Kook die noedels volgens die pakkie, met die groente saam in die water.', 'Dreineer, meng met die hoender, die geurpakkies en die sous.'],
     ],
     [
@@ -80,14 +80,14 @@ return [
         'title' => 'Spaghetti bolognaise',
         'minutes' => 35,
         'kids' => 'Wortel word fyn gerasper, so niemand sien dit nie.',
-        'ingredients' => [['500 g maalvleis', 'maalvleis'], ['400 g spaghetti', 'pasta'], ['1 ui, fyngekap', 'uie'], ['1 wortel, fyn gerasper', 'wortels'], ['1 blikkie gekapte tamaties (410 g)', 'tamaties'], ['2 e tamatiepuree', null], ['Gerasperde kaas om oor te strooi', 'kaas'], ['Olie, sout en peper', 'staple']],
+        'ingredients' => [['500 g maalvleis', 'maalvleis'], ['400 g spaghetti', 'pasta'], ['1 ui, fyngekap', 'uie'], ['1 wortel, fyn gerasper', 'wortels'], ['1 blikkie gekapte tamaties (410 g)', 'tamaties'], ['2 e tamatiepuree', 'tamatiepuree'], ['Gerasperde kaas om oor te strooi', 'kaas'], ['Olie, sout en peper', 'staple']],
         'method' => ['Braai die ui en wortel 5 minute in ’n bietjie olie.', 'Voeg die maalvleis by en braai tot bruin en krummelrig.', 'Roer tamaties en tamatiepuree in en prut 15 minute.', 'Kook intussen die spaghetti; bedien met die sous en kaas.'],
     ],
     [
         'title' => 'Krummelhoender-strepies met patat-skyfies uit die oond',
         'minutes' => 35,
         'kids' => 'Tuisgemaakte "nuggets" met soet skyfies.',
-        'ingredients' => [['4 hoenderborsies, in repies', 'hoender'], ['2 eiers, geklits', 'eiers'], ['1½ koppies broodkrummels of fyn cornflakes', null], ['3 patats, in skyfies', 'patat'], ['Olie en sout', 'staple'], ['Tamatiesous of mayo om in te doop', 'tamatiesous']],
+        'ingredients' => [['4 hoenderborsies, in repies', 'hoender'], ['2 eiers, geklits', 'eiers'], ['1½ koppies broodkrummels of fyn cornflakes', 'broodkrummels'], ['3 patats, in skyfies', 'patat'], ['Olie en sout', 'staple'], ['Tamatiesous of mayo om in te doop', 'tamatiesous']],
         'method' => ['Verhit die oond tot 220 °C. Gooi die patat-skyfies met olie en sout op ’n bakplaat en bak 10 minute voor.', 'Doop die hoender in eier en rol in die krummels.', 'Pak die hoender langs die skyfies en bak saam 18–20 minute, een keer omgedraai.'],
     ],
     [
@@ -108,14 +108,14 @@ return [
         'title' => 'Vis en skyfies uit die oond',
         'minutes' => 35,
         'kids' => 'Soos uit die viswinkel, sonder die diepbraai.',
-        'ingredients' => [['4 stokvis- (hake-) filette of 12 visvingers', 'vis'], ['4 aartappels, in skyfies', 'aartappels'], ['1 koppie broodkrummels', null], ['1 eier, geklits', 'eiers'], ['Suurlemoen en tartaarsous', null], ['Olie en sout', 'staple']],
+        'ingredients' => [['4 stokvis- (hake-) filette of 12 visvingers', 'vis'], ['4 aartappels, in skyfies', 'aartappels'], ['1 koppie broodkrummels', 'broodkrummels'], ['1 eier, geklits', 'eiers'], ['Suurlemoen en tartaarsous', null], ['Olie en sout', 'staple']],
         'method' => ['Verhit die oond tot 220 °C en bak die skyfies met olie en sout 15 minute voor.', 'Doop die vis in eier en krummels (of gebruik bevrore visvingers).', 'Bak die vis saam met die skyfies 12–15 minute.'],
     ],
     [
         'title' => 'Hoender-roerbraai met rys',
         'minutes' => 25,
         'kids' => 'Effens soet heuning-sojasous.',
-        'ingredients' => [['3 hoenderborsies, in repies', 'hoender'], ['1½ koppies rys', 'rys'], ['400 g roerbraai-groente (vars of bevrore)', 'broccoli'], ['2 e sojasous', null], ['2 e heuning', null], ['Olie', 'staple']],
+        'ingredients' => [['3 hoenderborsies, in repies', 'hoender'], ['1½ koppies rys', 'rys'], ['400 g roerbraai-groente (vars of bevrore)', 'broccoli'], ['2 e sojasous', 'sojasous'], ['2 e heuning', 'heuning'], ['Olie', 'staple']],
         'method' => ['Kook die rys.', 'Roerbraai die hoender in olie oor hoë hitte 5 minute.', 'Voeg die groente by en roerbraai nog 4 minute.', 'Roer die soja en heuning in en bedien op die rys.'],
     ],
     [
@@ -136,7 +136,7 @@ return [
         'title' => 'Worsies, ertjies en kapokaartappel',
         'minutes' => 30,
         'kids' => '"Bangers and mash": eenvoudig en lekker.',
-        'ingredients' => [['8 pork- of beesworsies', 'wors'], ['6 aartappels', 'aartappels'], ['2 koppies bevrore ertjies', 'ertjies'], ['½ koppie melk en 2 e botter', 'melk'], ['1 pakkie sous-poeier (bruinsous)', null]],
+        'ingredients' => [['8 pork- of beesworsies', 'wors'], ['6 aartappels', 'aartappels'], ['2 koppies bevrore ertjies', 'ertjies'], ['½ koppie melk en 2 e botter', 'melk'], ['1 pakkie sous-poeier (bruinsous)', 'souspoeier']],
         'method' => ['Kook die aartappels gaar en druk fyn met melk, botter en sout.', 'Braai of rooster die worsies 15 minute tot gaar.', 'Kook die ertjies en maak die sous volgens die pakkie.'],
     ],
 
@@ -159,7 +159,7 @@ return [
         'title' => 'Sagte bobotie met geelrys',
         'minutes' => 60,
         'kids' => 'Effens soet met appelkooskonfyt en sonder brand.',
-        'ingredients' => [['500 g maalvleis', 'maalvleis'], ['1 ui, fyngekap', 'uie'], ['1 sny brood, in melk geweek', 'brood'], ['1 e matige kerriepoeier en 1 t borrie', null], ['2 e appelkooskonfyt en 2 e blatjang', null], ['2 eiers en 1 koppie melk vir die bolaag', 'eiers'], ['1½ koppies rys (met borrie en rosyne gekook)', 'rys'], ['Olie en sout', 'staple']],
+        'ingredients' => [['500 g maalvleis', 'maalvleis'], ['1 ui, fyngekap', 'uie'], ['1 sny brood, in melk geweek', 'brood'], ['1 e matige kerriepoeier en 1 t borrie', 'kerriepoeier'], ['2 e appelkooskonfyt en 2 e blatjang', null], ['2 eiers en 1 koppie melk vir die bolaag', 'eiers'], ['1½ koppies rys (met borrie en rosyne gekook)', 'rys'], ['Olie en sout', 'staple']],
         'method' => ['Braai die ui, voeg kerrie en borrie by en braai 1 minuut.', 'Voeg die maalvleis by en braai tot bruin; meng die brood, konfyt en blatjang in.', 'Skep in ’n oondbak, klits die eiers en melk en gooi bo-oor.', 'Bak 35 minute by 180 °C. Kook intussen die geelrys.'],
     ],
     [
@@ -173,14 +173,14 @@ return [
         'title' => 'Hoenderboudjies en aartappels in een pan',
         'minutes' => 55,
         'kids' => 'Boudjies om met die hand te eet.',
-        'ingredients' => [['8 hoenderboudjies of -dye', 'hoender'], ['6 aartappels, in kwarte', 'aartappels'], ['3 wortels, in stukke', 'wortels'], ['2 e heuning en 2 e sojasous of BBQ-sous', null], ['Olie, sout en paprika', 'staple']],
+        'ingredients' => [['8 hoenderboudjies of -dye', 'hoender'], ['6 aartappels, in kwarte', 'aartappels'], ['3 wortels, in stukke', 'wortels'], ['2 e heuning en 2 e sojasous of BBQ-sous', 'heuning'], ['Olie, sout en paprika', 'staple']],
         'method' => ['Verhit die oond tot 200 °C.', 'Gooi die aartappels en wortels met olie en sout in ’n groot oondpan.', 'Smeer die hoender met heuning, soja en paprika en pak tussen die groente.', 'Bak 45 minute, een keer omgedraai, tot die hoender goudbruin en gaar is.'],
     ],
     [
         'title' => 'Matige botterhoender met rys',
         'minutes' => 50,
         'kids' => 'Romerige "butter chicken" sonder die brand.',
-        'ingredients' => [['4 hoenderborsies of 6 dye, in blokkies', 'hoender'], ['1 ui, fyngekap', 'uie'], ['2 e matige botterhoender-pasta of kerriepoeier', null], ['1 blikkie tamatiepuree of gekapte tamaties', 'tamaties'], ['250 ml room', 'room'], ['1½ koppies basmati-rys', 'rys'], ['Botter en olie', 'staple']],
+        'ingredients' => [['4 hoenderborsies of 6 dye, in blokkies', 'hoender'], ['1 ui, fyngekap', 'uie'], ['2 e matige botterhoender-pasta of kerriepoeier', 'kerriepoeier'], ['1 blikkie tamatiepuree of gekapte tamaties', 'tamaties'], ['250 ml room', 'room'], ['1½ koppies basmati-rys', 'rys'], ['Botter en olie', 'staple']],
         'method' => ['Braai die ui in botter en olie, voeg die pasta by en braai 1 minuut.', 'Voeg die hoender by en braai tot verseël.', 'Roer die tamatie en room in en prut 20 minute.', 'Kook intussen die rys en bedien saam.'],
     ],
     [

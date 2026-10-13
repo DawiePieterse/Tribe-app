@@ -25,6 +25,12 @@ it('knows ingredients by their Afrikaans, English and till-slip names', function
         ->and(Ingredients::canonical('Simba Chips Salt & Vinegar'))->toBeNull()
         ->and(Ingredients::canonical('Kruie'))->toBeNull()
         ->and(Ingredients::fromText("Clover Full Cream Milk 2L\nFree range eggs x18\nTastic rice 2kg\nSunlight dishwashing liquid"))->toBe(['melk', 'eiers', 'rys']);
+
+    // Lines as a Sixty60 tax invoice prints them: drinks, headings and totals fall away.
+    $invoice = "Product Detail Price (per item) Total\nHeineken Non-Alcoholic Beer Bottles 24 x 330ml\nQty 1\nRobertsons Bicarbonate Of Soda 500g\nQty 1\n"
+        ."Rajah Medium Curry Powder Value Pack 200g\nBisto Original Gravy Powder 400g\nDiemersdal Sauvignon Blanc White Wine Bottles 6 x 750ml\n** Save 25% **\n"
+        ."Product sub-total R 964.95\nSpekko Rice 2kg\nFreshline Slap Chips 1kg\nSimba Chips Salt and Vinegar";
+    expect(Ingredients::fromText($invoice))->toBe(['koeksoda', 'kerriepoeier', 'souspoeier', 'rys', 'aartappels']);
 });
 
 it('suggests children’s meals built on what they have, at the chosen time', function () {
