@@ -476,3 +476,5 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .idea form.actions { flex-wrap: nowrap; }
 .idea select { width: auto; min-width: 0; flex: 1; min-height: 36px; padding-top: 6px; padding-bottom: 6px; font-size: 0.9em; }
 details > summary.link { display: inline; font-size: 0.9em; }
+.people { grid-template-columns: 1fr auto; align-items: center; }
+.people input { width: 5.5em; text-align: center; }

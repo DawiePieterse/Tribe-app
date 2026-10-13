@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Grocery;
+use App\Models\Household;
 use App\Models\Meal;
 use App\Models\Recipe;
 use App\Models\TodoList;
@@ -38,6 +39,8 @@ class MealIdeaController extends Controller
             'ideas' => $ideas,
             'asked' => is_array($result) ? $result : [],
             'bought' => $bought,
+            'people' => old('people', (string) $me->household->peopleEating()),
+            'maxPeople' => Household::MAX_PEOPLE,
             'known' => collect(Ingredients::known())->merge($bought)->unique()->sort()->values(),
             'claude' => Claude::available(),
             'lists' => TodoList::query()->shoppingFor($me)->get(),
@@ -54,7 +57,11 @@ class MealIdeaController extends Controller
             'bought.*' => ['string', 'max:60'],
             'level' => ['required', Rule::in(MealIdea::LEVELS)],
             'from' => ['nullable', Rule::in(['typed', 'bought'])],
+            'people' => ['required', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
         ]);
+
+        // How many they cook for is remembered for the household.
+        $this->me()->household->update(['people' => $data['people']]);
 
         $fromPantry = ($data['from'] ?? 'typed') === 'bought';
         $have = Ingredients::uniqueTidy($fromPantry
@@ -67,7 +74,7 @@ class MealIdeaController extends Controller
                 : __('Tik ten minste een ding wat julle het.')]);
         }
 
-        $result = $chef->suggest($have, $data['level'], $fromPantry);
+        $result = $chef->suggest($have, $data['level'], $fromPantry, (int) $data['people']);
 
         $request->session()->put(self::SESSION, [
             'have' => $have,
@@ -171,7 +178,7 @@ class MealIdeaController extends Controller
         return Recipe::query()->firstOrCreate(
             ['household_id' => $me->household_id, 'title' => $idea->title],
             [
-                'servings' => '4',
+                'servings' => trans_choice(':count porsie|:count porsies', $idea->people),
                 'time' => $idea->minutes.' min',
                 'ingredients' => implode("\n", array_map(fn ($i) => $i['line'], $idea->ingredients)),
                 'method' => implode("\n", $idea->method),

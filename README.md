@@ -48,7 +48,8 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 - **Wat maak ons vanaand?** (Lyste › Idees): type two or three things you have, choose quick (up to 20 min),
   medium (20–40) or more time (40+), and get child-friendly meals with Checkers/Woolworths ingredients;
   put one on the week menu, save it as a recipe, or send what's missing to a shopping list or the share
-  sheet. Or tell Tribe what you bought: a photo of the till slip, a Sixty60 order screenshot or VAT invoice
+  sheet. Each household says how many it cooks for (Idees, or Meer › Familie) and quantities are scaled
+  to that. Or tell Tribe what you bought: a photo of the till slip, a Sixty60 order screenshot or VAT invoice
   PDF (read by Claude), or pasted text; ideas then come from what's in the cupboard. Without
   `ANTHROPIC_API_KEY`, ideas come from Tribe's own cookbook and only pasted text can be read.
   Sixty60 has no public API or list import, so the list is shared as text.

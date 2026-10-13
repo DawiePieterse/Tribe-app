@@ -2,16 +2,19 @@
 
 namespace App\Services\Food;
 
-/** Picks meals from Tribe's own cookbook (cookbook.php) by what the family has. */
+/** Picks meals from Tribe's own cookbook (cookbook.php) by what the family has, scaled to the table. */
 final class BuiltInChef
 {
     private const COUNT = 5;
+
+    /** The cookbook's recipes feed this many. */
+    private const WRITTEN_FOR = 4;
 
     /**
      * @param  list<string>  $have  ingredient names (see Ingredients)
      * @return list<MealIdea>
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false): array
+    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = self::WRITTEN_FOR): array
     {
         /** @var list<array{title: string, minutes: int, kids: string, ingredients: list<array{0: string, 1: string|null}>, method: list<string>}> $cookbook */
         $cookbook = require __DIR__.'/cookbook.php';
@@ -34,7 +37,7 @@ final class BuiltInChef
                 continue;
             }
 
-            $idea = new MealIdea($recipe['title'], $recipe['minutes'], $recipe['kids'], $lines, $recipe['method']);
+            $idea = (new MealIdea($recipe['title'], $recipe['minutes'], $recipe['kids'], $lines, $recipe['method'], self::WRITTEN_FOR))->for($people);
             $scored[] = [
                 'idea' => $idea,
                 'level' => $idea->level() === $level ? 1 : 0,

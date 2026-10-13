@@ -39,6 +39,12 @@
             </fieldset>
         @endif
 
+        <label class="people">
+            {{ __('Vir hoeveel mense?') }}
+            <input type="number" name="people" min="1" max="{{ $maxPeople }}" inputmode="numeric" required value="{{ $people }}">
+            @error('people')<span class="error">{{ $message }}</span>@enderror
+        </label>
+
         <fieldset>
             <legend>{{ __('Hoeveel tyd is daar?') }}</legend>
             <div class="choice levels">
@@ -72,6 +78,7 @@
                         <p class="recipe-meta">
                             <span>{{ __(':n min', ['n' => $idea->minutes]) }}</span>
                             <span>{{ $levels[$idea->level()][0] }}</span>
+                            <span>{{ trans_choice('vir :count mens|vir :count mense', $idea->people) }}</span>
                             <span>{{ $missing === [] ? __('Julle het alles') : trans_choice(':count ding om te koop|:count dinge om te koop', count($missing)) }}</span>
                         </p>
                         @if ($idea->kids !== '')

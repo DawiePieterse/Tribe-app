@@ -17,14 +17,14 @@ final class ClaudeChef
      * @param  list<string>  $have
      * @return list<MealIdea>
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false): array
+    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = 4): array
     {
         $system = implode("\n", [
             'You suggest family dinners for working parents in South Africa who have little time.',
             'The meals must be ones children (about 3 to 12 years old) like: mild, familiar, no chilli heat.',
             'Use only ingredients that any Checkers, Pick n Pay or Woolworths sells; use South African names (mince, boerewors, hake, butternut, mielies, viennas, All Gold tomato sauce).',
             'Write everything in Afrikaans, as a South African parent would: metric measures (g, ml, koppie, e for eetlepel, t for teelepel), oven in °C.',
-            'Servings: four (two adults, two children).',
+            'Servings: '.$people.' '.($people === 1 ? 'person' : 'people').' (a family with children); size every quantity for that.',
             'Time: '.self::TIMES[$level].'.',
             $fromPantry
                 ? 'The family recently bought the ingredients listed. Prefer meals that use several of them and need few other things.'
@@ -65,7 +65,7 @@ final class ClaudeChef
             'required' => ['ideas'],
         ], 4000, 60);
 
-        $ideas = MealIdea::manyFromArray($input['ideas'] ?? []);
+        $ideas = array_map(fn (MealIdea $i) => new MealIdea($i->title, $i->minutes, $i->kids, $i->ingredients, $i->method, $people), MealIdea::manyFromArray($input['ideas'] ?? []));
 
         if ($ideas === []) {
             throw new \RuntimeException('Claude gave no usable meal ideas');

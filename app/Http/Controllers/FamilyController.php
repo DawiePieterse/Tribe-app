@@ -115,10 +115,11 @@ class FamilyController extends Controller
     /** @return array{name: string, colour: string} */
     private function household(Request $request): array
     {
-        /** @var array{name: string, colour: string} */
+        /** @var array{name: string, colour: string, people?: int|null} */
         return $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'colour' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'people' => ['nullable', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
         ]);
     }
 

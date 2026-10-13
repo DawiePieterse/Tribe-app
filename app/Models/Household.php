@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $name
  * @property string $colour
+ * @property int|null $people how many they cook for; null means everyone in the household
  */
 class Household extends Model
 {
-    protected $fillable = ['name', 'colour'];
+    public const MAX_PEOPLE = 20;
+
+    protected $fillable = ['name', 'colour', 'people'];
 
     /** Colours offered for a household: aloe green, protea pink, saffron, sea blue, clay, plum. */
     public const COLOURS = ['#2E7D5B', '#C2185B', '#C98A1B', '#1F6FA8', '#A0522D', '#6A3D9A'];
@@ -27,5 +30,11 @@ class Household extends Model
     public function adults(): HasMany
     {
         return $this->hasMany(Member::class)->where('kind', Member::ADULT);
+    }
+
+    /** How many sit down to eat: the number set for the household, else everyone in it. */
+    public function peopleEating(): int
+    {
+        return max(1, min(self::MAX_PEOPLE, $this->people ?? $this->members()->count()));
     }
 }
