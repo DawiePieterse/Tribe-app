@@ -20,6 +20,7 @@ class RecipeController extends Controller
 
         $recipes = Recipe::query()
             ->visibleTo($this->me())
+            ->withFavourite($this->me())
             ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q
                 ->where('title', 'like', '%'.$search.'%')
                 ->orWhere('ingredients', 'like', '%'.$search.'%')))
@@ -61,8 +62,24 @@ class RecipeController extends Controller
 
         return view('recipes.show', [
             'recipe' => $recipe,
+            'favourite' => $recipe->isFavouriteOf($this->me()),
             'lists' => $this->shoppingLists(),
         ]);
+    }
+
+    /** A heart on a recipe: mine, not the household's. */
+    public function favourite(Recipe $recipe): RedirectResponse
+    {
+        $this->ensureVisible($recipe);
+        $me = $this->me();
+
+        if ($recipe->isFavouriteOf($me)) {
+            $recipe->favouredBy()->detach($me->id);
+        } else {
+            $recipe->favouredBy()->attach($me->id, ['created_at' => now()]);
+        }
+
+        return back();
     }
 
     public function edit(Recipe $recipe): View

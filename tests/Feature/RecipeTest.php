@@ -112,3 +112,28 @@ it('needs a recipe or a few words for a meal', function () {
 it('shows the recipe and week pages', function (string $route) {
     $this->actingAs($this->me)->get(route($route))->assertOk();
 })->with(['recipes.index', 'recipes.create', 'meals.week', 'meals.shopping']);
+
+it('marks a recipe as a favourite, for that person only', function () {
+    $recipe = Recipe::query()->create(['title' => 'Melktert', 'household_id' => $this->me->household_id]);
+    $other = Recipe::query()->create(['title' => 'Bobotie', 'household_id' => $this->me->household_id]);
+    $someoneElse = adult($this->me->household);
+
+    $this->actingAs($this->me)->post(route('recipes.favourite', $recipe))->assertRedirect();
+    expect($recipe->isFavouriteOf($this->me))->toBeTrue()
+        ->and($recipe->isFavouriteOf($someoneElse))->toBeFalse();
+
+    // Favourites come first, under their own heading, in the recipe list and the week menu's choices.
+    $page = $this->actingAs($this->me)->get(route('recipes.index'))->assertSeeInOrder(['Gunstelinge', 'Melktert', 'Al die resepte', 'Bobotie']);
+    $this->actingAs($this->me)->get(route('meals.week'))->assertSeeInOrder(['♥ Melktert', 'Bobotie']);
+    $this->actingAs($someoneElse)->get(route('recipes.index'))->assertDontSee('Gunstelinge');
+
+    // Tapping again takes it off.
+    $this->actingAs($this->me)->post(route('recipes.favourite', $recipe));
+    expect($recipe->isFavouriteOf($this->me))->toBeFalse();
+});
+
+it('keeps another household’s recipe out of reach of the heart', function () {
+    $recipe = Recipe::query()->create(['title' => 'Geheim', 'household_id' => household('Ander')->id]);
+
+    $this->actingAs($this->me)->post(route('recipes.favourite', $recipe))->assertNotFound();
+});

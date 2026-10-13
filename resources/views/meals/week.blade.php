@@ -52,7 +52,7 @@
                             <select name="recipe_id" aria-label="{{ __('Resep') }}">
                                 <option value="">{{ __('Kies ’n resep…') }}</option>
                                 @foreach ($recipes as $recipe)
-                                    <option value="{{ $recipe->id }}">{{ $recipe->title }}</option>
+                                    <option value="{{ $recipe->id }}">{{ $recipe->is_favourite ? '♥ ' : '' }}{{ $recipe->title }}</option>
                                 @endforeach
                             </select>
                             <input type="text" name="title" maxlength="255" placeholder="{{ __('of tik iets, bv. braai') }}" aria-label="{{ __('Of tik wat julle eet') }}">

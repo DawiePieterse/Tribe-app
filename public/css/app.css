@@ -478,3 +478,10 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 details > summary.link { display: inline; font-size: 0.9em; }
 .people { grid-template-columns: 1fr auto; align-items: center; }
 .people input { width: 5.5em; text-align: center; }
+
+/* Favourite recipes. */
+.fav { width: 40px; min-height: 40px; padding: 0; border-radius: 50%; background: var(--fill); color: var(--ink-soft); }
+.fav.is-on { color: #FF375F; background: color-mix(in srgb, #FF375F 12%, transparent); }
+.fav .icon { width: 22px; height: 22px; }
+.fav-mark { display: inline-block; color: #FF375F; vertical-align: -3px; margin-right: 4px; }
+.fav-mark .icon { width: 1em; height: 1em; color: inherit; }

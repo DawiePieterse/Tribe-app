@@ -31,7 +31,7 @@ class MealController extends Controller
         return view('meals.week', [
             'monday' => $monday,
             'meals' => $meals,
-            'recipes' => Recipe::query()->visibleTo($me)->orderBy('title')->get(['id', 'title']),
+            'recipes' => Recipe::query()->visibleTo($me)->withFavourite($me)->orderBy('title')->get(),
             'today' => CarbonImmutable::today(),
         ]);
     }

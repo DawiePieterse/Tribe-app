@@ -12,26 +12,22 @@
         <button type="submit" class="quiet">{{ __('Soek') }}</button>
     </form>
 
-    <ul class="cards">
-        @forelse ($recipes as $recipe)
-            <li>
-                <a class="card" href="{{ route('recipes.show', $recipe) }}">
-                    <span>
-                        <strong>{{ $recipe->title }}</strong>
-                        @if ($recipe->time || $recipe->servings)
-                            <br><span class="muted small">{{ implode(' · ', array_filter([$recipe->time, $recipe->servings])) }}</span>
-                        @endif
-                    </span>
-                </a>
-            </li>
-        @empty
-            <li class="empty">
-                @if ($search !== '')
-                    {{ __('Geen resepte met “:search” nie.', ['search' => $search]) }}
-                @else
-                    {{ __('Nog geen resepte nie. Tik Ouma se melktert in, of plak ’n skakel na ’n resep op die internet.') }}
-                @endif
-            </li>
-        @endforelse
-    </ul>
+    @php($favourites = $search === '' ? $recipes->where('is_favourite', true) : collect())
+    @if ($favourites->isNotEmpty())
+        <h2>{{ __('Gunstelinge') }}</h2>
+        @include('recipes.cards', ['recipes' => $favourites])
+        <h2>{{ __('Al die resepte') }}</h2>
+    @endif
+
+    @if ($recipes->isEmpty())
+        <p class="empty">
+            @if ($search !== '')
+                {{ __('Geen resepte met “:search” nie.', ['search' => $search]) }}
+            @else
+                {{ __('Nog geen resepte nie. Tik Ouma se melktert in, of plak ’n skakel na ’n resep op die internet.') }}
+            @endif
+        </p>
+    @else
+        @include('recipes.cards', ['recipes' => $recipes])
+    @endif
 </x-layout>

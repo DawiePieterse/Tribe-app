@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Models\Concerns\HouseholdScoped;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Ingredients and method are kept as plain text, one ingredient per line, so they are easy to type
@@ -18,12 +20,37 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $method
  * @property string|null $notes
  * @property string|null $source_url
+ * @property-read bool|null $is_favourite  set by scopeWithFavourite()
  */
 class Recipe extends Model
 {
     use HouseholdScoped;
 
     protected $fillable = ['household_id', 'title', 'servings', 'time', 'ingredients', 'method', 'notes', 'source_url', 'created_by'];
+
+    /** @return BelongsToMany<Member, $this> */
+    public function favouredBy(): BelongsToMany
+    {
+        return $this->belongsToMany(Member::class, 'recipe_favourites')->withPivot('created_at');
+    }
+
+    /**
+     * Adds `is_favourite` for this member, and puts their favourites first.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeWithFavourite(Builder $query, Member $member): Builder
+    {
+        return $query
+            ->selectRaw('recipes.*, EXISTS (SELECT 1 FROM recipe_favourites f WHERE f.recipe_id = recipes.id AND f.member_id = ?) AS is_favourite', [$member->id])
+            ->orderByDesc('is_favourite');
+    }
+
+    public function isFavouriteOf(Member $member): bool
+    {
+        return $this->favouredBy()->whereKey($member->id)->exists();
+    }
 
     /** @return list<string> */
     public function ingredientLines(): array

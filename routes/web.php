@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/resepte/{recipe}/wysig', [RecipeController::class, 'edit'])->name('recipes.edit');
     Route::put('/resepte/{recipe}', [RecipeController::class, 'update'])->name('recipes.update');
     Route::delete('/resepte/{recipe}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
+    Route::post('/resepte/{recipe}/gunsteling', [RecipeController::class, 'favourite'])->name('recipes.favourite');
 
     Route::get('/weekmenu', [MealController::class, 'week'])->name('meals.week');
     Route::post('/weekmenu', [MealController::class, 'store'])->name('meals.store');

@@ -2,7 +2,15 @@
     <a class="back" href="{{ route('recipes.index') }}">@include('partials.icon', ['name' => 'back']) {{ __('Resepte') }}</a>
     <div class="head">
         <h1>{{ $recipe->title }}</h1>
-        <a class="button quiet small" href="{{ route('recipes.edit', $recipe) }}">{{ __('Wysig') }}</a>
+        <span class="actions">
+            <form method="post" action="{{ route('recipes.favourite', $recipe) }}">
+                @csrf
+                <button type="submit" @class(['fav', 'is-on' => $favourite]) aria-pressed="{{ $favourite ? 'true' : 'false' }}" aria-label="{{ $favourite ? __('Haal uit my gunstelinge') : __('Merk as gunsteling') }}">
+                    @include('partials.icon', ['name' => $favourite ? 'heart-filled' : 'heart'])
+                </button>
+            </form>
+            <a class="button quiet small" href="{{ route('recipes.edit', $recipe) }}">{{ __('Wysig') }}</a>
+        </span>
     </div>
     <p class="recipe-meta">
         @if ($recipe->servings)<span>{{ $recipe->servings }}</span>@endif
