@@ -6,3 +6,4 @@ use Illuminate\Support\Facades\Schedule;
 // `php artisan schedule:run` (see docs/DEPLOY-AFRIHOST.md).
 
 Schedule::command('tribe:sync-calendars')->hourly()->withoutOverlapping();
+Schedule::command('tribe:sync-connections')->everyTenMinutes()->withoutOverlapping();

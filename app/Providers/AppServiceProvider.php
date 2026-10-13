@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Sync\SyncSoon;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
 
         Date::use(CarbonImmutable::class);
+
+        SyncSoon::watch();
         CarbonImmutable::setLocale((string) config('app.locale'));
 
         if (str_starts_with((string) config('app.url'), 'https://')) {

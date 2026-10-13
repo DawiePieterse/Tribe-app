@@ -2,7 +2,53 @@
     <a class="back" href="{{ route('more') }}">@include('partials.icon', ['name' => 'back']) {{ __('Meer') }}</a>
     <h1>{{ __('Kalenders') }}</h1>
 
-    <h2>{{ __('Tribe in jou iPhone-kalender') }}</h2>
+    <h2>{{ __('Jou eie kalender, albei kante') }}</h2>
+    <p>{{ __('Koppel jou Google-, Outlook- of iCloud-kalender. Wat jy daar byvoeg of verander, kom in Tribe; wat in Tribe gebeur, kom in jou kalender. Tribe sinkroniseer elke tien minute en dadelik ná ’n verandering hier.') }}</p>
+
+    @if ($connections->isNotEmpty())
+        <ul class="cards">
+            @foreach ($connections as $connection)
+                <li class="card" style="--c: var(--action)">
+                    <span>
+                        <strong>{{ $connection->calendar_name ?? $connection->providerName() }}</strong>
+                        <br><span class="muted small">
+                            {{ $connection->providerName() }}@if ($connection->account) · {{ $connection->account }}@endif
+                            @if ($connection->synced_at) · {{ __('gesinkroniseer :when', ['when' => $connection->synced_at->diffForHumans()]) }}@endif
+                        </span>
+                        @if ($connection->calendar_id === null)
+                            <br><a class="small" href="{{ route('connections.edit', $connection) }}">{{ __('Kies watter kalender') }}</a>
+                        @endif
+                        @if ($connection->last_error)
+                            <br><span class="error">{{ $connection->last_error }}</span>
+                        @endif
+                    </span>
+                    <span class="actions" style="justify-content: flex-end">
+                        @if ($connection->calendar_id !== null)
+                            <a class="button quiet small" href="{{ route('connections.edit', $connection) }}">{{ __('Stel') }}</a>
+                            <form method="post" action="{{ route('connections.sync', $connection) }}">
+                                @csrf
+                                <button type="submit" class="quiet small">{{ __('Nou') }}</button>
+                            </form>
+                        @endif
+                        <form method="post" action="{{ route('connections.destroy', $connection) }}" data-confirm="{{ __('Ontkoppel :provider? Wat uit daardie kalender in Tribe gekom het, word uit Tribe verwyder; Tribe se inskrywings bly in jou kalender.', ['provider' => $connection->providerName()]) }}">
+                            @csrf @method('delete')
+                            <button type="submit" class="remove" aria-label="{{ __('Ontkoppel') }}">@include('partials.icon', ['name' => 'trash'])</button>
+                        </form>
+                    </span>
+                </li>
+            @endforeach
+        </ul>
+    @endif
+
+    <div class="actions" style="margin-top: 14px">
+        @foreach ($providers as $provider)
+            <a class="button {{ $loop->first ? '' : 'quiet' }}" href="{{ $provider === 'icloud' ? route('connections.icloud') : route('connections.connect', $provider) }}">
+                @include('partials.icon', ['name' => 'plus']) {{ __('Koppel :provider', ['provider' => \App\Models\CalendarConnection::label($provider)]) }}
+            </a>
+        @endforeach
+    </div>
+
+    <h2>{{ __('Of net kyk: Tribe in jou iPhone-kalender') }}</h2>
     <p>{{ __('Sien alles uit Tribe tussen jou ander afsprake in die Kalender-app. Tribe werk dit elke uur by; verander dinge steeds hier in Tribe.') }}</p>
     <p><a class="button" href="{{ $webcal }}">@include('partials.icon', ['name' => 'calendar']) {{ __('Teken in op die kalender') }}</a></p>
     <p class="muted small">{{ __('Tik op die knoppie en dan op “Teken in”. Werk dit nie, kopieer die skakel en voeg dit by in Instellings › Kalender › Rekeninge › Voeg rekening by › Ander › Voeg ingetekende kalender by.') }}</p>

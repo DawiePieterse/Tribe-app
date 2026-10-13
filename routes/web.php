@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CalendarConnectionController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\ContactController;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 // Afrikaans paths, since people will see them in the address bar and in shared links.
 
 // Record ids are numbers, so /kalender/nuut and /kalender/<token>.ics never reach a record route.
-foreach (['event', 'item', 'list', 'member', 'milestone', 'contact', 'household', 'recipe', 'meal', 'feed', 'poll', 'option', 'inboxItem'] as $parameter) {
+foreach (['event', 'item', 'list', 'member', 'milestone', 'contact', 'household', 'recipe', 'meal', 'feed', 'poll', 'option', 'inboxItem', 'connection'] as $parameter) {
     Route::pattern($parameter, '[0-9]+');
 }
 
@@ -118,6 +119,15 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/kalenders/nuwe-skakel', [CalendarFeedController::class, 'newLink'])->name('feeds.new-link');
     Route::post('/kalenders/{feed}/sinkroniseer', [CalendarFeedController::class, 'sync'])->middleware('throttle:10,1')->name('feeds.sync');
     Route::delete('/kalenders/{feed}', [CalendarFeedController::class, 'destroy'])->name('feeds.destroy');
+
+    Route::get('/kalenders/koppel/icloud', [CalendarConnectionController::class, 'icloud'])->name('connections.icloud');
+    Route::post('/kalenders/koppel/icloud', [CalendarConnectionController::class, 'storeICloud'])->middleware('throttle:10,1')->name('connections.icloud.store');
+    Route::get('/kalenders/koppel/{provider}', [CalendarConnectionController::class, 'connect'])->whereIn('provider', ['google', 'outlook'])->name('connections.connect');
+    Route::get('/kalenders/koppel/{provider}/terug', [CalendarConnectionController::class, 'callback'])->whereIn('provider', ['google', 'outlook'])->name('connections.callback');
+    Route::get('/kalenders/koppelings/{connection}', [CalendarConnectionController::class, 'edit'])->name('connections.edit');
+    Route::put('/kalenders/koppelings/{connection}', [CalendarConnectionController::class, 'update'])->name('connections.update');
+    Route::post('/kalenders/koppelings/{connection}/sinkroniseer', [CalendarConnectionController::class, 'sync'])->middleware('throttle:10,1')->name('connections.sync');
+    Route::delete('/kalenders/koppelings/{connection}', [CalendarConnectionController::class, 'destroy'])->name('connections.destroy');
 
     Route::get('/stuur', [ShareController::class, 'paste'])->name('share.paste');
     Route::post('/stuur', [ShareController::class, 'read'])->middleware('throttle:20,1')->name('share.read');

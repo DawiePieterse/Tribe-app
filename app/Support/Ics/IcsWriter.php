@@ -4,19 +4,25 @@ namespace App\Support\Ics;
 
 use Carbon\CarbonImmutable;
 
-/** Builds an iCalendar file for the iPhone (or any) calendar app. Times are written in UTC. */
+/**
+ * Builds an iCalendar file for the iPhone (or any) calendar app. Times are written in UTC. Without a
+ * name it is a single calendar object, as CalDAV stores one event per file.
+ */
 final class IcsWriter
 {
     /** @var list<string> */
     private array $lines = [];
 
-    public function __construct(string $name)
+    public function __construct(?string $name)
     {
+        $this->lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tribe//Familie//AF', 'CALSCALE:GREGORIAN'];
+
+        if ($name === null) {
+            return;
+        }
+
         $this->lines = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//Tribe//Familie//AF',
-            'CALSCALE:GREGORIAN',
+            ...$this->lines,
             'METHOD:PUBLISH',
             'X-WR-CALNAME:'.$this->escape($name),
             'X-WR-TIMEZONE:Africa/Johannesburg',

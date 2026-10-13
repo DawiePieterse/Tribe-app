@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CalendarConnection;
 use App\Models\CalendarFeed;
 use App\Models\Household;
 use App\Services\CalendarSync;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-/** Meer › Kalenders: Tribe in the iPhone Calendar app, and other calendars in Tribe. */
+/** Meer › Kalenders: your own calendar synced both ways, Tribe in the iPhone Calendar app, and other calendars in Tribe. */
 class CalendarFeedController extends Controller
 {
     public function index(): View
@@ -20,6 +21,8 @@ class CalendarFeedController extends Controller
         $feedUrl = route('ics', ['token' => $me->calendarToken()]);
 
         return view('feeds.index', [
+            'connections' => CalendarConnection::query()->where('member_id', $me->id)->withCount('links')->orderBy('id')->get(),
+            'providers' => array_values(array_filter(CalendarConnection::PROVIDERS, CalendarConnection::isAvailable(...))),
             'feeds' => CalendarFeed::query()->visibleTo($me)->withCount('events')->orderBy('name')->get(),
             'webcal' => (string) preg_replace('~^https?://~', 'webcal://', $feedUrl),
             'feedUrl' => $feedUrl,

@@ -165,7 +165,7 @@ final class IcsParser
     }
 
     /** @return array{0: string, 1: string|null} [repeats, repeat_until] */
-    private function rule(?string $rrule, CarbonImmutable $start): array
+    public function rule(?string $rrule, CarbonImmutable $start): array
     {
         if ($rrule === null) {
             return ['none', null];

@@ -46,12 +46,27 @@ only for `php artisan` commands.
    (Run AutoSSL if offered). Then cPanel > Domains: **Force HTTPS Redirect** on for the subdomain.
 8. **Scheduled jobs:** cPanel > Cron Jobs, Once Per Minute:
    `cd ~/tribe && /opt/cpanel/ea-php83/root/usr/bin/php artisan schedule:run >> /dev/null 2>&1`
-   This syncs subscribed calendars hourly.
+   This syncs subscribed calendars hourly and connected Google/Outlook/iCloud calendars every ten minutes.
 9. **First login:** in the Terminal, `php artisan tribe:invite <admin email>` prints a link. Open it on your
    iPhone in Safari and add Tribe to the Home Screen. Add the other households and people in the app
    (Meer › Familie) and send them invites from there.
 10. **Claude for Stuur na Tribe (optional):** an API key from console.anthropic.com in `.env` as
     `ANTHROPIC_API_KEY`, then `php artisan config:cache`. Without it Tribe uses its built-in reader.
+11. **Two-way calendar sync (optional):** iCloud works with nothing set up here (each person makes an
+    app-specific password at appleid.apple.com). Google and Outlook each need an app registered once:
+    - **Google:** console.cloud.google.com › new project › APIs & Services › enable **Google Calendar
+      API** › OAuth consent screen (External; add the family's Gmail addresses as test users, or publish
+      it) › Credentials › Create OAuth client ID › Web application, with authorised redirect URI
+      `https://tribe.bowlsbuddy.co.za/kalenders/koppel/google/terug`. Put the ID and secret in `.env` as
+      `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+    - **Outlook:** portal.azure.com › Microsoft Entra ID › App registrations › New registration, account
+      type "Accounts in any organizational directory and personal Microsoft accounts", redirect URI (Web)
+      `https://tribe.bowlsbuddy.co.za/kalenders/koppel/outlook/terug`. Under Certificates & secrets make a
+      client secret; under API permissions add Microsoft Graph delegated `Calendars.ReadWrite`,
+      `User.Read` and `offline_access`. Put the Application (client) ID and the secret's value in `.env`
+      as `MICROSOFT_CLIENT_ID` and `MICROSOFT_CLIENT_SECRET`.
+
+    Then `php artisan config:cache`. A provider without its ID and secret simply isn't offered.
 
 ## Updates
 
