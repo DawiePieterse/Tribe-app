@@ -52,7 +52,7 @@ class EveningSummary
             'entries' => $entries,
             'mine' => array_map(fn ($l) => trim((string) preg_replace('/\s+/', ' ', $l)), $mine),
             'open' => $open,
-            'weather' => $this->weather->on($tomorrow),
+            'weather' => $this->weather->for($member->household, $tomorrow),
         ];
     }
 

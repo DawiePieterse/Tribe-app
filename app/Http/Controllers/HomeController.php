@@ -57,7 +57,7 @@ class HomeController extends Controller
             'polls' => $polls,
             'inbox' => $helper ? collect() : InboxItem::query()->where('member_id', $me->id)->whereNull('handled_at')->latest()->get(),
             'lifts' => $lifts,
-            'weather' => $weather->on($today),
+            'weather' => $weather->for($me->household, $today),
             'shopping' => $shopping,
         ]);
     }

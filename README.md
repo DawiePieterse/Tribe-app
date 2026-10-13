@@ -55,7 +55,7 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 - **Week view** on Kalender: Monday to Sunday with a dot per colour, next to the month view.
 - **Evening summary:** at 18:00 everyone with notifications on gets tomorrow's entries, their own lifts
   ("Jy haal Anri om 16:00 · Dansstudio") and tomorrow's weather with "waterbottel / reënjas / trek warm
-  aan" flags (Open-Meteo, `TRIBE_LAT`/`TRIBE_LON`); the same goes by email to anyone who ticks it under My
+  aan" flags (Open-Meteo; each household's town is set under Meer › Familie); the same goes by email to anyone who ticks it under My
   instellings (a nanny without the app). Today's weather shows on Tuis.
 - **Two-way calendar sync:** each person connects their own Google, Outlook or iCloud calendar (Meer ›
   Kalenders). New and changed events go both ways; the later change wins when both sides changed.

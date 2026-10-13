@@ -41,12 +41,12 @@ it('emails the nanny tomorrow’s program with her lifts, and pushes it to the p
 });
 
 it('adds the weather with its flags when the town is set', function () {
-    config(['services.weather.lat' => '-33.1', 'services.weather.lon' => '18.03']);
+    $this->ours->update(['town' => 'Langebaan', 'lat' => '-33.09000', 'lon' => '18.03000']);
     Http::fake(['api.open-meteo.com/*' => Http::response(['daily' => [
         'temperature_2m_min' => [9.4], 'temperature_2m_max' => [31.2], 'precipitation_probability_max' => [65], 'weathercode' => [61], 'windspeed_10m_max' => [22.6],
     ]])]);
 
-    $w = app(Weather::class)->on(today()->addDay());
+    $w = app(Weather::class)->for($this->ours->fresh(), today()->addDay());
     expect($w['min'])->toBe(9)->and($w['max'])->toBe(31)->and($w['condition'])->toBe('reën')
         ->and($w['flags'])->toBe(['Baie warm: waterbottel en hoed', 'Koud: trek warm aan', 'Reën moontlik: reënjas']);
 
@@ -60,8 +60,34 @@ it('adds the weather with its flags when the town is set', function () {
 });
 
 it('leaves the weather out when the town is not set, and turns the email on under settings', function () {
-    expect(app(Weather::class)->on(today()))->toBeNull();
+    expect(app(Weather::class)->for($this->ours, today()))->toBeNull();
+    $this->actingAs($this->parent)->get(route('home'))->assertDontSee('°C');
 
     $this->actingAs($this->parent)->put(route('settings.update'), ['name' => $this->parent->name, 'email' => $this->parent->email, 'evening_email' => 1])->assertRedirect();
     expect($this->parent->fresh()->evening_email)->toBeTrue();
+});
+
+it('looks a household’s town up when an admin sets it', function () {
+    $admin = adult($this->ours, ['is_admin' => true]);
+    Http::fake([
+        'geocoding-api.open-meteo.com/*' => fn ($request) => Http::response(['results' => str_contains($request->url(), 'Langebaan') ? [
+            ['name' => 'Langebaan', 'country_code' => 'ZA', 'admin1' => 'Western Cape', 'latitude' => -33.0917, 'longitude' => 18.0333],
+        ] : []]),
+        'api.open-meteo.com/*' => Http::response(['daily' => ['temperature_2m_min' => [12], 'temperature_2m_max' => [22], 'precipitation_probability_max' => [0], 'weathercode' => [0], 'windspeed_10m_max' => [10]]]),
+    ]);
+
+    $this->actingAs($admin)->put(route('family.households.update', $this->ours), ['name' => 'Ons', 'colour' => '#2E7D5B', 'town' => 'Langebaan'])->assertRedirect();
+    $ours = $this->ours->fresh();
+    expect($ours->town)->toBe('Langebaan, Western Cape')->and($ours->lat)->toBe('-33.09170')->and($ours->lon)->toBe('18.03330');
+
+    // Saving again with the same town doesn't look it up again; another household has its own weather.
+    $this->actingAs($admin)->put(route('family.households.update', $ours), ['name' => 'Ons', 'colour' => '#2E7D5B', 'town' => $ours->town]);
+    Http::assertSentCount(1);
+    $this->actingAs($this->parent)->get(route('home'))->assertSee('12–22 °C');
+    $other = household('Ander');
+    $this->actingAs(adult($other))->get(route('home'))->assertDontSee('°C');
+
+    // A town nobody can find is refused, and the old one kept.
+    $this->actingAs($admin)->put(route('family.households.update', $ours), ['name' => 'Ons', 'colour' => '#2E7D5B', 'town' => 'Nêrensville'])->assertSessionHasErrors('town');
+    expect($ours->fresh()->town)->toBe('Langebaan, Western Cape');
 });

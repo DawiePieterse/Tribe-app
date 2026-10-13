@@ -6,6 +6,7 @@ use App\Models\Household;
 use App\Models\Member;
 use App\Models\TodoList;
 use App\Services\Login;
+use App\Services\Weather;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -27,10 +28,14 @@ class FamilyController extends Controller
         ]);
     }
 
-    public function storeHousehold(Request $request): RedirectResponse
+    public function storeHousehold(Request $request, Weather $weather): RedirectResponse
     {
         $this->ensureAdmin();
-        $household = Household::query()->create($this->household($request));
+        $data = $this->household($request, null, $weather);
+        if ($data === null) {
+            return back()->withInput()->withErrors(['town' => __('Tribe kon nie daardie dorp vind nie. Probeer ’n ander spelling, of die naaste groter dorp.')]);
+        }
+        $household = Household::query()->create($data);
 
         // Every household starts with its own shopping list.
         TodoList::query()->create(['household_id' => $household->id, 'name' => __('Inkopies'), 'kind' => TodoList::SHOPPING]);
@@ -38,10 +43,14 @@ class FamilyController extends Controller
         return redirect()->route('family.index')->with('status', __('Huis bygevoeg.'));
     }
 
-    public function updateHousehold(Request $request, Household $household): RedirectResponse
+    public function updateHousehold(Request $request, Household $household, Weather $weather): RedirectResponse
     {
         $this->ensureAdmin();
-        $household->update($this->household($request));
+        $data = $this->household($request, $household, $weather);
+        if ($data === null) {
+            return back()->withInput()->withErrors(['town' => __('Tribe kon nie daardie dorp vind nie. Probeer ’n ander spelling, of die naaste groter dorp.')]);
+        }
+        $household->update($data);
 
         return redirect()->route('family.index')->with('status', __('Gestoor.'));
     }
@@ -113,14 +122,32 @@ class FamilyController extends Controller
     }
 
     /** @return array{name: string, colour: string} */
-    private function household(Request $request): array
+    /**
+     * The household's details; a new town is looked up for its weather (null when it can't be found).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function household(Request $request, ?Household $household, Weather $weather): ?array
     {
-        /** @var array{name: string, colour: string, people?: int|null} */
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'colour' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'people' => ['nullable', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
+            'town' => ['nullable', 'string', 'max:100'],
         ]);
+
+        $town = trim((string) ($data['town'] ?? ''));
+        $place = ['town' => null, 'lat' => null, 'lon' => null];
+        if ($town !== '' && $household !== null && $town === (string) $household->town) {
+            $place = ['town' => $household->town, 'lat' => $household->lat, 'lon' => $household->lon];
+        } elseif ($town !== '') {
+            $place = $weather->find($town);
+            if ($place === null) {
+                return null;
+            }
+        }
+
+        return ['name' => $data['name'], 'colour' => $data['colour'], 'people' => $data['people'] ?? null] + $place;
     }
 
     /** @return array<string, mixed> */

@@ -2,14 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Household;
 use App\Support\Dates;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
- * A day's forecast for the family's town from Open-Meteo (free, no key), kept for half an hour.
- * Off unless TRIBE_LAT and TRIBE_LON are set.
+ * A day's forecast for a household's town from Open-Meteo (free, no key), kept for half an hour.
+ * Each household sets its town under Familie; without one there is no weather.
  */
 class Weather
 {
@@ -19,25 +20,50 @@ class Weather
 
     public const RAIN = 40;
 
-    public static function enabled(): bool
+    /**
+     * Finds a town: its name as Open-Meteo knows it, and where it is.
+     *
+     * @return array{town: string, lat: string, lon: string}|null
+     */
+    public function find(string $town): ?array
     {
-        return is_numeric(config('services.weather.lat')) && is_numeric(config('services.weather.lon'));
+        try {
+            $response = Http::timeout(10)->get('https://geocoding-api.open-meteo.com/v1/search', [
+                'name' => $town, 'count' => 5, 'language' => 'af', 'format' => 'json',
+            ]);
+            $results = $response->successful() ? (array) $response->json('results', []) : [];
+        } catch (\Throwable) {
+            return null;
+        }
+
+        // South Africa first, then whatever matches best.
+        usort($results, fn ($a, $b) => (($b['country_code'] ?? '') === 'ZA') <=> (($a['country_code'] ?? '') === 'ZA'));
+        $hit = $results[0] ?? null;
+        if (! is_array($hit) || ! isset($hit['latitude'], $hit['longitude'])) {
+            return null;
+        }
+
+        return [
+            'town' => mb_substr((string) ($hit['name'] ?? $town).(isset($hit['admin1']) ? ', '.$hit['admin1'] : ''), 0, 100),
+            'lat' => number_format((float) $hit['latitude'], 5, '.', ''),
+            'lon' => number_format((float) $hit['longitude'], 5, '.', ''),
+        ];
     }
 
     /** @return array{min: int, max: int, rain: int, wind: int, condition: string, flags: list<string>}|null */
-    public function on(CarbonImmutable $date): ?array
+    public function for(Household $household, CarbonImmutable $date): ?array
     {
-        if (! self::enabled()) {
+        if (! $household->hasWeather()) {
             return null;
         }
 
         $day = $date->toDateString();
 
-        return Cache::remember('weather.'.$day, now()->addMinutes(30), function () use ($day): ?array {
+        return Cache::remember('weather.'.$household->lat.','.$household->lon.'.'.$day, now()->addMinutes(30), function () use ($household, $day): ?array {
             try {
                 $response = Http::timeout(10)->get('https://api.open-meteo.com/v1/forecast', [
-                    'latitude' => config('services.weather.lat'),
-                    'longitude' => config('services.weather.lon'),
+                    'latitude' => $household->lat,
+                    'longitude' => $household->lon,
                     'daily' => 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,windspeed_10m_max',
                     'timezone' => Dates::ZONE,
                     'start_date' => $day,

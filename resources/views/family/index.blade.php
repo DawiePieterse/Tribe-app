@@ -33,12 +33,15 @@
                 <a href="{{ route('family.members.create', ['huis' => $household->id, 'soort' => 'child']) }}">{{ __('+ Kind') }}</a>
             </p>
             <details>
-                <summary class="small">{{ __('Verander naam, kleur of hoeveel eet') }}</summary>
+                <summary class="small">{{ __('Verander naam, kleur, hoeveel eet, of dorp') }}</summary>
                 <form method="post" action="{{ route('family.households.update', $household) }}" class="stack" style="margin-top: 10px">
                     @csrf @method('put')
                     <label>{{ __('Naam') }}<input type="text" name="name" maxlength="100" required value="{{ $household->name }}"></label>
                     <label>{{ __('Kook vir hoeveel mense?') }} <span class="hint">{{ __('leeg: almal in die huis') }}</span>
                         <input type="number" name="people" min="1" max="{{ \App\Models\Household::MAX_PEOPLE }}" inputmode="numeric" value="{{ $household->people }}"></label>
+                    <label>{{ __('Dorp') }} <span class="hint">{{ __('vir die weer op Tuis en in die aandopsomming') }}</span>
+                        <input type="text" name="town" maxlength="100" value="{{ old('town', $household->town) }}" placeholder="{{ __('bv. Langebaan') }}">
+                        @error('town')<span class="error">{{ $message }}</span>@enderror</label>
                     @include('family.swatches', ['current' => $household->colour, 'id' => 'h'.$household->id])
                     <div><button type="submit" class="small">{{ __('Stoor') }}</button></div>
                 </form>
@@ -52,6 +55,9 @@
         <label>{{ __('Naam') }}<input type="text" name="name" maxlength="100" required placeholder="{{ __('Bv. Mia en Dewan') }}" value="{{ old('name') }}">
             @error('name')<span class="error">{{ $message }}</span>@enderror</label>
         @include('family.swatches', ['current' => $colours[$households->count() % count($colours)], 'id' => 'new'])
+        <label>{{ __('Dorp') }} <span class="hint">{{ __('vir die weer') }}</span>
+            <input type="text" name="town" maxlength="100" value="{{ old('town') }}" placeholder="{{ __('bv. Langebaan') }}">
+            @error('town')<span class="error">{{ $message }}</span>@enderror</label>
         <div><button type="submit">{{ __('Voeg huis by') }}</button></div>
     </form>
 </x-layout>

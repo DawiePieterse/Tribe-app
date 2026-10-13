@@ -24,7 +24,7 @@ class RemindCommand extends Command
     {
         $tomorrow = CarbonImmutable::tomorrow();
         $withPush = Push::enabled() ? PushSubscription::query()->select('member_id') : collect();
-        $members = Member::query()->whereNotNull('email')
+        $members = Member::query()->with('household')->whereNotNull('email')
             ->where(fn ($q) => $q->where('evening_email', true)->orWhereIn('id', $withPush))
             ->get();
 

@@ -47,12 +47,6 @@ return [
         'subject' => env('VAPID_SUBJECT'),
     ],
 
-    // The family's town, for tomorrow's weather (Open-Meteo, no key). Empty: no weather.
-    'weather' => [
-        'lat' => env('TRIBE_LAT'),
-        'lon' => env('TRIBE_LON'),
-    ],
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
