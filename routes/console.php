@@ -7,3 +7,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('tribe:sync-calendars')->hourly()->withoutOverlapping();
 Schedule::command('tribe:sync-connections')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('tribe:remind')->dailyAt('18:00')->withoutOverlapping();

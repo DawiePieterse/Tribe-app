@@ -67,6 +67,11 @@ only for `php artisan` commands.
       as `MICROSOFT_CLIENT_ID` and `MICROSOFT_CLIENT_SECRET`.
 
     Then `php artisan config:cache`. A provider without its ID and secret simply isn't offered.
+12. **Push notifications:** in the Terminal, `php artisan tribe:vapid-keys` prints two lines; paste them into
+    `.env` (and `VAPID_SUBJECT=mailto:<your address>`), then `php artisan config:cache`. Each person turns
+    notifications on under Meer › My instellings, from Tribe on their Home Screen. The evening reminder
+    runs from the same cron job (18:00). In cPanel › Select PHP Version, tick `gmp` (or `bcmath`): the
+    signing maths is much faster with it.
 
 ## Updates
 

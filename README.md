@@ -63,8 +63,12 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
   `ANTHROPIC_API_KEY`, ideas come from Tribe's own cookbook and only pasted text can be read.
   Sixty60 has no public API or list import, so the list is shared as text.
 
-Still to come: chores and pocket money, document vault, push notifications
-(they need the `minishlink/web-push` package, which couldn't be installed while Packagist was blocked here).
+- **Push notifications:** turned on per device under My instellings (iPhone: once Tribe is on the Home
+  Screen). Tomorrow's entries and open lifts every evening at 18:00 (`tribe:remind`), a new gathering or
+  date poll, an RSVP for your gathering, and being put down for a lift. Needs VAPID keys from
+  `php artisan tribe:vapid-keys` in `.env`.
+
+Still to come: chores and pocket money, document vault.
 
 ## Getting started
 

@@ -9,6 +9,7 @@ use App\Models\InboxItem;
 use App\Models\Lift;
 use App\Models\Member;
 use App\Services\Agenda;
+use App\Services\Push;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,9 +49,17 @@ class EventController extends Controller
         return is_string($value) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value) ? $value : null;
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Push $push): RedirectResponse
     {
         $event = Event::query()->create($this->validated($request) + ['created_by' => $this->me()->id]);
+
+        if ($event->isGathering()) {
+            $event->load('hostHousehold');
+            $push->send(Member::query()->drivers()->whereKeyNot($this->me()->id)->get(),
+                __('Nuwe byeenkoms: :title', ['title' => $event->title]),
+                $event->starts_on->translatedFormat('l j F').($event->timeLabel() ? ' '.$event->timeLabel() : '').($event->hostHousehold ? ' · '.__('by :house', ['house' => $event->hostHousehold->name]) : ''),
+                route('events.show', $event));
+        }
 
         if ($request->integer('poll_id') > 0) {
             DatePollController::close($request->integer('poll_id'), $event->id);

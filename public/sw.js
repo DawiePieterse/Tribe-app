@@ -3,7 +3,7 @@
  * so the calendar and lists can be read with no signal. Static files: cache first.
  * Only plain GET pages are kept; nothing is cached for other origins.
  */
-const VERSION = 'tribe-v1';
+const VERSION = 'tribe-v2';
 const STATIC = ['/css/app.css', '/js/app.js', '/js/lists.js', '/icons/icon-192.png', '/offline.html'];
 
 self.addEventListener('install', (event) => {
@@ -55,4 +55,26 @@ self.addEventListener('fetch', (event) => {
             })),
         );
     }
+});
+
+// Notifications from Tribe (tomorrow's agenda, a new gathering, who gives the lift). Tapping one opens the page.
+self.addEventListener('push', (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
+    event.waitUntil(self.registration.showNotification(data.title || 'Tribe', {
+        body: data.body || '',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: { url: data.url || '/' },
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+    event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+        const open = windows.find((w) => w.url.startsWith(self.location.origin));
+        if (open) return open.navigate(url).then((w) => w && w.focus());
+        return self.clients.openWindow(url);
+    }));
 });

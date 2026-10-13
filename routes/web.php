@@ -18,6 +18,7 @@ use App\Http\Controllers\ListController;
 use App\Http\Controllers\ListItemController;
 use App\Http\Controllers\MealController;
 use App\Http\Controllers\MealIdeaController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShareController;
@@ -157,6 +158,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/meer', [SettingsController::class, 'more'])->name('more');
     Route::get('/instellings', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/instellings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/kennisgewings', [PushController::class, 'store'])->name('push.store');
+    Route::delete('/kennisgewings', [PushController::class, 'destroy'])->name('push.destroy');
 
     Route::middleware('family')->group(function (): void {
         Route::get('/familie', [FamilyController::class, 'index'])->name('family.index');

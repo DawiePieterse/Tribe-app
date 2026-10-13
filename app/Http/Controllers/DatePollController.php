@@ -6,6 +6,8 @@ use App\Models\DatePoll;
 use App\Models\DatePollOption;
 use App\Models\DatePollVote;
 use App\Models\Household;
+use App\Models\Member;
+use App\Services\Push;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,7 +31,7 @@ class DatePollController extends Controller
         return view('polls.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Push $push): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -61,6 +63,11 @@ class DatePollController extends Controller
 
             return $poll;
         });
+
+        $push->send(Member::query()->drivers()->whereKeyNot($this->me()->id)->get(),
+            __('Watter datums werk? :title', ['title' => $poll->title]),
+            trans_choice(':count datum om te merk|:count datums om te merk', $options->count()),
+            route('polls.show', $poll));
 
         return redirect()->route('polls.show', $poll)->with('status', __('Klaar. Merk nou wat vir julle huis werk.'));
     }

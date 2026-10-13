@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\GatheringItem;
 use App\Models\GatheringResponse;
+use App\Models\Member;
+use App\Services\Push;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,7 +14,7 @@ use Illuminate\Validation\Rule;
 class GatheringController extends Controller
 {
     /** Each household answers once for everyone in it; answering again replaces the answer. */
-    public function respond(Request $request, Event $event): RedirectResponse
+    public function respond(Request $request, Event $event, Push $push): RedirectResponse
     {
         $this->ensureGathering($event);
         $me = $this->me();
@@ -36,6 +38,15 @@ class GatheringController extends Controller
                 'responded_by' => $me->id,
             ],
         );
+
+        // The hosts hear who is coming.
+        if ($event->host_household_id !== null && $event->host_household_id !== $me->household_id) {
+            $label = ['yes' => __('kom'), 'maybe' => __('kom dalk'), 'no' => __('kan nie kom nie')][$data['status']];
+            $push->send(Member::query()->drivers()->where('household_id', $event->host_household_id)->get(),
+                $event->title,
+                __(':house :label', ['house' => $me->household->name, 'label' => $label]).($coming ? ' ('.((int) ($data['adults'] ?? 0) + (int) ($data['children'] ?? 0)).')' : '').(! empty($data['note']) ? ' · '.$data['note'] : ''),
+                route('events.show', $event));
+        }
 
         return redirect()->route('events.show', $event)->with('status', __('Dankie, julle antwoord is gestoor.'));
     }

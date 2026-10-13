@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Push;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,7 @@ class SettingsController extends Controller
 
     public function edit(): View
     {
-        return view('settings', ['me' => $this->me()]);
+        return view('settings', ['me' => $this->me(), 'push' => Push::enabled() ? (string) config('services.webpush.public_key') : null]);
     }
 
     public function update(Request $request): RedirectResponse

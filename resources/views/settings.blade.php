@@ -13,4 +13,24 @@
         <label class="check"><input type="checkbox" name="large_text" value="1" @checked(old('large_text', $me->large_text))> {{ __('Groter teks') }}</label>
         <div><button type="submit">{{ __('Stoor') }}</button></div>
     </form>
+
+    @if ($push !== null)
+        @push('scripts')<script src="/js/push.js?v={{ filemtime(public_path('js/push.js')) }}" defer></script>@endpush
+        <h2>{{ __('Kennisgewings') }}</h2>
+        <p>{{ __('Tribe laat weet jou op hierdie toestel: môre se afsprake, ’n nuwe byeenkoms of datumpeiling, wie se beurt dit is om te ry, en wanneer niemand nog ry nie.') }}</p>
+        <div data-push data-push-key="{{ $push }}" data-push-url="{{ route('push.store') }}" hidden
+             data-push-words="{{ json_encode([
+                 'on' => __('Skakel kennisgewings aan'),
+                 'off' => __('Skakel kennisgewings af'),
+                 'turnedOn' => __('Aan. Jy kry kennisgewings op hierdie toestel.'),
+                 'turnedOff' => __('Af op hierdie toestel.'),
+                 'denied' => __('Jou toestel laat dit nie toe nie. Skakel dit aan by Instellings › Kennisgewings › Tribe.'),
+                 'unsupported' => __('Op ’n iPhone werk dit net as Tribe op die Tuisskerm is: tik Deel in Safari, dan “Voeg by Tuisskerm”, en maak Tribe daarvandaan oop.'),
+                 'failed' => __('Dit het nie gewerk nie. Probeer weer.'),
+             ]) }}">
+            <p><button type="button" data-push-toggle hidden></button></p>
+            <p class="muted small" data-push-note></p>
+        </div>
+        <noscript><p class="muted small">{{ __('Kennisgewings het JavaScript nodig.') }}</p></noscript>
+    @endif
 </x-layout>
