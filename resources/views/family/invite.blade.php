@@ -11,7 +11,7 @@
     </div>
 
     <p style="margin-top: 16px">
-        <a class="button" href="https://wa.me/?text={{ rawurlencode($message) }}">@include('partials.icon', ['name' => 'share']) {{ __('Stuur op WhatsApp') }}</a>
+        <x-message :text="$message" class="button" />
     </p>
     <p class="muted small">{{ __('As jy weer op Uitnodig tik, hou hierdie skakel op werk.') }}</p>
 </x-layout>

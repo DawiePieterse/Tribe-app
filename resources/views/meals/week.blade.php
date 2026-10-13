@@ -11,6 +11,9 @@
     <p class="actions">
         <a class="button" href="{{ route('ideas.index') }}">{{ __('Wat maak ons vanaand?') }}</a>
         <a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
+        @if ($meals->isNotEmpty())
+            <x-message :text="__('Weekmenu :from tot :to', ['from' => $monday->translatedFormat('j M'), 'to' => $monday->addDays(6)->translatedFormat('j M')]).":\n".collect(range(0, 6))->map(fn ($i) => $monday->addDays($i))->filter(fn ($d) => $meals->has($d->toDateString()))->map(fn ($d) => \App\Support\Dates::shortDay($d).' '.$meals->get($d->toDateString())->map->label()->implode(', '))->implode("\n")" :label="__('Stuur')" />
+        @endif
     </p>
 
     <ol class="week">

@@ -123,11 +123,9 @@
                             <summary>{{ __('Koop wat kort') }}</summary>
                             @include('partials.to-list', ['lines' => $missing, 'lists' => $lists])
                             <p>
-                                <button type="button" class="quiet small" data-share="{{ $shareText }}" data-copied="{{ __('Gekopieer') }}">
-                                    @include('partials.icon', ['name' => 'share']) {{ __('Deel vir Sixty60') }}
-                                </button>
+                                <x-message class="button quiet small" :text="$shareText" />
                             </p>
-                            <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie: tik “Checkers” by ’n item om dit daar te soek, of deel die lys en soek in die app.') }}</p>
+                            <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie: tik “Checkers” by ’n item om dit daar te soek.') }}</p>
                         </details>
                     @endif
                 </article>

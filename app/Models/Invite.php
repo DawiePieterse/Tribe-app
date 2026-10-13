@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A single-use link that logs one adult in. Admins share it on WhatsApp.
+ * A single-use link that logs one adult in. Admins send it in Messages.
  *
  * @property int $id
  * @property int $member_id

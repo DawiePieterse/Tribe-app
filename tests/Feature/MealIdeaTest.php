@@ -137,7 +137,7 @@ it('offers the missing ingredients for a shopping list and to share', function (
 
     $this->get(route('ideas.index'))
         ->assertSee(__('Koop wat kort'))
-        ->assertSee(__('Deel vir Sixty60'))
+        ->assertSee(__('Stuur in Messages'))->assertSee('href="sms:&amp;body=', false)
         ->assertSee('value="1 blikkie mielies (410 g), gedreineer"', false);
 });
 

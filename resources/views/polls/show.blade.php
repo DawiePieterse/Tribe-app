@@ -4,6 +4,11 @@
     <h1>{{ $poll->title }}</h1>
     <p class="muted">{{ $poll->creator ? __('Voorgestel deur :name', ['name' => $poll->creator->name]) : '' }}</p>
     @if ($poll->notes)<p class="notes">{{ $poll->notes }}</p>@endif
+    @if ($poll->isOpen())
+        <p>
+            <x-message class="button quiet small" :text="__('Watter datums werk vir julle vir :title? Merk dit in Tribe: :link', ['title' => $poll->title, 'link' => route('polls.show', $poll)])" :label="__('Vra die familie')" />
+        </p>
+    @endif
 
     @if (! $poll->isOpen())
         <p class="panel">

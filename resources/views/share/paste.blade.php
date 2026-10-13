@@ -1,7 +1,7 @@
 <x-layout :title="__('Plak ’n boodskap')">
     <a class="back" href="{{ route('calendar') }}">@include('partials.icon', ['name' => 'back']) {{ __('Kalender') }}</a>
     <h1>{{ __('Plak ’n boodskap') }}</h1>
-    <p class="muted">{{ __('Kopieer ’n plan uit die familie se WhatsApp-groep en plak dit hier. Tribe vul die datum, tyd en plek vir jou in; jy kyk dit na voor dit op die kalender gaan.') }}</p>
+    <p class="muted">{{ __('Kopieer ’n plan uit die familie se Messages-groep en plak dit hier. Tribe vul die datum, tyd en plek vir jou in; jy kyk dit na voor dit op die kalender gaan.') }}</p>
 
     <form method="post" action="{{ route('share.read') }}" class="stack" style="margin-top: 16px">
         @csrf
@@ -16,5 +16,5 @@
         @endif
     </form>
 
-    <p class="small" style="margin-top: 24px"><a href="{{ route('share.setup') }}">{{ __('Stuur boodskappe reguit uit WhatsApp na Tribe') }}</a></p>
+    <p class="small" style="margin-top: 24px"><a href="{{ route('share.setup') }}">{{ __('Stuur boodskappe reguit uit Messages na Tribe') }}</a></p>
 </x-layout>

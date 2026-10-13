@@ -9,6 +9,9 @@
             <h1>{{ $list->name }}</h1>
             <p class="muted small">{{ $list->isFamilyWide() ? __('Hele familie') : __('Net ons huis') }}</p>
         </div>
+        @if ($open->isNotEmpty())
+            <x-message class="button quiet small" :text="$list->name.":\n".$open->map(fn ($i) => '• '.$i->title)->implode("\n")."\n".route('lists.show', $list)" :label="__('Stuur')" />
+        @endif
     </div>
 
     <p class="offline-note">{{ __('Geen sein nie. Wat jy afmerk of byvoeg, word gestoor sodra daar weer sein is.') }}</p>

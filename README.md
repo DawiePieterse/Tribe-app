@@ -10,7 +10,7 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 ## What's in phase 1
 
 - **Logins without passwords:** an emailed six-digit code, or an admin's single-use invite link shared on
-  WhatsApp. Logins are remembered on each device.
+  Messages. Logins are remembered on each device.
 - **Households:** each household has its own private things, and the whole family shares the rest. Every
   event, list and contact is either "Net ons huis" or "Hele familie"; `Concerns/HouseholdScoped` enforces it.
   Admins manage people, not content: they can't see another household's private things either.
@@ -32,7 +32,7 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
   and Tribe subscribes to school, club or holiday calendars by `.ics` / `webcal://` link, synced hourly.
 - **Vind ’n datum:** propose dates, each household marks yes / maybe / no, Tribe shows the date that suits
   everyone, and the chosen date becomes a gathering.
-- **Stuur na Tribe:** paste a message from the family WhatsApp group, or share it from WhatsApp with an
+- **Stuur na Tribe:** paste a message from the family Messages group, or share it from Messages with an
   Apple Shortcut; Tribe reads the plan (with Claude if `ANTHROPIC_API_KEY` is set, otherwise a built-in
   Afrikaans/English reader) and it waits on the home screen to be checked and saved.
 
@@ -40,6 +40,9 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 
 - **A new look:** Apple-style grouped cards, a floating glass tab bar, SF Pro and New York (the iPhone's own
   fonts), graphite and sapphire, with a true-black dark mode.
+- **Stuur in Messages:** gatherings, date polls, lists, recipes, the week menu and a meal idea's shopping
+  list open the Messages app with the text (and a Tribe link) filled in; the Stuur na Tribe page explains the
+  Shortcuts automation that sends family members' messages to Tribe by itself. The family doesn't use WhatsApp.
 - **Two-way calendar sync:** each person connects their own Google, Outlook or iCloud calendar (Meer ›
   Kalenders). New and changed events go both ways; the later change wins when both sides changed.
   Deleting in Tribe deletes the copy; deleting a Tribe event from your own calendar only removes it for

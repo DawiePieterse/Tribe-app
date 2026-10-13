@@ -49,3 +49,14 @@ it('makes a new gathering whole-family even if "net ons huis" is sent', function
     $braai = Event::query()->where('title', 'Braai')->sole();
     expect($braai->household_id)->toBeNull()->and($braai->host_household_id)->toBe($this->ours->id);
 });
+
+it('offers to invite the family in Messages', function () {
+    $host = household('Gashere');
+    $me = adult($host);
+    $event = Event::query()->create(['kind' => 'gathering', 'title' => 'Sondagete', 'starts_on' => today()->addWeek(), 'host_household_id' => $host->id]);
+
+    $this->actingAs($me)->get(route('events.show', $event))
+        ->assertSee('href="sms:&amp;body=', false)
+        ->assertSee(rawurlencode(route('events.show', $event)), false)
+        ->assertSee(__('Nooi die familie'));
+});

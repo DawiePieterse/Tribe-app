@@ -15,6 +15,12 @@
         @endunless
     </div>
 
+    @if ($event->isGathering())
+        <p>
+            <x-message class="button quiet small" :text="__(':title, :date. Laat weet in Tribe of julle kom: :link', ['title' => $event->title, 'date' => $event->starts_on->translatedFormat('l j F').($event->timeLabel() ? ' '.$event->timeLabel() : ''), 'link' => route('events.show', $event)])" :label="__('Nooi die familie')" />
+        </p>
+    @endif
+
     <dl class="facts">
         <dt>{{ __('Wanneer') }}</dt>
         <dd>

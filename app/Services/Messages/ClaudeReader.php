@@ -17,7 +17,7 @@ final class ClaudeReader
         $households = Household::query()->orderBy('id')->pluck('name')->implode(', ');
 
         $system = implode("\n", [
-            'You read one message from a South African family\'s group chat (usually Afrikaans, sometimes English)',
+            'You read one message from a South African family\'s group chat in Messages (usually Afrikaans, sometimes English)',
             'and pull out the single plan it describes, for their shared calendar.',
             'Today is '.$today->locale('en')->isoFormat('dddd D MMMM YYYY').' (Africa/Johannesburg).',
             'The family\'s households: '.$households.'.',

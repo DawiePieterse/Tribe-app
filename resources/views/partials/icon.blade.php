@@ -19,6 +19,7 @@
     @case('door')<path d="M14 4.5H6.5v15H14"/><path d="M10.5 12H20M17 9l3 3-3 3"/>@break
     @case('check')<path d="m5 12.5 4.5 4.5L19 7.5"/>@break
     @case('trash')<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>@break
+    @case('message')<path d="M4.5 6.5A2.5 2.5 0 0 1 7 4h10a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 17 16h-6l-4.5 3.5V16H7a2.5 2.5 0 0 1-2.5-2.5v-7Z"/>@break
     @case('share')<path d="M12 15V3.5M8 7.5l4-4 4 4"/><path d="M6.5 11H5v9.5h14V11h-1.5"/>@break
 @endswitch
 </svg>

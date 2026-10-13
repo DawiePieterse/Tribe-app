@@ -1,7 +1,7 @@
 <x-layout :title="__('Stuur na Tribe')">
     <a class="back" href="{{ route('more') }}">@include('partials.icon', ['name' => 'back']) {{ __('Meer') }}</a>
     <h1>{{ __('Stuur na Tribe') }}</h1>
-    <p>{{ __('Stuur ’n plan uit die familie se WhatsApp-groep reguit na Tribe. Dit wag dan op jou tuisblad; jy tik daarop, kyk die datum na en stoor.') }}</p>
+    <p>{{ __('Stuur ’n plan uit die familie se Messages-groep reguit na Tribe. Dit wag dan op jou tuisblad; jy tik daarop, kyk die datum na en stoor.') }}</p>
     <p class="muted small">
         {{ __('Net boodskappe wat jy self stuur, gaan na Tribe; Tribe lees nooit die groep nie.') }}
         @if ($usesClaude) {{ __('Die boodskap word na Claude (Anthropic) gestuur om die datum uit te lees.') }} @endif
@@ -40,9 +40,18 @@
 
     <h2>{{ __('3. Gebruik dit') }}</h2>
     <ol class="steps">
-        <li>{{ __('In WhatsApp: druk lank op die boodskap, tik “Forward”, en dan die Deel-knoppie regs onder.') }}</li>
+        <li>{{ __('In Messages: druk lank op die boodskap, tik “More…”, en dan die Deel-knoppie links onder.') }}</li>
         <li>{{ __('Kies “Stuur na Tribe”. ’n Kennisgewing sê wat Tribe gelees het.') }}</li>
         <li>{{ __('Maak Tribe oop: die plan wag bo-aan jou tuisblad. Tik daarop, kyk dit na en stoor.') }}</li>
     </ol>
     <p class="muted small">{{ __('In ander apps: kies die teks, tik “Share…” en dan “Stuur na Tribe”.') }}</p>
+
+    <h2>{{ __('4. Vanself, sonder om te deel (opsioneel)') }}</h2>
+    <p>{{ __('Jou iPhone kan elke boodskap van die familie self na Tribe stuur. Tribe lees dit en hou net die planne wat ’n datum het; die res word weggegooi.') }}</p>
+    <ol class="steps">
+        <li>{{ __('In Shortcuts, tik op “Automation” onder, dan op +, en kies “Message”.') }}</li>
+        <li>{{ __('By “Sender” kies die familie se name. Los “Contains” leeg. Kies “Run Immediately” en tik “Next”.') }}</li>
+        <li>{{ __('Kies die opdrag “Stuur na Tribe”. Die boodskap gaan vanself as “Shortcut Input”.') }}</li>
+    </ol>
+    <p class="muted small">{{ __('Dit werk net vir boodskappe wat jou iPhone ontvang terwyl dit aan is, en net vir die senders wat jy kies.') }}</p>
 </x-layout>

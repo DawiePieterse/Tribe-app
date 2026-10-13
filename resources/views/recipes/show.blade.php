@@ -9,6 +9,7 @@
                     @include('partials.icon', ['name' => $favourite ? 'heart-filled' : 'heart'])
                 </button>
             </form>
+            <x-message class="button quiet small" :text="__('Resep: :title :link', ['title' => $recipe->title, 'link' => route('recipes.show', $recipe)])" :label="__('Stuur')" />
             <a class="button quiet small" href="{{ route('recipes.edit', $recipe) }}">{{ __('Wysig') }}</a>
         </span>
     </div>
