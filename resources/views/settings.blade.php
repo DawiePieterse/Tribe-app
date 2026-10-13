@@ -11,6 +11,7 @@
             @error('email')<span class="error">{{ $message }}</span>@enderror</label>
         <label>{{ __('Verjaarsdag') }}<input type="date" name="birthday" value="{{ old('birthday', $me->birthday?->toDateString()) }}"></label>
         <label class="check"><input type="checkbox" name="large_text" value="1" @checked(old('large_text', $me->large_text))> {{ __('Groter teks') }}</label>
+        <label class="check"><input type="checkbox" name="evening_email" value="1" @checked(old('evening_email', $me->evening_email))> {{ __('Stuur my elke aand ’n e-pos met môre se program (en my ritte)') }}</label>
         <div><button type="submit">{{ __('Stoor') }}</button></div>
     </form>
 

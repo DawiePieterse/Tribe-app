@@ -2,48 +2,57 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\EveningSummaryMail;
 use App\Models\Member;
 use App\Models\PushSubscription;
-use App\Services\Agenda;
+use App\Services\EveningSummary;
 use App\Services\Push;
+use App\Services\Weather;
 use App\Support\Dates;
-use App\Support\Occurrence;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
-/** Every evening: tomorrow's entries, and children's lifts nobody is down for yet. */
+/** Every evening: tomorrow's entries, the weather, your lifts, and children's lifts nobody is down for yet. */
 class RemindCommand extends Command
 {
     protected $signature = 'tribe:remind';
 
-    protected $description = 'Push tomorrow’s agenda and open lifts to everyone with notifications on';
+    protected $description = 'Send tomorrow’s summary: push to devices with notifications on, email to those who asked';
 
-    public function handle(Agenda $agenda, Push $push): int
+    public function handle(EveningSummary $summaries, Push $push): int
     {
-        if (! Push::enabled()) {
-            $this->line('Push notifications are not set up (tribe:vapid-keys).');
-
-            return self::SUCCESS;
-        }
-
         $tomorrow = CarbonImmutable::tomorrow();
-        $members = Member::query()->whereIn('id', PushSubscription::query()->select('member_id'))->get();
+        $withPush = Push::enabled() ? PushSubscription::query()->select('member_id') : collect();
+        $members = Member::query()->whereNotNull('email')
+            ->where(fn ($q) => $q->where('evening_email', true)->orWhereIn('id', $withPush))
+            ->get();
 
         foreach ($members as $member) {
-            $coming = $agenda->between($member, $tomorrow, $tomorrow->addDays(2));
-            $lines = $coming->filter(fn (Occurrence $o) => $o->date->isSameDay($tomorrow))
-                ->map(fn (Occurrence $o) => trim(($o->time ? $o->time.' ' : '').$o->title.($o->event?->member ? ' ('.$o->event->member->firstName().')' : '')));
+            $summary = $summaries->for($member, $tomorrow);
 
-            if ($lines->isNotEmpty()) {
-                $push->send($member, __('Môre, :day', ['day' => Dates::shortDay($tomorrow).' '.$tomorrow->translatedFormat('j F')]),
-                    $lines->take(5)->implode("\n").($lines->count() > 5 ? "\n…" : ''), route('calendar'));
+            if ($member->evening_email) {
+                Mail::to($member->email)->send(new EveningSummaryMail($member, $summary));
             }
 
-            $open = $coming->filter(fn (Occurrence $o) => $o->liftOpen() && $o->event?->member?->household_id === $member->household_id);
-            if ($open->isNotEmpty()) {
-                $push->send($member, __('Niemand ry nog nie'),
-                    $open->map(fn (Occurrence $o) => Dates::shortDay($o->date).' '.$o->title.' ('.$o->event?->member?->firstName().'): '.$o->lift)->implode("\n"),
-                    route('home'));
+            if (! Push::enabled() || ! PushSubscription::query()->where('member_id', $member->id)->exists()) {
+                continue;
+            }
+
+            $lines = $summary['entries']->map(fn ($o) => EveningSummary::entryLine($o));
+            if ($lines->isNotEmpty() || $summary['mine'] !== []) {
+                $body = $lines->take(5)->implode("\n").($lines->count() > 5 ? "\n…" : '');
+                if ($summary['mine'] !== []) {
+                    $body = trim($body."\n".implode("\n", $summary['mine']));
+                }
+                if ($summary['weather'] !== null) {
+                    $body = Weather::line($summary['weather']).($summary['weather']['flags'] ? ' · '.implode(' · ', $summary['weather']['flags']) : '')."\n".$body;
+                }
+                $push->send($member, __('Môre, :day', ['day' => Dates::shortDay($tomorrow).' '.$tomorrow->translatedFormat('j F')]), $body, route('calendar'));
+            }
+
+            if ($summary['open'] !== []) {
+                $push->send($member, __('Niemand ry nog nie'), implode("\n", $summary['open']), route('home'));
             }
         }
 

@@ -25,7 +25,7 @@ final class IcsWriter
     }
 
     /**
-     * @param  array{uid: string, title: string, date: CarbonImmutable, end_date?: CarbonImmutable|null, start_time?: string|null, end_time?: string|null, location?: string|null, notes?: string|null, rrule?: string|null, url?: string|null}  $e
+     * @param  array{uid: string, title: string, date: CarbonImmutable, end_date?: CarbonImmutable|null, start_time?: string|null, end_time?: string|null, location?: string|null, notes?: string|null, rrule?: string|null, url?: string|null, exdates?: list<CarbonImmutable>}  $e
      */
     public function add(array $e): void
     {
@@ -55,6 +55,11 @@ final class IcsWriter
 
         if (! empty($e['rrule'])) {
             $this->lines[] = 'RRULE:'.$e['rrule'];
+            foreach ($e['exdates'] ?? [] as $skip) {
+                $this->lines[] = $startTime === null
+                    ? 'EXDATE;VALUE=DATE:'.$skip->format('Ymd')
+                    : 'EXDATE:'.$this->at($skip, $startTime)->format('Ymd\THis\Z');
+            }
         }
 
         $this->lines[] = 'END:VEVENT';

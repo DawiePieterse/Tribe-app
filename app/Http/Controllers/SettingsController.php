@@ -29,6 +29,7 @@ class SettingsController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('members', 'email')->ignore($me->id)],
             'birthday' => ['nullable', 'date', 'before_or_equal:today'],
             'large_text' => ['nullable', 'boolean'],
+            'evening_email' => ['nullable', 'boolean'],
         ]);
 
         $me->update([
@@ -36,6 +37,7 @@ class SettingsController extends Controller
             'email' => $data['email'],
             'birthday' => $data['birthday'] ?? null,
             'large_text' => $request->boolean('large_text'),
+            'evening_email' => $request->boolean('evening_email'),
         ]);
 
         return redirect()->route('settings')->with('status', __('Gestoor.'));

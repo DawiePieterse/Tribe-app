@@ -504,3 +504,20 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .lifts select { min-height: 40px; padding: 6px 30px 6px 10px; font-size: 0.95em; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink); }
 .lift-line { display: block; font-size: 0.85em; color: var(--ink-soft); }
 .lift-line .open { color: var(--danger); font-weight: 600; }
+.lifts.no-lifts > li { grid-template-columns: 1fr auto; }
+.lifts > li > .skip-day { grid-column: 1 / -1; justify-self: start; min-height: 0; padding: 2px 0; }
+.lifts.no-lifts > li > .skip-day { grid-column: 2; grid-row: 1; }
+.lifts > li.is-skipped .when { text-decoration: line-through; color: var(--ink-soft); }
+.lifts > li .skip-note { grid-column: 2 / -1; }
+.greeting .weather { order: 1; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 0.95em; margin: 6px 0 0; }
+.greeting .flag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-ink); font-size: 0.85em; font-weight: 600; }
+
+/* Week strip: Monday to Sunday, a dot per colour. */
+.week-title { font-size: 1.35em; text-align: center; text-transform: none; }
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px 6px; margin-bottom: 16px; background: var(--surface); border-radius: var(--card); box-shadow: var(--shadow); }
+.week-strip a { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 12px; color: inherit; }
+.week-strip .wd { font-size: 0.68em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+.week-strip b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-weight: 600; font-variant-numeric: tabular-nums; }
+.week-strip .today b { background: var(--action); color: var(--on-action); }
+.week-strip .dots { display: flex; gap: 3px; min-height: 6px; }
+.week-strip .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }

@@ -80,7 +80,8 @@ class EventController extends Controller
         $me = $this->me();
         $event->load(['member.household', 'household', 'hostHousehold', 'feed', 'responses.household', 'items.household']);
 
-        $liftDates = $event->isForChild() ? LiftController::dates($event, $agenda) : [];
+        $event->load(['thereDriver', 'backDriver', 'skips']);
+        $liftDates = $event->isForChild() || ($event->repeats() && ! $event->isFromFeed()) ? LiftController::dates($event, $agenda) : [];
         $lifts = $liftDates === [] ? collect() : $event->lifts()->whereIn('date', array_map(fn ($d) => $d->toDateString(), $liftDates))->get()
             ->keyBy(fn (Lift $l) => $l->date->toDateString().'|'.$l->direction);
 
@@ -98,7 +99,7 @@ class EventController extends Controller
                 : collect(),
             'liftDates' => $liftDates,
             'lifts' => $lifts,
-            'drivers' => $liftDates === [] ? collect() : Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get()
+            'drivers' => ! $event->isForChild() ? collect() : Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get()
                 ->sortBy(fn (Member $m) => $m->household_id === $event->member?->household_id ? 0 : 1)->values(),
         ]);
     }
@@ -143,6 +144,10 @@ class EventController extends Controller
             'me' => $this->me(),
             'households' => Household::query()->orderBy('id')->get(),
             'members' => Member::query()->with('household')->orderBy('household_id')->orderBy('name')->get(),
+            'drivers' => Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get(),
+            // Places used before (the rugby field, the pool), most used first, to pick from.
+            'places' => Event::query()->visibleTo($this->me())->whereNotNull('location')->where('location', '!=', '')
+                ->selectRaw('location, COUNT(*) AS n')->groupBy('location')->orderByDesc('n')->orderBy('location')->limit(40)->pluck('location'),
         ];
     }
 
@@ -161,6 +166,8 @@ class EventController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'member_id' => ['nullable', Rule::exists('members', 'id')],
+            'there_member_id' => ['nullable', Rule::exists('members', 'id')],
+            'back_member_id' => ['nullable', Rule::exists('members', 'id')],
             'host_household_id' => ['nullable', Rule::exists('households', 'id')],
             'share' => ['required', Rule::in(['household', 'family'])],
             'repeats' => ['nullable', Rule::in(Event::REPEATS)],
@@ -182,6 +189,8 @@ class EventController extends Controller
             'location' => $data['location'] ?? null,
             'notes' => $data['notes'] ?? null,
             'member_id' => $data['member_id'] ?? null,
+            'there_member_id' => $data['there_member_id'] ?? null,
+            'back_member_id' => $data['back_member_id'] ?? null,
             // Gatherings are for the whole family; anything else follows the "who sees it" choice.
             'household_id' => ($gathering || $data['share'] === 'family') && ! $me->isHelper() ? null : $me->household_id,
             'host_household_id' => $gathering ? ($data['host_household_id'] ?? $me->household_id) : null,

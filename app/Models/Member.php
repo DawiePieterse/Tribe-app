@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable|null $birthday
  * @property string|null $colour
  * @property bool $large_text
+ * @property bool $evening_email the evening summary by email as well
  * @property string|null $clothes_size
  * @property string|null $shoe_size
  * @property string|null $favourites
@@ -49,20 +50,21 @@ class Member extends Model implements AuthenticatableContract
     public const KINDS = [self::ADULT, self::CHILD, self::HELPER];
 
     protected $fillable = [
-        'household_id', 'name', 'kind', 'email', 'is_admin', 'birthday', 'colour', 'large_text',
+        'household_id', 'name', 'kind', 'email', 'is_admin', 'birthday', 'colour', 'large_text', 'evening_email',
         'clothes_size', 'shoe_size', 'favourites', 'allergies', 'wishlist',
     ];
 
     protected $hidden = ['remember_token', 'calendar_token', 'share_token_hash'];
 
     /** @var array<string, mixed> */
-    protected $attributes = ['kind' => self::ADULT, 'is_admin' => false, 'large_text' => false];
+    protected $attributes = ['kind' => self::ADULT, 'is_admin' => false, 'large_text' => false, 'evening_email' => false];
 
     protected function casts(): array
     {
         return [
             'is_admin' => 'boolean',
             'large_text' => 'boolean',
+            'evening_email' => 'boolean',
             'birthday' => 'immutable_date',
             'last_login_at' => 'immutable_datetime',
         ];

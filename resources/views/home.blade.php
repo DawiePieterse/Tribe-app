@@ -2,6 +2,9 @@
     <header class="greeting">
         <h1>{{ __('Hallo :name', ['name' => $me->firstName()]) }}</h1>
         <p>{{ $today->translatedFormat('l j F') }}</p>
+        @if ($weather)
+            <p class="weather">{{ \App\Services\Weather::line($weather) }}@foreach ($weather['flags'] as $flag) <span class="flag">{{ $flag }}</span>@endforeach</p>
+        @endif
     </header>
 
     @if ($inbox->isNotEmpty())

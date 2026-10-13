@@ -46,9 +46,17 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 - **Helpers:** a nanny or au pair is added under Meer › Familie as a "Helper". They log in like an adult but
   see only their household's calendar (its entries and family-wide ones) and who gives the lifts. Nothing
   else: no lists, recipes, children's profiles, numbers, polls, calendars or family admin.
-- **Wie ry?** On a child's activity (an entry "Vir" a child), each coming day gets "Neem" and "Haal":
-  who takes them and who fetches them, per day for repeating activities. The agenda shows it under the
-  entry, "?" in red while nobody is down for it, and the home page lists the coming week's lifts.
+- **Wie ry?** A child's activity (an entry "Vir" a child) says who usually takes them ("Neem") and fetches
+  them ("Haal"); any single day can differ (Pa this Tuesday, nobody next week). The agenda shows it under
+  the entry, "?" in red while nobody is down for it, and the home page lists the coming week's lifts.
+- **Val weg:** one day of a repeating entry can be taken out (practice cancelled) without touching the series;
+  it leaves the agenda, the summaries and the iPhone feed (EXDATE).
+- **Places:** "Waar" offers the places used before (the rugby field, the pool) and links to the Maps app.
+- **Week view** on Kalender: Monday to Sunday with a dot per colour, next to the month view.
+- **Evening summary:** at 18:00 everyone with notifications on gets tomorrow's entries, their own lifts
+  ("Jy haal Anri om 16:00 · Dansstudio") and tomorrow's weather with "waterbottel / reënjas / trek warm
+  aan" flags (Open-Meteo, `TRIBE_LAT`/`TRIBE_LON`); the same goes by email to anyone who ticks it under My
+  instellings (a nanny without the app). Today's weather shows on Tuis.
 - **Two-way calendar sync:** each person connects their own Google, Outlook or iCloud calendar (Meer ›
   Kalenders). New and changed events go both ways; the later change wins when both sides changed.
   Deleting in Tribe deletes the copy; deleting a Tribe event from your own calendar only removes it for

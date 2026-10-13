@@ -7,12 +7,13 @@ use App\Models\Event;
 use App\Models\InboxItem;
 use App\Models\TodoList;
 use App\Services\Agenda;
+use App\Services\Weather;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function __invoke(Agenda $agenda): View
+    public function __invoke(Agenda $agenda, Weather $weather): View
     {
         $me = $this->me();
         $today = CarbonImmutable::today();
@@ -56,6 +57,7 @@ class HomeController extends Controller
             'polls' => $polls,
             'inbox' => $helper ? collect() : InboxItem::query()->where('member_id', $me->id)->whereNull('handled_at')->latest()->get(),
             'lifts' => $lifts,
+            'weather' => $weather->on($today),
             'shopping' => $shopping,
         ]);
     }

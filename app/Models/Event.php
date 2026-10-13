@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\HouseholdScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int|null $household_id
  * @property int|null $member_id
+ * @property int|null $there_member_id who usually takes a child there
+ * @property int|null $back_member_id who usually fetches
  * @property string $kind
  * @property string $title
  * @property CarbonImmutable $starts_on
@@ -34,6 +37,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $created_by
  * @property-read Household|null $household
  * @property-read Member|null $member
+ * @property-read Member|null $thereDriver
+ * @property-read Member|null $backDriver
+ * @property-read Collection<int, EventSkip> $skips
  * @property-read Household|null $hostHousehold
  * @property-read CalendarFeed|null $feed
  */
@@ -67,7 +73,7 @@ class Event extends Model
     protected $attributes = ['kind' => self::EVENT, 'repeats' => self::ONCE];
 
     protected $fillable = [
-        'household_id', 'member_id', 'kind', 'title', 'starts_on', 'ends_on', 'start_time', 'end_time',
+        'household_id', 'member_id', 'there_member_id', 'back_member_id', 'kind', 'title', 'starts_on', 'ends_on', 'start_time', 'end_time',
         'location', 'notes', 'repeats', 'repeat_until', 'host_household_id', 'created_by',
         'feed_id', 'external_uid',
     ];
@@ -151,6 +157,42 @@ class Event extends Model
     public function lifts(): HasMany
     {
         return $this->hasMany(Lift::class);
+    }
+
+    /** @return BelongsTo<Member, $this> */
+    public function thereDriver(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'there_member_id');
+    }
+
+    /** @return BelongsTo<Member, $this> */
+    public function backDriver(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'back_member_id');
+    }
+
+    /** Who usually does this leg. */
+    public function usualDriver(string $direction): ?Member
+    {
+        return $direction === Lift::THERE ? $this->thereDriver : $this->backDriver;
+    }
+
+    /** @return HasMany<EventSkip, $this> */
+    public function skips(): HasMany
+    {
+        return $this->hasMany(EventSkip::class);
+    }
+
+    /** Whether this day of the series was taken out. */
+    public function isSkippedOn(CarbonImmutable $date): bool
+    {
+        return $this->skips->contains(fn (EventSkip $s) => $s->date->isSameDay($date));
+    }
+
+    /** A link that opens the place in the Maps app. */
+    public function mapUrl(): ?string
+    {
+        return $this->location === null ? null : 'https://maps.apple.com/?q='.rawurlencode($this->location);
     }
 
     public function isGathering(): bool

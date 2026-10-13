@@ -26,7 +26,7 @@ class Agenda
 
         $events = Event::query()
             ->visibleTo($viewer)
-            ->with(['member.household', 'household', 'hostHousehold', 'feed'])
+            ->with(['member.household', 'household', 'hostHousehold', 'feed', 'thereDriver', 'backDriver', 'skips'])
             ->between($from->toDateString(), $to->toDateString())
             ->get();
 
@@ -40,6 +40,9 @@ class Agenda
 
             if ($event->repeats()) {
                 foreach ($this->repeatDates($event, $from, $to) as $date) {
+                    if ($event->isSkippedOn($date)) {
+                        continue;
+                    }
                     $years = (int) $event->starts_on->diffInYears($date);
                     $occurrences->push(new Occurrence(
                         date: $date,
@@ -122,7 +125,12 @@ class Agenda
             return null;
         }
 
-        $who = fn (string $direction) => $lifts->get(Lift::key($event->id, $date->toDateString(), $direction))?->member?->firstName() ?? '?';
+        $who = function (string $direction) use ($event, $date, $lifts): string {
+            $exception = $lifts->get(Lift::key($event->id, $date->toDateString(), $direction));
+            $driver = $exception !== null ? $exception->member : $event->usualDriver($direction);
+
+            return $driver?->firstName() ?? '?';
+        };
 
         return __('Neem: :there · Haal: :back', ['there' => $who(Lift::THERE), 'back' => $who(Lift::BACK)]);
     }

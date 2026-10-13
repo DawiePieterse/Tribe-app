@@ -23,7 +23,7 @@ class IcsController extends Controller
 
         $ics = new IcsWriter('Tribe');
 
-        $events = Event::query()->visibleTo($member)->with('hostHousehold')
+        $events = Event::query()->visibleTo($member)->with(['hostHousehold', 'skips'])
             ->between(CarbonImmutable::today()->subMonths(3)->toDateString(), CarbonImmutable::today()->addYears(5)->toDateString())
             ->get();
 
@@ -40,6 +40,7 @@ class IcsController extends Controller
                 'location' => $event->location,
                 'notes' => $event->notes,
                 'rrule' => EventData::fromEvent($event)->rrule(),
+                'exdates' => $event->skips->map(fn ($s) => $s->date)->all(),
                 'url' => route('events.show', $event),
             ]);
         }

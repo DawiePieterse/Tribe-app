@@ -37,7 +37,7 @@
             <dt>{{ __('By') }}</dt><dd>{{ $event->hostHousehold->name }}</dd>
         @endif
         @if ($event->location)
-            <dt>{{ __('Waar') }}</dt><dd>{{ $event->location }}</dd>
+            <dt>{{ __('Waar') }}</dt><dd>{{ $event->location }} <a class="small" href="{{ $event->mapUrl() }}" target="_blank" rel="noopener noreferrer">{{ __('Kaart') }}</a></dd>
         @endif
         @if ($event->member)
             <dt>{{ __('Vir') }}</dt><dd>{{ $event->member->name }}</dd>
@@ -51,30 +51,59 @@
     </dl>
 
     @if ($liftDates !== [])
-        <h2 id="ry">{{ __('Wie ry?') }}</h2>
-        <p class="muted small">{{ __('Wie neem :name soontoe en wie haal, elke keer.', ['name' => $event->member?->firstName()]) }}</p>
-        <form method="post" action="{{ route('lifts.store', $event) }}" class="stack">
+        @php($child = $event->isForChild())
+        <h2 id="kere">{{ $child ? __('Wie ry?') : __('Komende kere') }}</h2>
+        <p class="muted small">
+            @if ($child && ($event->thereDriver || $event->backDriver))
+                {{ __('Gewoonlik: neem :there, haal :back.', ['there' => $event->thereDriver?->firstName() ?? '?', 'back' => $event->backDriver?->firstName() ?? '?']) }}
+            @elseif ($child)
+                {{ __('Stel by Wysig wie gewoonlik ry; hier verander jy ’n enkele keer.') }}
+            @endif
+            @if ($event->repeats()) {{ __('“Val weg” haal net daardie een keer uit die reeks.') }} @endif
+        </p>
+        <form method="post" action="{{ route('lifts.store', $event) }}" class="stack" id="lifts-form">
             @csrf
-            <ul class="lifts panel">
+            <ul @class(['lifts', 'panel', 'no-lifts' => ! $child])>
                 @foreach ($liftDates as $date)
                     @php($d = $date->toDateString())
-                    <li>
+                    @php($skipped = $event->isSkippedOn($date))
+                    <li @class(['is-skipped' => $skipped])>
                         <span class="when">{{ \App\Support\Dates::shortDay($date) }} {{ $date->translatedFormat('j M') }}@if ($event->timeLabel())<span>{{ $event->timeLabel() }}</span>@endif</span>
-                        @foreach (['there', 'back'] as $direction)
-                            <label>{{ \App\Models\Lift::label($direction) }}
-                                <select name="lifts[{{ $d }}][{{ $direction }}]">
-                                    <option value="">{{ __('Niemand') }}</option>
-                                    @foreach ($drivers as $driver)
-                                        <option value="{{ $driver->id }}" @selected(($lifts->get($d.'|'.$direction)?->member_id) === $driver->id)>{{ $driver->firstName() }}@if ($driver->household_id !== $event->member?->household_id) ({{ $driver->household->name }})@endif</option>
-                                    @endforeach
-                                </select>
-                            </label>
-                        @endforeach
+                        @if ($child && ! $skipped)
+                            @foreach (['there', 'back'] as $direction)
+                                @php($exception = $lifts->get($d.'|'.$direction))
+                                <label>{{ \App\Models\Lift::label($direction) }}
+                                    <select name="lifts[{{ $d }}][{{ $direction }}]">
+                                        <option value="">{{ $event->usualDriver($direction)?->firstName() ?? __('Niemand') }} · {{ __('gewoonlik') }}</option>
+                                        <option value="0" @selected($exception !== null && $exception->member_id === null)>{{ __('Niemand') }}</option>
+                                        @foreach ($drivers as $driver)
+                                            <option value="{{ $driver->id }}" @selected($exception?->member_id === $driver->id)>{{ $driver->firstName() }}@if ($driver->household_id !== $event->member?->household_id) ({{ $driver->household->name }})@endif</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            @endforeach
+                        @elseif ($skipped)
+                            <span class="muted small skip-note">{{ __('Val weg') }}</span>
+                        @endif
+                        @if ($event->repeats() && ! $event->isFromFeed())
+                            <button type="submit" form="skip-{{ $d }}" class="link small skip-day">{{ $skipped ? __('Herstel') : __('Val weg') }}</button>
+                        @endif
                     </li>
                 @endforeach
             </ul>
-            <div><button type="submit">{{ __('Stoor wie ry') }}</button></div>
+            @if ($child)
+                <div><button type="submit">{{ __('Stoor wie ry') }}</button></div>
+            @endif
         </form>
+        @if ($event->repeats() && ! $event->isFromFeed())
+            @foreach ($liftDates as $date)
+                <form method="post" action="{{ route('events.skip', $event) }}" id="skip-{{ $date->toDateString() }}" hidden>
+                    @csrf
+                    <input type="hidden" name="date" value="{{ $date->toDateString() }}">
+                    <input type="hidden" name="skip" value="{{ $event->isSkippedOn($date) ? 0 : 1 }}">
+                </form>
+            @endforeach
+        @endif
     @endif
 
     @if ($event->isGathering())

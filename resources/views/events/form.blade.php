@@ -86,7 +86,12 @@
 
         <label>
             {{ __('Waar') }}
-            <input type="text" name="location" value="{{ old('location', $event->location) }}" maxlength="255">
+            <input type="text" name="location" value="{{ old('location', $event->location) }}" maxlength="255" list="plekke" placeholder="{{ __('bv. Skool se rugbyveld, Swembad') }}">
+            <datalist id="plekke">
+                @foreach ($places as $place)
+                    <option value="{{ $place }}"></option>
+                @endforeach
+            </datalist>
         </label>
 
         <label data-show-for="gathering">
@@ -107,6 +112,20 @@
                 @endforeach
             </select>
         </label>
+
+        <fieldset class="row" data-hide-for="gathering">
+            <legend>{{ __('Wie ry gewoonlik?') }} <span class="hint">{{ __('vir ’n kind se aktiwiteit; ’n ander keer kan jy dit per dag verander') }}</span></legend>
+            @foreach (['there_member_id' => __('Neem'), 'back_member_id' => __('Haal')] as $field => $label)
+                <label>{{ $label }}
+                    <select name="{{ $field }}">
+                        <option value="">{{ __('Niemand') }}</option>
+                        @foreach ($drivers as $driver)
+                            <option value="{{ $driver->id }}" @selected((int) old($field, $event->$field) === $driver->id)>{{ $driver->firstName() }} ({{ $driver->household->name }})</option>
+                        @endforeach
+                    </select>
+                </label>
+            @endforeach
+        </fieldset>
 
         <fieldset data-hide-for="gathering" @if ($me->isHelper()) hidden @endif>
             <legend>{{ __('Wie sien dit?') }}</legend>

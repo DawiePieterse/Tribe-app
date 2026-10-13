@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/kalender/{event}', [EventController::class, 'destroy'])->name('events.destroy');
 
     Route::post('/kalender/{event}/ry', [LiftController::class, 'store'])->name('lifts.store');
+    Route::post('/kalender/{event}/oorslaan', [LiftController::class, 'skip'])->name('events.skip');
 
     // Helpers (a nanny) see the calendar, the children and the numbers; the rest is the family's.
     Route::middleware('family')->group(function (): void {
