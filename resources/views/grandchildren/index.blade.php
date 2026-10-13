@@ -12,7 +12,6 @@
                             {{ $child->household->name }}@if ($child->birthday) · {{ trans_choice(':count jaar oud|:count jaar oud', $child->ageOn($today)) }}@endif
                         </span>
                     </span>
-                    @include('partials.icon', ['name' => 'next'])
                 </a>
             </li>
         @empty

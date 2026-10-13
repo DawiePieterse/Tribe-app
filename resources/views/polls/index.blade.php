@@ -14,7 +14,6 @@
                         <strong>{{ $poll->title }}</strong><br>
                         <span class="muted small">{{ $poll->options->map(fn ($o) => $o->date->translatedFormat('j M'))->implode(', ') }}</span>
                     </span>
-                    @include('partials.icon', ['name' => 'next'])
                 </a>
             </li>
         @empty
@@ -29,7 +28,6 @@
                 <li>
                     <a class="card" href="{{ $poll->event ? route('events.show', $poll->event) : route('polls.show', $poll) }}">
                         <span><strong>{{ $poll->title }}</strong>@if ($poll->event)<br><span class="muted small">{{ $poll->event->starts_on->translatedFormat('l j F') }}</span>@endif</span>
-                        @include('partials.icon', ['name' => 'next'])
                     </a>
                 </li>
             @endforeach

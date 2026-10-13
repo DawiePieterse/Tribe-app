@@ -22,7 +22,6 @@
                             <br><span class="muted small">{{ implode(' · ', array_filter([$recipe->time, $recipe->servings])) }}</span>
                         @endif
                     </span>
-                    @include('partials.icon', ['name' => 'next'])
                 </a>
             </li>
         @empty

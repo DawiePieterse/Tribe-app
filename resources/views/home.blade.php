@@ -50,7 +50,7 @@
             <ul>
                 @foreach ($toAnswer as $event)
                     <li>
-                        <a class="entry" style="--c: {{ $event->hostHousehold->colour ?? '#1F5C99' }}" href="{{ route('events.show', $event) }}">
+                        <a class="entry" style="--c: {{ $event->hostHousehold->colour ?? '#2F5BD3' }}" href="{{ route('events.show', $event) }}">
                             <strong>{{ $event->title }}</strong>
                             <span class="meta">{{ $event->starts_on->translatedFormat('l j F') }}</span>
                         </a>
