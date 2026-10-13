@@ -34,6 +34,12 @@ return [
         'tenant' => env('MICROSOFT_TENANT', 'common'),
     ],
 
+    // Where a shopping-list item's "Checkers" link goes (%s is the search words). Change it in .env if
+    // the site's search address changes.
+    'checkers' => [
+        'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search/all?q=%s'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

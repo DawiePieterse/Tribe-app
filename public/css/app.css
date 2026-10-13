@@ -489,3 +489,6 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .fav-mark .icon { width: 1em; height: 1em; color: inherit; }
 .for-people { gap: 6px; flex-wrap: nowrap; }
 .for-people input { width: 4.2em; min-height: 36px; padding: 4px 8px; text-align: center; }
+.ingredients li:has(> .shop) { display: flex; align-items: center; gap: 8px; }
+.ingredients li > label { flex: 1; min-width: 0; }
+.shop { flex: none; font-size: 0.78em; font-weight: 600; color: var(--action); background: color-mix(in srgb, var(--action) 12%, transparent); padding: 4px 10px; border-radius: 999px; }

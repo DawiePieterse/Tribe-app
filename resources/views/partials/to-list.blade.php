@@ -3,7 +3,10 @@
     @csrf
     <ul class="ingredients">
         @foreach ($lines as $line)
-            <li><label><input type="checkbox" name="items[]" value="{{ $line }}" checked> {{ $line }}</label></li>
+            <li>
+                <label><input type="checkbox" name="items[]" value="{{ $line }}" checked> {{ $line }}</label>
+                <a class="shop" href="{{ \App\Services\Food\Checkers::searchUrl($line) }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Soek “:item” by Checkers', ['item' => \App\Services\Food\Checkers::term($line)]) }}">{{ __('Checkers') }}</a>
+            </li>
         @endforeach
     </ul>
     @error('items')<span class="error">{{ $message }}</span>@enderror

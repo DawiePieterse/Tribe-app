@@ -127,7 +127,7 @@
                                     @include('partials.icon', ['name' => 'share']) {{ __('Deel vir Sixty60') }}
                                 </button>
                             </p>
-                            <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie. Deel of kopieer die lys, en soek elke item in die app.') }}</p>
+                            <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie: tik “Checkers” by ’n item om dit daar te soek, of deel die lys en soek in die app.') }}</p>
                         </details>
                     @endif
                 </article>
