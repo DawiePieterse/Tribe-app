@@ -67,6 +67,20 @@ download-backup button, download the database weekly from cPanel > Backup (or ph
 
 ## Troubleshooting
 
+Problems met on the first install (13 Oct 2026), in the order they came up:
+
+- **"Index of /" with `cgi-bin` and `php.ini`:** the subdomain's document root is cPanel's own new folder.
+  Domains > Manage > set it to `tribe/public`.
+- **Blank page, log says "No application encryption key has been specified":** `APP_KEY` is empty, or
+  `config:cache` ran before `key:generate`. Run `php artisan key:generate --force && php artisan config:cache`.
+- **500, log says "Table … sessions doesn't exist":** `php artisan migrate --force` hasn't run.
+- **419 Page Expired:** the login page was opened before the app key changed. Reload it and try again.
+- **500 when sending a code, log says "535 Incorrect authentication data":** the mailbox password in `.env`
+  is wrong. Use letters and digits only and single quotes (`MAIL_PASSWORD='…'`); in double quotes `.env`
+  treats `$` and `\` specially. Then `php artisan config:cache`.
+- **Reading the log:** `grep -o 'production.ERROR: .\{0,300\}' storage/logs/laravel.log | tail -n 2`
+
+
 - **Login code never arrives:** check the mail settings in `.env`, and `storage/logs/laravel.log`. An admin
   can always send a new invite link instead (Meer › Familie › Uitnodig).
 - **Server error:** read `~/tribe/storage/logs/laravel.log`.
