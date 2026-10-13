@@ -14,7 +14,9 @@ class GrandchildController extends Controller
     public function index(): View
     {
         return view('grandchildren.index', [
-            'children' => Member::query()->children()->with('household')->orderBy('birthday')->get(),
+            'children' => Member::query()->children()->with('household')
+                ->when($this->me()->isHelper(), fn ($q) => $q->where('household_id', $this->me()->household_id))
+                ->orderBy('birthday')->get(),
             'today' => CarbonImmutable::today(),
         ]);
     }
@@ -77,7 +79,7 @@ class GrandchildController extends Controller
 
     private function ensureChild(Member $member): void
     {
-        abort_unless($member->isChild(), 404);
+        abort_unless($member->isChild() && $this->me()->canSeeChild($member), 404);
     }
 
     private function ensureEditable(Member $member): void

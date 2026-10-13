@@ -18,14 +18,17 @@
                                     @if ($o->isBirthday())@include('partials.icon', ['name' => 'cake'])@endif
                                     {{ $o->title }}
                                 </strong>
-                                @php($meta = array_filter([
+                                @php($meta = array_unique(array_filter([
                                     $o->time,
                                     $o->detail,
                                     $o->event?->location,
                                     $o->event?->isGathering() ? __('Byeenkoms by :house', ['house' => $o->event->hostHousehold?->name ?? '']) : null,
-                                ]))
+                                ])))
                                 @if ($meta)
                                     <span class="meta">{{ implode(' · ', $meta) }}</span>
+                                @endif
+                                @if ($o->lift !== null)
+                                    <span @class(['lift-line', 'open' => $o->liftOpen()])>{{ $o->lift }}</span>
                                 @endif
                             </{{ $href ? 'a' : 'div' }}>
                         </li>

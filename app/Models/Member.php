@@ -13,8 +13,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
- * Everyone in the family. Adults with an email address can log in; children are profiles only.
- * There are no passwords: logins happen with an emailed code or an invite link.
+ * Everyone in the family. Adults with an email address can log in; children are profiles only. A
+ * helper (a nanny, an au pair) also logs in, but sees only their household's days: the calendar,
+ * the children and the important numbers. There are no passwords: logins happen with an emailed
+ * code or an invite link.
  *
  * @property int $id
  * @property int $household_id
@@ -42,6 +44,10 @@ class Member extends Model implements AuthenticatableContract
     public const ADULT = 'adult';
 
     public const CHILD = 'child';
+
+    public const HELPER = 'helper';
+
+    public const KINDS = [self::ADULT, self::CHILD, self::HELPER];
 
     protected $fillable = [
         'household_id', 'name', 'kind', 'email', 'is_admin', 'birthday', 'colour', 'large_text',
@@ -96,20 +102,42 @@ class Member extends Model implements AuthenticatableContract
         return $query->where('kind', self::CHILD);
     }
 
+    /**
+     * Grown-ups who can give a child a lift: adults and helpers.
+     *
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
+    public function scopeDrivers(Builder $query): Builder
+    {
+        return $query->whereIn('kind', [self::ADULT, self::HELPER]);
+    }
+
     public function isChild(): bool
     {
         return $this->kind === self::CHILD;
     }
 
-    public function canLogIn(): bool
+    public function isHelper(): bool
     {
-        return $this->kind === self::ADULT && $this->email !== null;
+        return $this->kind === self::HELPER;
     }
 
-    /** Admins and the adults of the child's own household may edit a child's profile. */
+    public function canLogIn(): bool
+    {
+        return in_array($this->kind, [self::ADULT, self::HELPER], true) && $this->email !== null;
+    }
+
+    /** Admins and the adults of the child's own household may edit a child's profile; helpers only look. */
     public function canEditProfileOf(Member $child): bool
     {
-        return $this->is_admin || $this->household_id === $child->household_id;
+        return ! $this->isHelper() && ($this->is_admin || $this->household_id === $child->household_id);
+    }
+
+    /** Helpers see only their own household's children. */
+    public function canSeeChild(Member $child): bool
+    {
+        return ! $this->isHelper() || $this->household_id === $child->household_id;
     }
 
     /** The secret part of this member's calendar link; made on first use. */

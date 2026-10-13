@@ -2,6 +2,7 @@
 <x-layout :title="$editing ? $member->name : __('Nuwe persoon')">
     <a class="back" href="{{ route('family.index') }}">@include('partials.icon', ['name' => 'back']) {{ __('Familie') }}</a>
     <h1>{{ $editing ? $member->name : ($member->kind === 'child' ? __('Nuwe kind') : __('Nuwe grootmens')) }}</h1>
+    <p class="muted small">{{ __('’n Helper (soos ’n nanny of au pair) meld aan soos ’n grootmens, maar sien net julle huis se kalender, die kinders en die belangrike nommers; nie lyste, resepte of die ander huise se dinge nie.') }}</p>
 
     <form method="post" action="{{ $editing ? route('family.members.update', $member) : route('family.members.store') }}" class="stack" style="margin-top: 16px">
         @csrf
@@ -20,6 +21,7 @@
             <div class="choice">
                 <label><input type="radio" name="kind" value="adult" @checked(old('kind', $member->kind) === 'adult')><span>{{ __('Grootmens') }}</span></label>
                 <label><input type="radio" name="kind" value="child" @checked(old('kind', $member->kind) === 'child')><span>{{ __('Kind') }}</span></label>
+                <label><input type="radio" name="kind" value="helper" @checked(old('kind', $member->kind) === 'helper')><span>{{ __('Helper') }}</span></label>
             </div>
         </fieldset>
         <label>{{ __('E-posadres') }} <span class="hint">{{ __('vir grootmense wat gaan aanmeld') }}</span>

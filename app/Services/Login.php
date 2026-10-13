@@ -17,12 +17,12 @@ use Illuminate\Support\Str;
  */
 class Login
 {
-    /** Sends a code if the address belongs to an adult; says nothing either way. */
+    /** Sends a code if the address belongs to someone who may log in; says nothing either way. */
     public function sendCode(string $email): void
     {
         $member = Member::query()
             ->where('email', Str::lower(trim($email)))
-            ->where('kind', Member::ADULT)
+            ->whereIn('kind', [Member::ADULT, Member::HELPER])
             ->first();
 
         if ($member === null) {

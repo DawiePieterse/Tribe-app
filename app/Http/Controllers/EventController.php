@@ -6,7 +6,9 @@ use App\Models\Event;
 use App\Models\GatheringResponse;
 use App\Models\Household;
 use App\Models\InboxItem;
+use App\Models\Lift;
 use App\Models\Member;
+use App\Services\Agenda;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,11 +65,15 @@ class EventController extends Controller
         return redirect()->route('events.show', $event)->with('status', __('Bygevoeg.'));
     }
 
-    public function show(Event $event): View
+    public function show(Event $event, Agenda $agenda): View
     {
         $this->ensureVisible($event);
         $me = $this->me();
         $event->load(['member.household', 'household', 'hostHousehold', 'feed', 'responses.household', 'items.household']);
+
+        $liftDates = $event->isForChild() ? LiftController::dates($event, $agenda) : [];
+        $lifts = $liftDates === [] ? collect() : $event->lifts()->whereIn('date', array_map(fn ($d) => $d->toDateString(), $liftDates))->get()
+            ->keyBy(fn (Lift $l) => $l->date->toDateString().'|'.$l->direction);
 
         $responses = $event->responses->keyBy('household_id');
 
@@ -81,6 +87,10 @@ class EventController extends Controller
             'allergies' => $event->isGathering()
                 ? Member::query()->children()->whereNotNull('allergies')->where('allergies', '!=', '')->get()
                 : collect(),
+            'liftDates' => $liftDates,
+            'lifts' => $lifts,
+            'drivers' => $liftDates === [] ? collect() : Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get()
+                ->sortBy(fn (Member $m) => $m->household_id === $event->member?->household_id ? 0 : 1)->values(),
         ]);
     }
 
@@ -108,11 +118,12 @@ class EventController extends Controller
         return redirect()->route('calendar', ['maand' => $month])->with('status', __('Verwyder.'));
     }
 
-    /** Entries from a subscribed calendar change at the source, not here. */
+    /** Entries from a subscribed calendar change at the source, not here; helpers change only their household's own. */
     private function ensureEditable(Event $event): void
     {
         $this->ensureVisible($event);
         abort_if($event->isFromFeed(), 403, __('Hierdie inskrywing kom uit ’n ingetekende kalender en kan nie hier verander word nie.'));
+        abort_if($this->me()->isHelper() && $event->isFamilyWide(), 403, __('Net die familie kan dit verander.'));
     }
 
     /** @return array<string, mixed> */
@@ -132,7 +143,7 @@ class EventController extends Controller
         $me = $this->me();
 
         $data = $request->validate([
-            'kind' => ['required', Rule::in(Event::KINDS)],
+            'kind' => ['required', Rule::in($me->isHelper() ? [Event::EVENT, Event::SCHOOL] : Event::KINDS)],
             'title' => ['required', 'string', 'max:255'],
             'starts_on' => ['required', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
@@ -163,7 +174,7 @@ class EventController extends Controller
             'notes' => $data['notes'] ?? null,
             'member_id' => $data['member_id'] ?? null,
             // Gatherings are for the whole family; anything else follows the "who sees it" choice.
-            'household_id' => $gathering || $data['share'] === 'family' ? null : $me->household_id,
+            'household_id' => ($gathering || $data['share'] === 'family') && ! $me->isHelper() ? null : $me->household_id,
             'host_household_id' => $gathering ? ($data['host_household_id'] ?? $me->household_id) : null,
             'repeats' => $repeats,
             'repeat_until' => $repeats === Event::ONCE ? null : ($data['repeat_until'] ?? null),

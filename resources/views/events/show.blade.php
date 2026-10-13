@@ -50,6 +50,33 @@
         @endif
     </dl>
 
+    @if ($liftDates !== [])
+        <h2 id="ry">{{ __('Wie ry?') }}</h2>
+        <p class="muted small">{{ __('Wie neem :name soontoe en wie haal, elke keer.', ['name' => $event->member?->firstName()]) }}</p>
+        <form method="post" action="{{ route('lifts.store', $event) }}" class="stack">
+            @csrf
+            <ul class="lifts panel">
+                @foreach ($liftDates as $date)
+                    @php($d = $date->toDateString())
+                    <li>
+                        <span class="when">{{ \App\Support\Dates::shortDay($date) }} {{ $date->translatedFormat('j M') }}@if ($event->timeLabel())<span>{{ $event->timeLabel() }}</span>@endif</span>
+                        @foreach (['there', 'back'] as $direction)
+                            <label>{{ \App\Models\Lift::label($direction) }}
+                                <select name="lifts[{{ $d }}][{{ $direction }}]">
+                                    <option value="">{{ __('Niemand') }}</option>
+                                    @foreach ($drivers as $driver)
+                                        <option value="{{ $driver->id }}" @selected(($lifts->get($d.'|'.$direction)?->member_id) === $driver->id)>{{ $driver->firstName() }}@if ($driver->household_id !== $event->member?->household_id) ({{ $driver->household->name }})@endif</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        @endforeach
+                    </li>
+                @endforeach
+            </ul>
+            <div><button type="submit">{{ __('Stoor wie ry') }}</button></div>
+        </form>
+    @endif
+
     @if ($event->isGathering())
         <h2>{{ __('Kom julle?') }}</h2>
         <form method="post" action="{{ route('gatherings.respond', $event) }}" class="stack">

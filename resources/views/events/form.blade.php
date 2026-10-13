@@ -8,6 +8,10 @@
         'anniversary' => __('Herdenking (elke jaar)'),
         'school' => __('Skoolvakansie of kwartaal'),
     ];
+    // Helpers add their household's appointments; gatherings and anniversaries are the family's.
+    if ($me->isHelper()) {
+        $kinds = array_intersect_key($kinds, array_flip(['event', 'school']));
+    }
 @endphp
 <x-layout :title="$editing ? __('Wysig') : __('Nuwe inskrywing')">
     <a class="back" href="{{ $editing ? route('events.show', $event) : route('calendar') }}">@include('partials.icon', ['name' => 'back']) {{ __('Terug') }}</a>
@@ -104,7 +108,7 @@
             </select>
         </label>
 
-        <fieldset data-hide-for="gathering">
+        <fieldset data-hide-for="gathering" @if ($me->isHelper()) hidden @endif>
             <legend>{{ __('Wie sien dit?') }}</legend>
             <div class="choice">
                 <label><input type="radio" name="share" value="household" @checked($share === 'household')><span>{{ __('Net ons huis') }}</span></label>

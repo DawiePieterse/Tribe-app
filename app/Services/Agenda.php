@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Lift;
 use App\Models\Member;
 use App\Support\Occurrence;
 use Carbon\CarbonImmutable;
@@ -30,6 +31,7 @@ class Agenda
             ->get();
 
         $occurrences = collect();
+        $lifts = $this->lifts($events, $from, $to);
 
         foreach ($events as $event) {
             if (! $this->matches($event, $filter)) {
@@ -49,6 +51,7 @@ class Agenda
                         detail: $event->kind === Event::ANNIVERSARY && $years > 0
                             ? trans_choice(':count jaar|:count jaar', $years)
                             : $event->location,
+                        lift: $this->liftLine($event, $date, $lifts),
                     ));
                 }
 
@@ -66,6 +69,7 @@ class Agenda
                 detail: $event->ends_on && ! $event->ends_on->equalTo($event->starts_on)
                     ? __('tot :date', ['date' => $event->ends_on->translatedFormat('j F')])
                     : null,
+                lift: $this->liftLine($event, $event->starts_on, $lifts),
             ));
         }
 
@@ -90,6 +94,37 @@ class Agenda
         }
 
         return $occurrences->sortBy(fn (Occurrence $o) => $o->sortKey())->values();
+    }
+
+    /**
+     * Who takes and fetches, for the children's activities in range, keyed by event, date and direction.
+     *
+     * @param  Collection<int, Event>  $events
+     * @return Collection<string, Lift>
+     */
+    private function lifts(Collection $events, CarbonImmutable $from, CarbonImmutable $to): Collection
+    {
+        $ids = $events->filter(fn (Event $e) => $e->isForChild())->pluck('id');
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return Lift::query()->with('member')->whereIn('event_id', $ids)
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get()
+            ->keyBy(fn (Lift $l) => Lift::key($l->event_id, $l->date->toDateString(), $l->direction));
+    }
+
+    /** @param  Collection<string, Lift>  $lifts */
+    private function liftLine(Event $event, CarbonImmutable $date, Collection $lifts): ?string
+    {
+        if (! $event->isForChild() || $date->lessThan(CarbonImmutable::today())) {
+            return null;
+        }
+
+        $who = fn (string $direction) => $lifts->get(Lift::key($event->id, $date->toDateString(), $direction))?->member?->firstName() ?? '?';
+
+        return __('Neem: :there · Haal: :back', ['there' => $who(Lift::THERE), 'back' => $who(Lift::BACK)]);
     }
 
     /**

@@ -27,6 +27,23 @@
         </section>
     @endif
 
+    @if ($lifts->isNotEmpty())
+        <section class="panel">
+            <h2>{{ __('Wie ry hierdie week') }}</h2>
+            <ul>
+                @foreach ($lifts as $o)
+                    <li>
+                        <a class="entry" style="--c: {{ $o->colour }}" href="{{ route('events.show', $o->event) }}#ry">
+                            <strong>{{ $o->title }}@if ($o->event?->member) · {{ $o->event->member->firstName() }}@endif</strong>
+                            <span class="meta">{{ $o->date->isSameDay($today) ? __('vandag') : \App\Support\Dates::shortDay($o->date).' '.$o->date->translatedFormat('j M') }}@if ($o->time) {{ $o->time }}@endif</span>
+                            <span @class(['lift-line', 'open' => $o->liftOpen()])>{{ $o->lift }}</span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     @if ($birthdaysSoon->isNotEmpty())
         <section class="panel">
             <h2>{{ __('Verjaar binnekort') }}</h2>

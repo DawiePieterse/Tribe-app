@@ -31,13 +31,13 @@
 
     @auth
         <nav class="tabs" aria-label="{{ __('Hoofkeuses') }}">
-            @foreach ([
+            @foreach (array_values(array_filter([
                 ['home', 'Tuis', 'home'],
                 ['calendar', 'Kalender', 'calendar'],
-                ['lists.index', 'Lyste', 'list'],
-                ['grandchildren.index', 'Kleinkinders', 'heart'],
+                $me->isHelper() ? null : ['lists.index', 'Lyste', 'list'],
+                ['grandchildren.index', $me->isHelper() ? 'Kinders' : 'Kleinkinders', 'heart'],
                 ['more', 'Meer', 'more'],
-            ] as [$route, $label, $icon])
+            ])) as [$route, $label, $icon])
                 @php($active = request()->routeIs($route) || request()->routeIs(explode('.', $route)[0].'.*')
                     || ($route === 'calendar' && request()->routeIs('events.*', 'polls.*', 'inbox.*'))
                     || ($route === 'lists.index' && request()->routeIs('meals.*', 'recipes.*'))

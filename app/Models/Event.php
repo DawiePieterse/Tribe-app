@@ -141,6 +141,18 @@ class Event extends Model
         return $this->feed_id !== null;
     }
 
+    /** A child's activity (ballet, a party): the kind of entry that needs a lift there and back. */
+    public function isForChild(): bool
+    {
+        return $this->member !== null && $this->member->isChild();
+    }
+
+    /** @return HasMany<Lift, $this> */
+    public function lifts(): HasMany
+    {
+        return $this->hasMany(Lift::class);
+    }
+
     public function isGathering(): bool
     {
         return $this->kind === self::GATHERING;

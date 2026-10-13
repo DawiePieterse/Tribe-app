@@ -43,6 +43,12 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
 - **Stuur in Messages:** gatherings, date polls, lists, recipes, the week menu and a meal idea's shopping
   list open the Messages app with the text (and a Tribe link) filled in; the Stuur na Tribe page explains the
   Shortcuts automation that sends family members' messages to Tribe by itself. The family doesn't use WhatsApp.
+- **Helpers:** a nanny or au pair is added under Meer › Familie as a "Helper". They log in like an adult but
+  see only their household's days: the calendar (their household's entries and family-wide ones), that
+  household's children, and the important numbers. No lists, recipes, polls, calendars or family admin.
+- **Wie ry?** On a child's activity (an entry "Vir" a child), each coming day gets "Neem" and "Haal":
+  who takes them and who fetches them, per day for repeating activities. The agenda shows it under the
+  entry, "?" in red while nobody is down for it, and the home page lists the coming week's lifts.
 - **Two-way calendar sync:** each person connects their own Google, Outlook or iCloud calendar (Meer ›
   Kalenders). New and changed events go both ways; the later change wins when both sides changed.
   Deleting in Tribe deletes the copy; deleting a Tribe event from your own calendar only removes it for

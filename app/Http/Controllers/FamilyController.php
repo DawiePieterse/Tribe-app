@@ -129,21 +129,21 @@ class FamilyController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'household_id' => ['required', Rule::exists('households', 'id')],
-            'kind' => ['required', Rule::in([Member::ADULT, Member::CHILD])],
+            'kind' => ['required', Rule::in(Member::KINDS)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('members', 'email')->ignore($member?->id)],
             'birthday' => ['nullable', 'date', 'before_or_equal:today'],
             'is_admin' => ['nullable', 'boolean'],
         ]);
 
-        $adult = $data['kind'] === Member::ADULT;
+        $logsIn = $data['kind'] !== Member::CHILD;
 
         return [
             'name' => $data['name'],
             'household_id' => (int) $data['household_id'],
             'kind' => $data['kind'],
-            'email' => $adult ? ($data['email'] ?? null) : null,
+            'email' => $logsIn ? ($data['email'] ?? null) : null,
             'birthday' => $data['birthday'] ?? null,
-            'is_admin' => $adult && $request->boolean('is_admin'),
+            'is_admin' => $data['kind'] === Member::ADULT && $request->boolean('is_admin'),
         ];
     }
 }

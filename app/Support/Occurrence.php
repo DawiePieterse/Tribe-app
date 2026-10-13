@@ -21,7 +21,15 @@ final class Occurrence
         public readonly ?Member $member = null,
         public readonly ?string $time = null,
         public readonly ?string $detail = null,
+        /** "Neem: Pa · Haal: ?" for a child's activity, from today on. */
+        public readonly ?string $lift = null,
     ) {}
+
+    /** Whether someone still has to be found to take or fetch. */
+    public function liftOpen(): bool
+    {
+        return $this->lift !== null && str_contains($this->lift, '?');
+    }
 
     public function isBirthday(): bool
     {

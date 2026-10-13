@@ -12,7 +12,7 @@
                         <span class="title">
                             <span>{{ $member->name }}@if ($member->is_admin) <span class="muted small">({{ __('beheerder') }})</span>@endif</span>
                             <span class="meta">
-                                {{ $member->isChild() ? __('Kind') : ($member->email ?? __('Geen e-posadres nie')) }}
+                                {{ $member->isChild() ? __('Kind') : (($member->isHelper() ? __('Helper').' · ' : '').($member->email ?? __('Geen e-posadres nie'))) }}
                                 @if ($member->canLogIn())
                                     · {{ $member->last_login_at ? __('laas aangemeld :when', ['when' => $member->last_login_at->diffForHumans()]) : __('nog nooit aangemeld nie') }}
                                 @endif

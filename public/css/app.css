@@ -139,7 +139,8 @@ summary::-webkit-details-marker { display: none; }
     max-width: 520px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     gap: 2px;
     padding: 6px;
     background: var(--glass);
@@ -492,3 +493,14 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .ingredients li:has(> .shop) { display: flex; align-items: center; gap: 8px; }
 .ingredients li > label { flex: 1; min-width: 0; }
 .shop { flex: none; font-size: 0.78em; font-weight: 600; color: var(--action); background: color-mix(in srgb, var(--action) 12%, transparent); padding: 4px 10px; border-radius: 999px; }
+
+/* Wie ry?: a row per day, take and fetch. */
+.lifts { list-style: none; margin: 0; padding: 0 16px; display: grid; }
+.lifts > li { display: grid; grid-template-columns: 5.2em 1fr 1fr; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.lifts > li:first-child { border-top: 0; }
+.lifts .when { font-weight: 600; line-height: 1.2; }
+.lifts .when span { display: block; font-weight: 400; font-size: 0.8em; color: var(--ink-soft); }
+.lifts label { display: grid; gap: 2px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+.lifts select { min-height: 40px; padding: 6px 30px 6px 10px; font-size: 0.95em; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.lift-line { display: block; font-size: 0.85em; color: var(--ink-soft); }
+.lift-line .open { color: var(--danger); font-weight: 600; }
