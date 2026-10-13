@@ -36,7 +36,24 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
   Apple Shortcut; Tribe reads the plan (with Claude if `ANTHROPIC_API_KEY` is set, otherwise a built-in
   Afrikaans/English reader) and it waits on the home screen to be checked and saved.
 
-Next (phase 3): chores and pocket money, document vault, Google/Outlook two-way sync, push notifications
+## What's in phase 3 so far
+
+- **A new look:** Apple-style grouped cards, a floating glass tab bar, SF Pro and New York (the iPhone's own
+  fonts), graphite and sapphire, with a true-black dark mode.
+- **Two-way calendar sync:** each person connects their own Google, Outlook or iCloud calendar (Meer ›
+  Kalenders). New and changed events go both ways; the later change wins when both sides changed.
+  Deleting in Tribe deletes the copy; deleting a Tribe event from your own calendar only removes it for
+  you. Synced every ten minutes and straight after a change in Tribe (`tribe:sync-connections`).
+
+- **Wat maak ons vanaand?** (Lyste › Idees): type two or three things you have, choose quick (up to 20 min),
+  medium (20–40) or more time (40+), and get child-friendly meals with Checkers/Woolworths ingredients;
+  put one on the week menu, save it as a recipe, or send what's missing to a shopping list or the share
+  sheet. Or tell Tribe what you bought: a photo of the till slip, a Sixty60 order screenshot or VAT invoice
+  PDF (read by Claude), or pasted text; ideas then come from what's in the cupboard. Without
+  `ANTHROPIC_API_KEY`, ideas come from Tribe's own cookbook and only pasted text can be read.
+  Sixty60 has no public API or list import, so the list is shared as text.
+
+Still to come: chores and pocket money, document vault, push notifications
 (they need the `minishlink/web-push` package, which couldn't be installed while Packagist was blocked here).
 
 ## Getting started

@@ -8,7 +8,10 @@
         <a class="button quiet round" href="{{ route('meals.week', ['week' => $monday->addWeek()->toDateString()]) }}" aria-label="{{ __('Volgende week') }}">@include('partials.icon', ['name' => 'next'])</a>
     </div>
 
-    <p><a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a></p>
+    <p class="actions">
+        <a class="button" href="{{ route('meals.ideas') }}">{{ __('Wat maak ons vanaand?') }}</a>
+        <a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
+    </p>
 
     <ol class="week">
         @for ($i = 0; $i < 7; $i++)

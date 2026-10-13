@@ -16,6 +16,7 @@ use App\Http\Controllers\IcsController;
 use App\Http\Controllers\ListController;
 use App\Http\Controllers\ListItemController;
 use App\Http\Controllers\MealController;
+use App\Http\Controllers\MealIdeaController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShareController;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 // Afrikaans paths, since people will see them in the address bar and in shared links.
 
 // Record ids are numbers, so /kalender/nuut and /kalender/<token>.ics never reach a record route.
-foreach (['event', 'item', 'list', 'member', 'milestone', 'contact', 'household', 'recipe', 'meal', 'feed', 'poll', 'option', 'inboxItem', 'connection'] as $parameter) {
+foreach (['event', 'item', 'list', 'member', 'milestone', 'contact', 'household', 'recipe', 'meal', 'feed', 'poll', 'option', 'inboxItem', 'connection', 'idea'] as $parameter) {
     Route::pattern($parameter, '[0-9]+');
 }
 
@@ -97,6 +98,13 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/weekmenu', [MealController::class, 'store'])->name('meals.store');
     Route::delete('/weekmenu/{meal}', [MealController::class, 'destroy'])->name('meals.destroy');
     Route::get('/weekmenu/inkopies', [MealController::class, 'shopping'])->name('meals.shopping');
+
+    Route::get('/kosidees', [MealIdeaController::class, 'index'])->name('meals.ideas');
+    Route::post('/kosidees', [MealIdeaController::class, 'suggest'])->middleware('throttle:20,1')->name('meals.ideas.suggest');
+    Route::post('/kosidees/{idea}/resep', [MealIdeaController::class, 'saveRecipe'])->name('meals.ideas.recipe');
+    Route::post('/kosidees/{idea}/weekmenu', [MealIdeaController::class, 'addToWeek'])->name('meals.ideas.week');
+    Route::post('/kosidees/gekoop', [MealIdeaController::class, 'readBought'])->middleware('throttle:10,1')->name('meals.ideas.bought');
+    Route::delete('/kosidees/gekoop', [MealIdeaController::class, 'forgetBought'])->name('meals.ideas.forget');
 
     Route::post('/inkopies', [ShoppingController::class, 'add'])->name('shopping.add');
 

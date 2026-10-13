@@ -1,6 +1,6 @@
 /*
  * Tribe's small helpers. No inline scripts (the CSP forbids them), so pages mark what they need
- * with data attributes: data-confirm, data-autosubmit, data-kind, data-copy, data-logout.
+ * with data attributes: data-confirm, data-autosubmit, data-kind, data-copy, data-share, data-shrink, data-logout.
  */
 (() => {
     'use strict';
@@ -51,6 +51,48 @@
                 const label = button.textContent;
                 button.textContent = button.dataset.copied;
                 setTimeout(() => { button.textContent = label; }, 2000);
+            });
+        });
+
+        // Share a shopping list through the iPhone share sheet (to Sixty60, WhatsApp, Notes); else copy it.
+        document.querySelectorAll('[data-share]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const text = button.dataset.share;
+                if (navigator.share) {
+                    try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+                }
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const label = button.innerHTML;
+                    button.textContent = button.dataset.shared;
+                    setTimeout(() => { button.innerHTML = label; }, 2000);
+                } catch { /* nothing more to try */ }
+            });
+        });
+
+        // Make big phone photos smaller before they are sent (a till slip reads fine at 1600 px).
+        document.querySelectorAll('input[type=file][data-shrink]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const file = input.files && input.files[0];
+                if (!file || !file.type.startsWith('image/') || file.size < 1500000 || typeof DataTransfer === 'undefined') return;
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(url);
+                    canvas.toBlob((blob) => {
+                        if (!blob) return;
+                        const list = new DataTransfer();
+                        list.items.add(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+                        input.files = list.files;
+                    }, 'image/jpeg', 0.85);
+                };
+                img.onerror = () => URL.revokeObjectURL(url);
+                img.src = url;
             });
         });
 
