@@ -14,9 +14,8 @@ use Illuminate\Support\Str;
 
 /**
  * Everyone in the family. Adults with an email address can log in; children are profiles only. A
- * helper (a nanny, an au pair) also logs in, but sees only their household's days: the calendar,
- * the children and the important numbers. There are no passwords: logins happen with an emailed
- * code or an invite link.
+ * helper (a nanny, an au pair) also logs in, but sees only their household's calendar. There are no
+ * passwords: logins happen with an emailed code or an invite link.
  *
  * @property int $id
  * @property int $household_id
@@ -132,12 +131,6 @@ class Member extends Model implements AuthenticatableContract
     public function canEditProfileOf(Member $child): bool
     {
         return ! $this->isHelper() && ($this->is_admin || $this->household_id === $child->household_id);
-    }
-
-    /** Helpers see only their own household's children. */
-    public function canSeeChild(Member $child): bool
-    {
-        return ! $this->isHelper() || $this->household_id === $child->household_id;
     }
 
     /** The secret part of this member's calendar link; made on first use. */

@@ -2,7 +2,7 @@
 <x-layout :title="$editing ? $member->name : __('Nuwe persoon')">
     <a class="back" href="{{ route('family.index') }}">@include('partials.icon', ['name' => 'back']) {{ __('Familie') }}</a>
     <h1>{{ $editing ? $member->name : ($member->kind === 'child' ? __('Nuwe kind') : __('Nuwe grootmens')) }}</h1>
-    <p class="muted small">{{ __('’n Helper (soos ’n nanny of au pair) meld aan soos ’n grootmens, maar sien net julle huis se kalender, die kinders en die belangrike nommers; nie lyste, resepte of die ander huise se dinge nie.') }}</p>
+    <p class="muted small">{{ __('’n Helper (soos ’n nanny of au pair) meld aan soos ’n grootmens, maar sien net julle huis se kalender: wat elke dag gebeur en wie ry. Nie lyste, resepte, die kinders se profiele of die ander huise se dinge nie.') }}</p>
 
     <form method="post" action="{{ $editing ? route('family.members.update', $member) : route('family.members.store') }}" class="stack" style="margin-top: 16px">
         @csrf

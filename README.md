@@ -44,8 +44,8 @@ Address: `tribe.bowlsbuddy.co.za`, on the Bowls Buddy Afrihost account and the s
   list open the Messages app with the text (and a Tribe link) filled in; the Stuur na Tribe page explains the
   Shortcuts automation that sends family members' messages to Tribe by itself. The family doesn't use WhatsApp.
 - **Helpers:** a nanny or au pair is added under Meer › Familie as a "Helper". They log in like an adult but
-  see only their household's days: the calendar (their household's entries and family-wide ones), that
-  household's children, and the important numbers. No lists, recipes, polls, calendars or family admin.
+  see only their household's calendar (its entries and family-wide ones) and who gives the lifts. Nothing
+  else: no lists, recipes, children's profiles, numbers, polls, calendars or family admin.
 - **Wie ry?** On a child's activity (an entry "Vir" a child), each coming day gets "Neem" and "Haal":
   who takes them and who fetches them, per day for repeating activities. The agenda shows it under the
   entry, "?" in red while nobody is down for it, and the home page lists the coming week's lifts.

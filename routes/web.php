@@ -117,19 +117,21 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/inkopies', [ShoppingController::class, 'add'])->name('shopping.add');
     });
 
-    Route::get('/kleinkinders', [GrandchildController::class, 'index'])->name('grandchildren.index');
-    Route::get('/kleinkinders/{member}', [GrandchildController::class, 'show'])->name('grandchildren.show');
-    Route::get('/kleinkinders/{member}/wysig', [GrandchildController::class, 'edit'])->name('grandchildren.edit');
-    Route::put('/kleinkinders/{member}', [GrandchildController::class, 'update'])->name('grandchildren.update');
-    Route::post('/kleinkinders/{member}/mylpale', [GrandchildController::class, 'addMilestone'])->name('milestones.store');
-    Route::delete('/mylpale/{milestone}', [GrandchildController::class, 'removeMilestone'])->name('milestones.destroy');
+    Route::middleware('family')->group(function (): void {
+        Route::get('/kleinkinders', [GrandchildController::class, 'index'])->name('grandchildren.index');
+        Route::get('/kleinkinders/{member}', [GrandchildController::class, 'show'])->name('grandchildren.show');
+        Route::get('/kleinkinders/{member}/wysig', [GrandchildController::class, 'edit'])->name('grandchildren.edit');
+        Route::put('/kleinkinders/{member}', [GrandchildController::class, 'update'])->name('grandchildren.update');
+        Route::post('/kleinkinders/{member}/mylpale', [GrandchildController::class, 'addMilestone'])->name('milestones.store');
+        Route::delete('/mylpale/{milestone}', [GrandchildController::class, 'removeMilestone'])->name('milestones.destroy');
 
-    Route::get('/kontakte', [ContactController::class, 'index'])->name('contacts.index');
-    Route::get('/kontakte/nuut', [ContactController::class, 'create'])->name('contacts.create');
-    Route::post('/kontakte', [ContactController::class, 'store'])->name('contacts.store');
-    Route::get('/kontakte/{contact}/wysig', [ContactController::class, 'edit'])->name('contacts.edit');
-    Route::put('/kontakte/{contact}', [ContactController::class, 'update'])->name('contacts.update');
-    Route::delete('/kontakte/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get('/kontakte', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('/kontakte/nuut', [ContactController::class, 'create'])->name('contacts.create');
+        Route::post('/kontakte', [ContactController::class, 'store'])->name('contacts.store');
+        Route::get('/kontakte/{contact}/wysig', [ContactController::class, 'edit'])->name('contacts.edit');
+        Route::put('/kontakte/{contact}', [ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('/kontakte/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+    });
 
     Route::middleware('family')->group(function (): void {
         Route::get('/kalenders', [CalendarFeedController::class, 'index'])->name('feeds.index');

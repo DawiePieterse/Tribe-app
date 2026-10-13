@@ -35,7 +35,7 @@
                 ['home', 'Tuis', 'home'],
                 ['calendar', 'Kalender', 'calendar'],
                 $me->isHelper() ? null : ['lists.index', 'Lyste', 'list'],
-                ['grandchildren.index', $me->isHelper() ? 'Kinders' : 'Kleinkinders', 'heart'],
+                $me->isHelper() ? null : ['grandchildren.index', 'Kleinkinders', 'heart'],
                 ['more', 'Meer', 'more'],
             ])) as [$route, $label, $icon])
                 @php($active = request()->routeIs($route) || request()->routeIs(explode('.', $route)[0].'.*')

@@ -7,7 +7,9 @@
             <li><a href="{{ route('share.setup') }}" class="tile-share">@include('partials.icon', ['name' => 'share']) {{ __('Stuur na Tribe') }}</a></li>
             <li><a href="{{ route('feeds.index') }}" class="tile-feeds">@include('partials.icon', ['name' => 'calendar']) {{ __('Kalenders') }}</a></li>
         @endunless
-        <li><a href="{{ route('contacts.index') }}" class="tile-contacts">@include('partials.icon', ['name' => 'book']) {{ __('Belangrike nommers') }}</a></li>
+        @unless ($me->isHelper())
+            <li><a href="{{ route('contacts.index') }}" class="tile-contacts">@include('partials.icon', ['name' => 'book']) {{ __('Belangrike nommers') }}</a></li>
+        @endunless
         @if ($me->is_admin)
             <li><a href="{{ route('family.index') }}" class="tile-family">@include('partials.icon', ['name' => 'people']) {{ __('Familie en uitnodigings') }}</a></li>
         @endif

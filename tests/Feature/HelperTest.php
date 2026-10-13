@@ -19,20 +19,16 @@ it('lets a helper log in and see only their household’s days', function () {
     $ballet = Event::query()->create(['title' => 'Ballet', 'starts_on' => today()->addDay(), 'household_id' => $this->ours->id, 'member_id' => $this->child->id]);
     Event::query()->create(['title' => 'Sondagete', 'starts_on' => today()->addDays(2)]);
     Event::query()->create(['title' => 'Hulle geheim', 'starts_on' => today()->addDays(3), 'household_id' => $this->other->id]);
-    $otherChild = child($this->other, ['name' => 'Ben']);
     TodoList::query()->create(['name' => 'Inkopies', 'household_id' => $this->ours->id]);
 
     $this->actingAs($this->nanny);
     $this->get(route('home'))->assertOk()->assertSee('Ballet')->assertSee('Sondagete')->assertDontSee('Hulle geheim')->assertDontSee('Lyste');
     $this->get(route('calendar'))->assertOk()->assertSee('Ballet');
     $this->get(route('events.show', $ballet))->assertOk()->assertSee(__('Wie ry?'));
-    $this->get(route('grandchildren.index'))->assertOk()->assertSee('Anri')->assertDontSee('Ben');
-    $this->get(route('grandchildren.show', $otherChild))->assertNotFound();
-    $this->get(route('grandchildren.show', $this->child))->assertOk()->assertDontSee(__('Wysig'));
-    $this->get(route('contacts.index'))->assertOk();
+    $this->get(route('more'))->assertOk()->assertSee(__('My instellings'))->assertDontSee(__('Belangrike nommers'));
 
-    // The family's parts stay closed.
-    foreach (['lists.index', 'recipes.index', 'meals.week', 'ideas.index', 'polls.index', 'feeds.index', 'share.setup', 'family.index'] as $route) {
+    // Only the calendar: everything else stays closed.
+    foreach (['grandchildren.index', 'contacts.index', 'lists.index', 'recipes.index', 'meals.week', 'ideas.index', 'polls.index', 'feeds.index', 'share.setup', 'family.index'] as $route) {
         $this->get(route($route))->assertForbidden();
     }
 });

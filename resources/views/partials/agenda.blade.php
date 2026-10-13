@@ -12,7 +12,7 @@
                 <ul class="entries">
                     @foreach ($occurrences as $o)
                         <li>
-                            @php($href = $o->event ? route('events.show', $o->event) : ($o->member?->isChild() ? route('grandchildren.show', $o->member) : null))
+                            @php($href = $o->event ? route('events.show', $o->event) : ($o->member?->isChild() && ! auth()->user()?->isHelper() ? route('grandchildren.show', $o->member) : null))
                             <{{ $href ? 'a' : 'div' }} class="entry" style="--c: {{ $o->colour }}" @if ($href) href="{{ $href }}" @endif>
                                 <strong>
                                     @if ($o->isBirthday())@include('partials.icon', ['name' => 'cake'])@endif
