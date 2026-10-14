@@ -11,7 +11,7 @@
     </div>
 
     <p style="margin-top: 16px">
-        <x-message :text="$message" class="button" />
+        <x-message :text="$message" primary />
     </p>
     <p class="muted small">{{ __('As jy weer op Uitnodig tik, hou hierdie skakel op werk.') }}</p>
 </x-layout>

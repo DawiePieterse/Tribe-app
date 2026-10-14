@@ -51,20 +51,16 @@ final class Portions
         $unit = strtolower((string) preg_replace('/^(\S+).*/su', '$1', $rest));
         $scaled = $amount * $to / $from;
 
-        if (in_array($unit, self::MEASURED, true)) {
-            $scaled = self::tidyMeasure($scaled, $unit);
-            $text = self::number($scaled);
-        } elseif (in_array(rtrim($unit, ',.;:'), self::WHOLE, true)) {
-            $scaled = max(1, round($scaled));
-            $text = self::number($scaled);
-            $rest = self::agree($rest, $amount, $scaled);
-        } else {
-            $scaled = $scaled < 1 ? max(0.25, round($scaled * 4) / 4) : round($scaled * 2) / 2;
-            $text = self::number($scaled);
-            $rest = self::agree($rest, $amount, $scaled);
-        }
+        $measured = in_array($unit, self::MEASURED, true);
+        $scaled = match (true) {
+            $measured => self::tidyMeasure($scaled, $unit),
+            in_array(rtrim($unit, ',.;:'), self::WHOLE, true) => max(1, round($scaled)),
+            $scaled < 1 => max(0.25, round($scaled * 4) / 4),
+            default => round($scaled * 2) / 2,
+        };
 
-        return $text.' '.ltrim($rest);
+        // A count makes the next word plural or singular; grams and millilitres don't.
+        return self::number($scaled).' '.ltrim($measured ? $rest : self::agree($rest, $amount, $scaled));
     }
 
     private static function tidyMeasure(float $value, string $unit): float

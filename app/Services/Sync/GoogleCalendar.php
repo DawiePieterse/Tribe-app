@@ -166,7 +166,7 @@ class GoogleCalendar extends OAuthProvider
             'end' => $data->isAllDay()
                 ? ['date' => $data->end()->toDateString()]
                 : ['dateTime' => $data->end()->format('Y-m-d\TH:i:s'), 'timeZone' => Dates::ZONE],
-            'recurrence' => $rule === null ? [] : ['RRULE:'.$rule],
+            'recurrence' => $rule === null ? [] : ['RRULE:'.$rule, ...$data->exdateLines()],
             'extendedProperties' => ['private' => ['tribe' => TwoWaySync::marker($tribeId)]],
         ];
     }

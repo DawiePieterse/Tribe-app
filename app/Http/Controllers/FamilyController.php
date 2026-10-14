@@ -10,6 +10,7 @@ use App\Services\Weather;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -31,11 +32,7 @@ class FamilyController extends Controller
     public function storeHousehold(Request $request, Weather $weather): RedirectResponse
     {
         $this->ensureAdmin();
-        $data = $this->household($request, null, $weather);
-        if ($data === null) {
-            return back()->withInput()->withErrors(['town' => __('Tribe kon nie daardie dorp vind nie. Probeer ’n ander spelling, of die naaste groter dorp.')]);
-        }
-        $household = Household::query()->create($data);
+        $household = Household::query()->create($this->household($request, null, $weather));
 
         // Every household starts with its own shopping list.
         TodoList::query()->create(['household_id' => $household->id, 'name' => __('Inkopies'), 'kind' => TodoList::SHOPPING]);
@@ -46,11 +43,7 @@ class FamilyController extends Controller
     public function updateHousehold(Request $request, Household $household, Weather $weather): RedirectResponse
     {
         $this->ensureAdmin();
-        $data = $this->household($request, $household, $weather);
-        if ($data === null) {
-            return back()->withInput()->withErrors(['town' => __('Tribe kon nie daardie dorp vind nie. Probeer ’n ander spelling, of die naaste groter dorp.')]);
-        }
-        $household->update($data);
+        $household->update($this->household($request, $household, $weather));
 
         return redirect()->route('family.index')->with('status', __('Gestoor.'));
     }
@@ -121,13 +114,14 @@ class FamilyController extends Controller
         ]);
     }
 
-    /** @return array{name: string, colour: string} */
     /**
-     * The household's details; a new town is looked up for its weather (null when it can't be found).
+     * The household's details; a new town is looked up for its weather.
      *
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
+     *
+     * @throws ValidationException when the town can't be found
      */
-    private function household(Request $request, ?Household $household, Weather $weather): ?array
+    private function household(Request $request, ?Household $household, Weather $weather): array
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -141,10 +135,7 @@ class FamilyController extends Controller
         if ($town !== '' && $household !== null && $town === (string) $household->town) {
             $place = ['town' => $household->town, 'lat' => $household->lat, 'lon' => $household->lon];
         } elseif ($town !== '') {
-            $place = $weather->find($town);
-            if ($place === null) {
-                return null;
-            }
+            $place = $weather->find($town) ?? throw ValidationException::withMessages(['town' => __('Tribe kon nie daardie dorp vind nie. Probeer ’n ander spelling, of die naaste groter dorp.')]);
         }
 
         return ['name' => $data['name'], 'colour' => $data['colour'], 'people' => $data['people'] ?? null] + $place;

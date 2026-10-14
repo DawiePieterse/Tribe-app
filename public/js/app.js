@@ -1,6 +1,6 @@
 /*
  * Tribe's small helpers. No inline scripts (the CSP forbids them), so pages mark what they need
- * with data attributes: data-confirm, data-autosubmit, data-kind, data-copy, data-share, data-shrink, data-logout.
+ * with data attributes: data-confirm, data-autosubmit, data-kind, data-copy, data-shrink, data-logout.
  */
 (() => {
     'use strict';
@@ -38,34 +38,20 @@
             apply();
         }
 
-        // Copy text and say so on the button for a moment (data-copied holds the words).
-        const copyAndFlash = async (button, text, fallback) => {
-            try {
-                await navigator.clipboard.writeText(text);
-            } catch {
-                if (!fallback) return;
-                fallback();
-            }
-            const label = button.innerHTML;
-            button.textContent = button.dataset.copied;
-            setTimeout(() => { button.innerHTML = label; }, 2000);
-        };
-
+        // Copy a field's text and say so on the button for a moment (data-copied holds the words).
         document.querySelectorAll('[data-copy]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const input = document.querySelector(button.dataset.copy);
-                if (input) copyAndFlash(button, input.value, () => { input.select(); document.execCommand('copy'); });
-            });
-        });
-
-        // Share a shopping list through the iPhone share sheet (to Sixty60, WhatsApp, Notes); else copy it.
-        document.querySelectorAll('[data-share]').forEach((button) => {
             button.addEventListener('click', async () => {
-                const text = button.dataset.share;
-                if (navigator.share) {
-                    try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+                const input = document.querySelector(button.dataset.copy);
+                if (!input) return;
+                try {
+                    await navigator.clipboard.writeText(input.value);
+                } catch {
+                    input.select();
+                    document.execCommand('copy');
                 }
-                copyAndFlash(button, text);
+                const label = button.textContent;
+                button.textContent = button.dataset.copied;
+                setTimeout(() => { button.textContent = label; }, 2000);
             });
         });
 

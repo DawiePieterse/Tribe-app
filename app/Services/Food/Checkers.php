@@ -20,9 +20,12 @@ final class Checkers
         'sojasous' => 'soy sauce', 'heuning' => 'honey', 'broodkrummels' => 'breadcrumbs', 'tamatiepuree' => 'tomato paste',
     ];
 
-    public static function searchUrl(string $line): string
+    /** @return array{term: string, url: string} */
+    public static function link(string $line): array
     {
-        return sprintf((string) config('services.checkers.search'), rawurlencode(self::term($line)));
+        $term = self::term($line);
+
+        return ['term' => $term, 'url' => sprintf((string) config('services.checkers.search'), rawurlencode($term))];
     }
 
     /** "500 g maalvleis" → "beef mince"; an unknown line keeps its own words without the quantity. */

@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Member;
+use App\Services\Push;
 use App\Services\Sync\SyncSoon;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +18,12 @@ use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        // One Push per request, so its queued notifications go out together at the end.
+        $this->app->singleton(Push::class);
+    }
+
     public function boot(): void
     {
         // Outside production, fail on lazy loading (one query per row) and on attributes that aren't fillable.
@@ -24,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
         Date::use(CarbonImmutable::class);
 
         SyncSoon::watch();
+
+        // The family's parts of Tribe; helpers (a nanny) see only the calendar.
+        Gate::define('family', fn (Member $member) => ! $member->isHelper());
         CarbonImmutable::setLocale((string) config('app.locale'));
 
         if (str_starts_with((string) config('app.url'), 'https://')) {

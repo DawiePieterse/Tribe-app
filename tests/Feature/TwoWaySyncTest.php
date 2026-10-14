@@ -254,3 +254,17 @@ it('chooses the calendar and how it is shared, then syncs', function () {
     expect($this->connection->fresh()->household_id)->toBeNull()
         ->and(Event::query()->sole()->household_id)->toBeNull();
 });
+
+it('takes a skipped day out of the copy in their calendar too', function () {
+    $event = Event::query()->create(['title' => 'Hokkie', 'starts_on' => today()->addDay(), 'start_time' => '15:00', 'repeats' => 'weekly', 'household_id' => $this->ours->id]);
+    ($this->sync)();
+    $copy = collect($this->calendar->events)->first();
+    expect($copy->data->exdates)->toBe([]);
+
+    $event->skips()->create(['date' => today()->addDays(8)->toDateString()]);
+    ($this->sync)();
+
+    $copy = collect($this->calendar->events)->first();
+    expect($copy->data->exdates)->toBe([today()->addDays(8)->toDateString()])
+        ->and($copy->data->exdateLines())->toBe(['EXDATE;TZID=Africa/Johannesburg:'.today()->addDays(8)->format('Ymd').'T150000']);
+});

@@ -10,14 +10,14 @@
             <p class="muted small"><span class="dot" style="--c: {{ $event->colour() }}"></span> {{ $kindLabel[$event->kind] ?? '' }} · {{ $event->isFamilyWide() ? __('Hele familie') : __('Net ons huis') }}</p>
             <h1>{{ $event->title }}</h1>
         </div>
-        @unless ($event->isFromFeed())
+        @if ($event->isEditableBy($me))
             <a class="button quiet small" href="{{ route('events.edit', $event) }}">{{ __('Wysig') }}</a>
-        @endunless
+        @endif
     </div>
 
-    @if ($event->isGathering())
+    @if ($event->isGathering() && $me->can('family'))
         <p>
-            <x-message class="button quiet small" :text="__(':title, :date. Laat weet in Tribe of julle kom: :link', ['title' => $event->title, 'date' => $event->starts_on->translatedFormat('l j F').($event->timeLabel() ? ' '.$event->timeLabel() : ''), 'link' => route('events.show', $event)])" :label="__('Nooi die familie')" />
+            <x-message class="small" :text="__(':title, :date. Laat weet in Tribe of julle kom: :link', ['title' => $event->title, 'date' => $event->whenLabel(), 'link' => route('events.show', $event)])" :label="__('Nooi die familie')" />
         </p>
     @endif
 
@@ -52,6 +52,7 @@
 
     @if ($liftDates !== [])
         @php($child = $event->isForChild())
+        @php($skips = [])
         <h2 id="kere">{{ $child ? __('Wie ry?') : __('Komende kere') }}</h2>
         <p class="muted small">
             @if ($child && ($event->thereDriver || $event->backDriver))
@@ -67,11 +68,12 @@
                 @foreach ($liftDates as $date)
                     @php($d = $date->toDateString())
                     @php($skipped = $event->isSkippedOn($date))
+                    @php($skips[$d] = $skipped)
                     <li @class(['is-skipped' => $skipped])>
-                        <span class="when">{{ \App\Support\Dates::shortDay($date) }} {{ $date->translatedFormat('j M') }}@if ($event->timeLabel())<span>{{ $event->timeLabel() }}</span>@endif</span>
+                        <span class="when">{{ \App\Support\Dates::short($date) }}@if ($event->timeLabel())<span>{{ $event->timeLabel() }}</span>@endif</span>
                         @if ($child && ! $skipped)
-                            @foreach (['there', 'back'] as $direction)
-                                @php($exception = $lifts->get($d.'|'.$direction))
+                            @foreach (\App\Models\Lift::DIRECTIONS as $direction)
+                                @php($exception = $event->liftOn($date, $direction))
                                 <label>{{ \App\Models\Lift::label($direction) }}
                                     <select name="lifts[{{ $d }}][{{ $direction }}]">
                                         <option value="">{{ $event->usualDriver($direction)?->firstName() ?? __('Niemand') }} · {{ __('gewoonlik') }}</option>
@@ -85,7 +87,7 @@
                         @elseif ($skipped)
                             <span class="muted small skip-note">{{ __('Val weg') }}</span>
                         @endif
-                        @if ($event->repeats() && ! $event->isFromFeed())
+                        @if ($event->canSkipDays())
                             <button type="submit" form="skip-{{ $d }}" class="link small skip-day">{{ $skipped ? __('Herstel') : __('Val weg') }}</button>
                         @endif
                     </li>
@@ -95,18 +97,18 @@
                 <div><button type="submit">{{ __('Stoor wie ry') }}</button></div>
             @endif
         </form>
-        @if ($event->repeats() && ! $event->isFromFeed())
-            @foreach ($liftDates as $date)
-                <form method="post" action="{{ route('events.skip', $event) }}" id="skip-{{ $date->toDateString() }}" hidden>
+        @if ($event->canSkipDays())
+            @foreach ($skips as $d => $skipped)
+                <form method="post" action="{{ route('events.skip', $event) }}" id="skip-{{ $d }}" hidden>
                     @csrf
-                    <input type="hidden" name="date" value="{{ $date->toDateString() }}">
-                    <input type="hidden" name="skip" value="{{ $event->isSkippedOn($date) ? 0 : 1 }}">
+                    <input type="hidden" name="date" value="{{ $d }}">
+                    <input type="hidden" name="skip" value="{{ $skipped ? 0 : 1 }}">
                 </form>
             @endforeach
         @endif
     @endif
 
-    @if ($event->isGathering())
+    @if ($event->isGathering() && $me->can('family'))
         <h2>{{ __('Kom julle?') }}</h2>
         <form method="post" action="{{ route('gatherings.respond', $event) }}" class="stack">
             @csrf
@@ -131,7 +133,7 @@
                 <li style="--c: {{ $household->colour }}">
                     <span>{{ $household->name }}@if ($r?->note)<br><span class="muted small">{{ $r->note }}</span>@endif</span>
                     @if ($r)
-                        <span class="status-{{ $r->status }}">{{ $statusLabel[$r->status] }}@if ($r->status !== 'no') ({{ $r->adults + $r->children }})@endif</span>
+                        <span class="status-{{ $r->status }}">{{ $statusLabel[$r->status] }}@if ($r->status !== 'no') ({{ $r->headcount() }})@endif</span>
                     @else
                         <span class="muted">{{ __('Nog nie geantwoord') }}</span>
                     @endif

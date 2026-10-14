@@ -2,17 +2,16 @@
 <x-layout :title="__('Weekmenu')">
     @include('partials.food-tabs')
 
-    <div class="month-nav">
-        <a class="button quiet round" href="{{ route('meals.week', ['week' => $monday->subWeek()->toDateString()]) }}" aria-label="{{ __('Vorige week') }}">@include('partials.icon', ['name' => 'back'])</a>
-        <h1 style="font-size: 1.25em; text-align: center">{{ __(':from tot :to', ['from' => $monday->translatedFormat('j M'), 'to' => $monday->addDays(6)->translatedFormat('j M')]) }}</h1>
-        <a class="button quiet round" href="{{ route('meals.week', ['week' => $monday->addWeek()->toDateString()]) }}" aria-label="{{ __('Volgende week') }}">@include('partials.icon', ['name' => 'next'])</a>
-    </div>
+    @include('partials.week-nav', [
+        'previous' => route('meals.week', ['week' => $monday->subWeek()->toDateString()]),
+        'next' => route('meals.week', ['week' => $monday->addWeek()->toDateString()]),
+    ])
 
     <p class="actions">
         <a class="button" href="{{ route('ideas.index') }}">{{ __('Wat maak ons vanaand?') }}</a>
         <a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
         @if ($meals->isNotEmpty())
-            <x-message :text="__('Weekmenu :from tot :to', ['from' => $monday->translatedFormat('j M'), 'to' => $monday->addDays(6)->translatedFormat('j M')]).":\n".collect(range(0, 6))->map(fn ($i) => $monday->addDays($i))->filter(fn ($d) => $meals->has($d->toDateString()))->map(fn ($d) => \App\Support\Dates::shortDay($d).' '.$meals->get($d->toDateString())->map->label()->implode(', '))->implode("\n")" :label="__('Stuur')" />
+            <x-message :title="__('Weekmenu :week', ['week' => \App\Support\Dates::weekRange($monday)])" :lines="$menuLines" :label="__('Stuur')" />
         @endif
     </p>
 

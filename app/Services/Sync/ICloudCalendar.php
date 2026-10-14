@@ -140,6 +140,7 @@ class ICloudCalendar implements CalendarProvider
             'location' => $data->location,
             'notes' => $data->notes,
             'rrule' => $data->rrule(),
+            'exdates' => array_map(fn (string $day) => CarbonImmutable::parse($day, Dates::ZONE), $data->exdates),
         ]);
 
         return $ics->render();

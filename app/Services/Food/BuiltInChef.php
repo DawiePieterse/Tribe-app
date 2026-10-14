@@ -7,14 +7,11 @@ final class BuiltInChef
 {
     private const COUNT = 5;
 
-    /** The cookbook's recipes feed this many. */
-    private const WRITTEN_FOR = 4;
-
     /**
      * @param  list<string>  $have  ingredient names (see Ingredients)
      * @return list<MealIdea>
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = self::WRITTEN_FOR): array
+    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = MealIdea::DEFAULT_PEOPLE): array
     {
         /** @var list<array{title: string, minutes: int, kids: string, ingredients: list<array{0: string, 1: string|null}>, method: list<string>}> $cookbook */
         $cookbook = require __DIR__.'/cookbook.php';
@@ -37,7 +34,7 @@ final class BuiltInChef
                 continue;
             }
 
-            $idea = (new MealIdea($recipe['title'], $recipe['minutes'], $recipe['kids'], $lines, $recipe['method'], self::WRITTEN_FOR))->for($people);
+            $idea = (new MealIdea($recipe['title'], $recipe['minutes'], $recipe['kids'], $lines, $recipe['method'], MealIdea::DEFAULT_PEOPLE))->for($people);
             $scored[] = [
                 'idea' => $idea,
                 'level' => $idea->level() === $level ? 1 : 0,

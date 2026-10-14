@@ -43,6 +43,12 @@ class Household extends Model
     /** How many sit down to eat: the number set for the household, else everyone in it. */
     public function peopleEating(): int
     {
-        return max(1, min(self::MAX_PEOPLE, $this->people ?? $this->members()->count()));
+        return self::clampPeople($this->people ?? $this->members()->count());
+    }
+
+    /** Between one and MAX_PEOPLE. */
+    public static function clampPeople(int $people): int
+    {
+        return max(1, min(self::MAX_PEOPLE, $people));
     }
 }

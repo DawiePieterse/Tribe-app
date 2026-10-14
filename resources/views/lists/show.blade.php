@@ -10,7 +10,7 @@
             <p class="muted small">{{ $list->isFamilyWide() ? __('Hele familie') : __('Net ons huis') }}</p>
         </div>
         @if ($open->isNotEmpty())
-            <x-message class="button quiet small" :text="$list->name.":\n".$open->map(fn ($i) => '• '.$i->title)->implode("\n")."\n".route('lists.show', $list)" :label="__('Stuur')" />
+            <x-message class="small" :title="$list->name" :lines="$open->pluck('title')" :link="route('lists.show', $list)" :label="__('Stuur')" />
         @endif
     </div>
 

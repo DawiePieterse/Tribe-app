@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
  */
 class Agenda
 {
+    /** How far ahead an entry's coming days (lifts, days that fall away) are shown. */
+    private const COMING_DAYS = 28;
+
     /**
      * @param  array{household?: int|null, member?: int|null}  $filter
      * @return Collection<int, Occurrence>
@@ -26,12 +29,12 @@ class Agenda
 
         $events = Event::query()
             ->visibleTo($viewer)
-            ->with(['member.household', 'household', 'hostHousehold', 'feed', 'thereDriver', 'backDriver', 'skips'])
+            ->with(['member.household', 'household', 'hostHousehold', 'feed', 'thereDriver', 'backDriver', 'skips',
+                'lifts' => fn ($q) => $q->with('member')->whereBetween('date', [$from->toDateString(), $to->toDateString()])])
             ->between($from->toDateString(), $to->toDateString())
             ->get();
 
         $occurrences = collect();
-        $lifts = $this->lifts($events, $from, $to);
 
         foreach ($events as $event) {
             if (! $this->matches($event, $filter)) {
@@ -44,6 +47,7 @@ class Agenda
                         continue;
                     }
                     $years = (int) $event->starts_on->diffInYears($date);
+                    [$needsLift, $there, $back] = $this->lift($event, $date);
                     $occurrences->push(new Occurrence(
                         date: $date,
                         title: $event->title,
@@ -54,7 +58,9 @@ class Agenda
                         detail: $event->kind === Event::ANNIVERSARY && $years > 0
                             ? trans_choice(':count jaar|:count jaar', $years)
                             : $event->location,
-                        lift: $this->liftLine($event, $date, $lifts),
+                        needsLift: $needsLift,
+                        there: $there,
+                        back: $back,
                     ));
                 }
 
@@ -62,6 +68,7 @@ class Agenda
             }
 
             // A multi-day entry (a holiday, a weekend away) shows once, on its first day in range.
+            [$needsLift, $there, $back] = $this->lift($event, $event->starts_on);
             $occurrences->push(new Occurrence(
                 date: $event->starts_on->lessThan($from) ? $from : $event->starts_on,
                 title: $event->title,
@@ -72,7 +79,9 @@ class Agenda
                 detail: $event->ends_on && ! $event->ends_on->equalTo($event->starts_on)
                     ? __('tot :date', ['date' => $event->ends_on->translatedFormat('j F')])
                     : null,
-                lift: $this->liftLine($event, $event->starts_on, $lifts),
+                needsLift: $needsLift,
+                there: $there,
+                back: $back,
             ));
         }
 
@@ -100,39 +109,34 @@ class Agenda
     }
 
     /**
-     * Who takes and fetches, for the children's activities in range, keyed by event, date and direction.
+     * For a child's activity from today on: who takes and who fetches that day.
      *
-     * @param  Collection<int, Event>  $events
-     * @return Collection<string, Lift>
+     * @return array{0: bool, 1: Member|null, 2: Member|null} [needs a lift, there, back]
      */
-    private function lifts(Collection $events, CarbonImmutable $from, CarbonImmutable $to): Collection
-    {
-        $ids = $events->filter(fn (Event $e) => $e->isForChild())->pluck('id');
-        if ($ids->isEmpty()) {
-            return collect();
-        }
-
-        return Lift::query()->with('member')->whereIn('event_id', $ids)
-            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
-            ->get()
-            ->keyBy(fn (Lift $l) => Lift::key($l->event_id, $l->date->toDateString(), $l->direction));
-    }
-
-    /** @param  Collection<string, Lift>  $lifts */
-    private function liftLine(Event $event, CarbonImmutable $date, Collection $lifts): ?string
+    private function lift(Event $event, CarbonImmutable $date): array
     {
         if (! $event->isForChild() || $date->lessThan(CarbonImmutable::today())) {
-            return null;
+            return [false, null, null];
         }
 
-        $who = function (string $direction) use ($event, $date, $lifts): string {
-            $exception = $lifts->get(Lift::key($event->id, $date->toDateString(), $direction));
-            $driver = $exception !== null ? $exception->member : $event->usualDriver($direction);
+        return [true, $event->driverOn($date, Lift::THERE), $event->driverOn($date, Lift::BACK)];
+    }
 
-            return $driver?->firstName() ?? '?';
-        };
+    /**
+     * The coming days of an entry (skipped ones included, so they can be brought back): the next four
+     * weeks of a repeating one, or its one day if that is still to come.
+     *
+     * @return list<CarbonImmutable>
+     */
+    public function comingDates(Event $event): array
+    {
+        $today = CarbonImmutable::today();
 
-        return __('Neem: :there · Haal: :back', ['there' => $who(Lift::THERE), 'back' => $who(Lift::BACK)]);
+        if (! $event->repeats()) {
+            return $event->starts_on->greaterThanOrEqualTo($today) ? [$event->starts_on] : [];
+        }
+
+        return $this->repeatDates($event, $today, $today->addDays(self::COMING_DAYS));
     }
 
     /**

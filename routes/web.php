@@ -68,7 +68,13 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/kalender/{event}/ry', [LiftController::class, 'store'])->name('lifts.store');
     Route::post('/kalender/{event}/oorslaan', [LiftController::class, 'skip'])->name('events.skip');
 
-    // Helpers (a nanny) see the calendar, the children and the numbers; the rest is the family's.
+    Route::get('/meer', [SettingsController::class, 'more'])->name('more');
+    Route::get('/instellings', [SettingsController::class, 'edit'])->name('settings');
+    Route::put('/instellings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/kennisgewings', [PushController::class, 'store'])->name('push.store');
+    Route::delete('/kennisgewings', [PushController::class, 'destroy'])->name('push.destroy');
+
+    // Helpers (a nanny) see only the calendar and their own settings; the rest is the family's.
     Route::middleware('family')->group(function (): void {
         Route::post('/kalender/{event}/antwoord', [GatheringController::class, 'respond'])->name('gatherings.respond');
         Route::post('/kalender/{event}/bring', [GatheringController::class, 'addItem'])->name('gatherings.items.store');
@@ -116,9 +122,7 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/kosidees/gekoop', [MealIdeaController::class, 'forgetBought'])->name('ideas.forget');
 
         Route::post('/inkopies', [ShoppingController::class, 'add'])->name('shopping.add');
-    });
 
-    Route::middleware('family')->group(function (): void {
         Route::get('/kleinkinders', [GrandchildController::class, 'index'])->name('grandchildren.index');
         Route::get('/kleinkinders/{member}', [GrandchildController::class, 'show'])->name('grandchildren.show');
         Route::get('/kleinkinders/{member}/wysig', [GrandchildController::class, 'edit'])->name('grandchildren.edit');
@@ -132,9 +136,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/kontakte/{contact}/wysig', [ContactController::class, 'edit'])->name('contacts.edit');
         Route::put('/kontakte/{contact}', [ContactController::class, 'update'])->name('contacts.update');
         Route::delete('/kontakte/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
-    });
 
-    Route::middleware('family')->group(function (): void {
         Route::get('/kalenders', [CalendarFeedController::class, 'index'])->name('feeds.index');
         Route::post('/kalenders', [CalendarFeedController::class, 'store'])->middleware('throttle:10,1')->name('feeds.store');
         Route::post('/kalenders/nuwe-skakel', [CalendarFeedController::class, 'newLink'])->name('feeds.new-link');
@@ -156,15 +158,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/stuur/sleutel', [ShareController::class, 'newKey'])->name('share.key');
         Route::get('/inkassie/{inboxItem}', [ShareController::class, 'open'])->name('inbox.open');
         Route::delete('/inkassie/{inboxItem}', [ShareController::class, 'discard'])->name('inbox.discard');
-    });
 
-    Route::get('/meer', [SettingsController::class, 'more'])->name('more');
-    Route::get('/instellings', [SettingsController::class, 'edit'])->name('settings');
-    Route::put('/instellings', [SettingsController::class, 'update'])->name('settings.update');
-    Route::post('/kennisgewings', [PushController::class, 'store'])->name('push.store');
-    Route::delete('/kennisgewings', [PushController::class, 'destroy'])->name('push.destroy');
-
-    Route::middleware('family')->group(function (): void {
         Route::get('/familie', [FamilyController::class, 'index'])->name('family.index');
         Route::post('/familie/huise', [FamilyController::class, 'storeHousehold'])->name('family.households.store');
         Route::put('/familie/huise/{household}', [FamilyController::class, 'updateHousehold'])->name('family.households.update');

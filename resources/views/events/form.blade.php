@@ -2,16 +2,14 @@
     $editing = $event->exists;
     $kind = old('kind', $event->kind);
     $share = old('share', $event->household_id === null && $editing ? 'family' : ($event->household_id === null && in_array($kind, ['anniversary', 'school', 'gathering']) ? 'family' : 'household'));
+    $kindsFor = $kinds;
     $kinds = [
         'event' => __('Afspraak, uitstappie of vaste program'),
         'gathering' => __('Byeenkoms (met wie kom en wie bring wat)'),
         'anniversary' => __('Herdenking (elke jaar)'),
         'school' => __('Skoolvakansie of kwartaal'),
     ];
-    // Helpers add their household's appointments; gatherings and anniversaries are the family's.
-    if ($me->isHelper()) {
-        $kinds = array_intersect_key($kinds, array_flip(['event', 'school']));
-    }
+    $kinds = array_intersect_key($kinds, array_flip($kindsFor));
 @endphp
 <x-layout :title="$editing ? __('Wysig') : __('Nuwe inskrywing')">
     <a class="back" href="{{ $editing ? route('events.show', $event) : route('calendar') }}">@include('partials.icon', ['name' => 'back']) {{ __('Terug') }}</a>
@@ -115,8 +113,8 @@
 
         <fieldset class="row" data-hide-for="gathering">
             <legend>{{ __('Wie ry gewoonlik?') }} <span class="hint">{{ __('vir ’n kind se aktiwiteit; ’n ander keer kan jy dit per dag verander') }}</span></legend>
-            @foreach (['there_member_id' => __('Neem'), 'back_member_id' => __('Haal')] as $field => $label)
-                <label>{{ $label }}
+            @foreach (['there_member_id' => \App\Models\Lift::THERE, 'back_member_id' => \App\Models\Lift::BACK] as $field => $direction)
+                <label>{{ \App\Models\Lift::label($direction) }}
                     <select name="{{ $field }}">
                         <option value="">{{ __('Niemand') }}</option>
                         @foreach ($drivers as $driver)
@@ -127,7 +125,7 @@
             @endforeach
         </fieldset>
 
-        <fieldset data-hide-for="gathering" @if ($me->isHelper()) hidden @endif>
+        <fieldset data-hide-for="gathering" @cannot('family') hidden @endcannot>
             <legend>{{ __('Wie sien dit?') }}</legend>
             <div class="choice">
                 <label><input type="radio" name="share" value="household" @checked($share === 'household')><span>{{ __('Net ons huis') }}</span></label>

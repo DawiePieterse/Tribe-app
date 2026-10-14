@@ -72,7 +72,6 @@
 
             @foreach ($ideas as $index => $idea)
                 @php($missing = $idea->missing())
-                @php($shareText = __('Inkopies vir :title', ['title' => $idea->title]).":\n".implode("\n", array_map(fn ($l) => '• '.$l, $missing)))
                 <article class="idea">
                     <header>
                         <h3>{{ $idea->title }}</h3>
@@ -123,7 +122,7 @@
                             <summary>{{ __('Koop wat kort') }}</summary>
                             @include('partials.to-list', ['lines' => $missing, 'lists' => $lists])
                             <p>
-                                <x-message class="button quiet small" :text="$shareText" />
+                                <x-message class="small" :title="__('Inkopies vir :title', ['title' => $idea->title])" :lines="$missing" />
                             </p>
                             <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie: tik “Checkers” by ’n item om dit daar te soek.') }}</p>
                         </details>

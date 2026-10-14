@@ -63,12 +63,13 @@ class RecipeController extends Controller
 
         // Quantities for the number at the table: the household's usual number, or what was asked (?vir=8).
         $written = $recipe->servingsCount();
-        $people = $written === null ? null : max(1, min(Household::MAX_PEOPLE, $request->integer('vir') ?: $this->me()->household->peopleEating()));
+        $people = $written === null ? null : Household::clampPeople($request->integer('vir') ?: $this->me()->household->peopleEating());
 
         return view('recipes.show', [
             'recipe' => $recipe,
+            'written' => $written,
             'people' => $people,
-            'lines' => $people === null ? $recipe->ingredientLines() : $recipe->ingredientLinesFor($people),
+            'lines' => $people === null ? $recipe->ingredientLines() : $recipe->ingredientLinesFor($written, $people),
             'maxPeople' => Household::MAX_PEOPLE,
             'favourite' => $recipe->isFavouriteOf($this->me()),
             'lists' => $this->shoppingLists(),
@@ -81,11 +82,7 @@ class RecipeController extends Controller
         $this->ensureVisible($recipe);
         $me = $this->me();
 
-        if ($recipe->isFavouriteOf($me)) {
-            $recipe->favouredBy()->detach($me->id);
-        } else {
-            $recipe->favouredBy()->attach($me->id, ['created_at' => now()]);
-        }
+        $recipe->favouredBy()->toggle([$me->id => ['created_at' => now()]]);
 
         return back();
     }

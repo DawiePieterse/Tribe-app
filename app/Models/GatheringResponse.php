@@ -30,6 +30,12 @@ class GatheringResponse extends Model
 
     protected $fillable = ['event_id', 'household_id', 'status', 'adults', 'children', 'note', 'responded_by'];
 
+    /** Grown-ups and children coming. */
+    public function headcount(): int
+    {
+        return $this->adults + $this->children;
+    }
+
     /** @return BelongsTo<Household, $this> */
     public function household(): BelongsTo
     {

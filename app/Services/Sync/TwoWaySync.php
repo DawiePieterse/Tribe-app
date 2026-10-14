@@ -87,7 +87,7 @@ class TwoWaySync
         }
 
         /** @var Collection<int, EventLink> $links */
-        $links = $connection->links()->with('event')->get();
+        $links = $connection->links()->with('event.skips')->get();
         $byRemote = $links->whereNotNull('remote_id')->keyBy('remote_id');
         $seen = [];
         $arrived = [];
@@ -160,7 +160,7 @@ class TwoWaySync
 
         // 4. Tribe events their calendar doesn't have yet.
         $linked = $connection->links()->whereNotNull('event_id')->pluck('event_id');
-        $new = Event::query()->visibleTo($member)
+        $new = Event::query()->visibleTo($member)->with('skips')
             ->whereNull('feed_id')
             ->whereNotIn('id', $linked)
             ->between($from, $to)
@@ -198,8 +198,8 @@ class TwoWaySync
         $linkedHere = array_fill_keys($links->whereNotNull('event_id')->pluck('event_id')->all(), true);
 
         // One query each for the two ways a remote event can already be in Tribe.
-        $marked = Event::query()->findMany(array_filter(array_map(fn (RemoteEvent $e) => $e->tribeId, $arrived)))->keyBy('id');
-        $siblings = EventLink::query()->with('event')
+        $marked = Event::query()->with('skips')->findMany(array_filter(array_map(fn (RemoteEvent $e) => $e->tribeId, $arrived)))->keyBy('id');
+        $siblings = EventLink::query()->with('event.skips')
             ->whereIn('remote_id', array_map(fn (RemoteEvent $e) => $e->id, $arrived))
             ->where('connection_id', '!=', $connection->id)
             ->whereHas('connection', fn ($q) => $q->where('provider', $connection->provider)->where('calendar_id', $connection->calendar_id))

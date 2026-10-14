@@ -15,9 +15,9 @@ class SettingsController extends Controller
         return view('more', ['me' => $this->me()]);
     }
 
-    public function edit(): View
+    public function edit(Push $push): View
     {
-        return view('settings', ['me' => $this->me(), 'push' => Push::enabled() ? (string) config('services.webpush.public_key') : null]);
+        return view('settings', ['me' => $this->me(), 'push' => $push->enabled() ? (string) config('services.webpush.public_key') : null]);
     }
 
     public function update(Request $request): RedirectResponse

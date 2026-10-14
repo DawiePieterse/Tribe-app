@@ -12,7 +12,7 @@
                 <ul class="entries">
                     @foreach ($occurrences as $o)
                         <li>
-                            @php($href = $o->event ? route('events.show', $o->event) : ($o->member?->isChild() && ! auth()->user()?->isHelper() ? route('grandchildren.show', $o->member) : null))
+                            @php($href = $o->event ? route('events.show', $o->event) : ($o->member?->isChild() && auth()->user()?->can('family') ? route('grandchildren.show', $o->member) : null))
                             <{{ $href ? 'a' : 'div' }} class="entry" style="--c: {{ $o->colour }}" @if ($href) href="{{ $href }}" @endif>
                                 <strong>
                                     @if ($o->isBirthday())@include('partials.icon', ['name' => 'cake'])@endif
@@ -27,9 +27,7 @@
                                 @if ($meta)
                                     <span class="meta">{{ implode(' · ', $meta) }}</span>
                                 @endif
-                                @if ($o->lift !== null)
-                                    <span @class(['lift-line', 'open' => $o->liftOpen()])>{{ $o->lift }}</span>
-                                @endif
+                                @include('partials.lift-line')
                             </{{ $href ? 'a' : 'div' }}>
                         </li>
                     @endforeach

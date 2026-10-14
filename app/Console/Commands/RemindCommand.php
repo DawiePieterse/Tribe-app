@@ -8,7 +8,6 @@ use App\Models\PushSubscription;
 use App\Services\EveningSummary;
 use App\Services\Push;
 use App\Services\Weather;
-use App\Support\Dates;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -23,7 +22,7 @@ class RemindCommand extends Command
     public function handle(EveningSummary $summaries, Push $push): int
     {
         $tomorrow = CarbonImmutable::tomorrow();
-        $withPush = Push::enabled() ? PushSubscription::query()->select('member_id') : collect();
+        $withPush = $push->enabled() ? PushSubscription::query()->distinct()->pluck('member_id') : collect();
         $members = Member::query()->with('household')->whereNotNull('email')
             ->where(fn ($q) => $q->where('evening_email', true)->orWhereIn('id', $withPush))
             ->get();
@@ -35,20 +34,19 @@ class RemindCommand extends Command
                 Mail::to($member->email)->send(new EveningSummaryMail($member, $summary));
             }
 
-            if (! Push::enabled() || ! PushSubscription::query()->where('member_id', $member->id)->exists()) {
+            if (! $withPush->contains($member->id)) {
                 continue;
             }
 
             $lines = $summary['entries']->map(fn ($o) => EveningSummary::entryLine($o));
             if ($lines->isNotEmpty() || $summary['mine'] !== []) {
-                $body = $lines->take(5)->implode("\n").($lines->count() > 5 ? "\n…" : '');
-                if ($summary['mine'] !== []) {
-                    $body = trim($body."\n".implode("\n", $summary['mine']));
-                }
-                if ($summary['weather'] !== null) {
-                    $body = Weather::line($summary['weather']).($summary['weather']['flags'] ? ' · '.implode(' · ', $summary['weather']['flags']) : '')."\n".$body;
-                }
-                $push->send($member, __('Môre, :day', ['day' => Dates::shortDay($tomorrow).' '.$tomorrow->translatedFormat('j F')]), $body, route('calendar'));
+                $body = collect([
+                    $summary['weather'] !== null ? Weather::summary($summary['weather']) : null,
+                    ...$lines->take(5),
+                    $lines->count() > 5 ? '…' : null,
+                    ...$summary['mine'],
+                ])->filter()->implode("\n");
+                $push->send($member, EveningSummary::heading($tomorrow), $body, route('calendar'));
             }
 
             if ($summary['open'] !== []) {
@@ -56,6 +54,7 @@ class RemindCommand extends Command
             }
         }
 
+        $push->flush();
         $this->line('Reminded '.$members->count().' member(s).');
 
         return self::SUCCESS;

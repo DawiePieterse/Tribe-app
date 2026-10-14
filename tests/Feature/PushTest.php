@@ -6,7 +6,7 @@ use App\Models\PushSubscription;
 use App\Services\Push;
 
 beforeEach(function () {
-    Push::fake();
+    $this->push = Push::fake();
     $this->ours = household('Ons');
     $this->other = household('Ander', '#C2185B');
     $this->me = adult($this->ours);
@@ -15,7 +15,7 @@ beforeEach(function () {
 
 function sentTo(Member $member): array
 {
-    return array_values(array_filter(Push::$sent, fn ($n) => $n['member_id'] === $member->id));
+    return test()->push->sentTo($member);
 }
 
 it('turns notifications on and off for a device', function () {
@@ -36,9 +36,12 @@ it('turns notifications on and off for a device', function () {
 });
 
 it('shows the notifications switch only when keys are set', function () {
+    app()->forgetInstance(Push::class);
     config(['services.webpush.public_key' => null, 'services.webpush.private_key' => null]);
-    Push::$sent = [];
-    $this->actingAs($this->me)->get(route('settings'))->assertOk()->assertSee(__('Kennisgewings'));
+    $this->actingAs($this->me)->get(route('settings'))->assertOk()->assertDontSee('data-push-key', false);
+
+    config(['services.webpush.public_key' => 'pub', 'services.webpush.private_key' => 'priv']);
+    $this->actingAs($this->me)->get(route('settings'))->assertOk()->assertSee('data-push-key="pub"', false);
 });
 
 it('tells the family about a new gathering, and the hosts who is coming', function () {
@@ -65,7 +68,7 @@ it('tells everyone about a date poll and the driver about a lift', function () {
     $ballet = Event::query()->create(['title' => 'Ballet', 'starts_on' => today()->addDay(), 'household_id' => $this->ours->id, 'member_id' => $child->id]);
     $date = today()->addDay()->toDateString();
 
-    Push::$sent = [];
+    $this->push->sent = [];
     $this->actingAs($this->me)->post(route('lifts.store', $ballet), ['lifts' => [$date => ['there' => $this->me->id, 'back' => $this->them->id]]]);
     expect(sentTo($this->me))->toBeEmpty()
         ->and(sentTo($this->them))->toHaveCount(1)

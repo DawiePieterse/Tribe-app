@@ -153,6 +153,52 @@ class Event extends Model
         return $this->member !== null && $this->member->isChild();
     }
 
+    /** Whether single days of it can fall away (a repeating entry of Tribe's own). */
+    public function canSkipDays(): bool
+    {
+        return $this->repeats() && ! $this->isFromFeed();
+    }
+
+    /** Whether the page shows its coming days: for lifts, or to take a day out. */
+    public function hasComingDays(): bool
+    {
+        return $this->isForChild() || $this->canSkipDays();
+    }
+
+    /**
+     * Who does this leg on that day: that day's exception if there is one (it may be nobody), else the
+     * usual driver. Reads the `lifts` already loaded for the dates in question.
+     */
+    public function driverOn(CarbonImmutable $date, string $direction): ?Member
+    {
+        $exception = $this->liftOn($date, $direction);
+
+        return $exception !== null ? $exception->member : $this->usualDriver($direction);
+    }
+
+    /** That day's exception for this leg, from the loaded `lifts`. */
+    public function liftOn(CarbonImmutable $date, string $direction): ?Lift
+    {
+        return $this->lifts->first(fn (Lift $l) => $l->direction === $direction && $l->date->isSameDay($date));
+    }
+
+    /** Who may change it: anyone in the family; a helper only their household's own. */
+    public function isEditableBy(Member $member): bool
+    {
+        return ! $this->isFromFeed() && (! $member->isHelper() || ! $this->isFamilyWide());
+    }
+
+    /**
+     * The kinds someone may add: helpers add their household's appointments and school days;
+     * gatherings and anniversaries are the family's.
+     *
+     * @return list<string>
+     */
+    public static function kindsFor(Member $member): array
+    {
+        return $member->isHelper() ? [self::EVENT, self::SCHOOL] : self::KINDS;
+    }
+
     /** @return HasMany<Lift, $this> */
     public function lifts(): HasMany
     {
@@ -216,8 +262,22 @@ class Event extends Model
             return null;
         }
 
-        $label = substr($this->start_time, 0, 5);
+        return $this->end_time === null ? $this->startLabel() : $this->startLabel().'–'.$this->endLabel();
+    }
 
-        return $this->end_time === null ? $label : $label.'–'.substr($this->end_time, 0, 5);
+    public function startLabel(): ?string
+    {
+        return $this->start_time === null ? null : substr($this->start_time, 0, 5);
+    }
+
+    public function endLabel(): ?string
+    {
+        return $this->end_time === null ? null : substr($this->end_time, 0, 5);
+    }
+
+    /** "Sondag 18 Oktober 12:30": the day it starts, and the time if it has one. */
+    public function whenLabel(): string
+    {
+        return trim($this->starts_on->translatedFormat('l j F').' '.$this->timeLabel());
     }
 }

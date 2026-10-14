@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Str;
 
 /**
@@ -37,9 +39,9 @@ use Illuminate\Support\Str;
  * @property string|null $share_token_hash
  * @property-read Household $household
  */
-class Member extends Model implements AuthenticatableContract
+class Member extends Model implements AuthenticatableContract, AuthorizableContract
 {
-    use Authenticatable;
+    use Authenticatable, Authorizable;
 
     public const ADULT = 'adult';
 
@@ -48,6 +50,9 @@ class Member extends Model implements AuthenticatableContract
     public const HELPER = 'helper';
 
     public const KINDS = [self::ADULT, self::CHILD, self::HELPER];
+
+    /** Those who log in and can give a child a lift. */
+    public const GROWN_UPS = [self::ADULT, self::HELPER];
 
     protected $fillable = [
         'household_id', 'name', 'kind', 'email', 'is_admin', 'birthday', 'colour', 'large_text', 'evening_email',
@@ -111,7 +116,18 @@ class Member extends Model implements AuthenticatableContract
      */
     public function scopeDrivers(Builder $query): Builder
     {
-        return $query->whereIn('kind', [self::ADULT, self::HELPER]);
+        return $query->whereIn('kind', self::GROWN_UPS);
+    }
+
+    /**
+     * The family's adults (not helpers): who hears about gatherings and date polls.
+     *
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
+    public function scopeAdults(Builder $query): Builder
+    {
+        return $query->where('kind', self::ADULT);
     }
 
     public function isChild(): bool
@@ -126,13 +142,13 @@ class Member extends Model implements AuthenticatableContract
 
     public function canLogIn(): bool
     {
-        return in_array($this->kind, [self::ADULT, self::HELPER], true) && $this->email !== null;
+        return in_array($this->kind, self::GROWN_UPS, true) && $this->email !== null;
     }
 
-    /** Admins and the adults of the child's own household may edit a child's profile; helpers only look. */
+    /** Admins and the adults of the child's own household may edit a child's profile. */
     public function canEditProfileOf(Member $child): bool
     {
-        return ! $this->isHelper() && ($this->is_admin || $this->household_id === $child->household_id);
+        return $this->is_admin || $this->household_id === $child->household_id;
     }
 
     /** The secret part of this member's calendar link; made on first use. */

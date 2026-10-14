@@ -1,11 +1,8 @@
 {{ __('Goeienaand :name', ['name' => $member->firstName()]) }}
 
-{{ __('Môre, :day:', ['day' => \App\Support\Dates::shortDay($summary['date']).' '.$summary['date']->translatedFormat('j F')]) }}
+{{ \App\Services\EveningSummary::heading($summary['date']) }}:
 @if ($summary['weather'])
-{{ __('Weer:') }} {{ \App\Services\Weather::line($summary['weather']) }}
-@foreach ($summary['weather']['flags'] as $flag)
-  {{ $flag }}
-@endforeach
+{{ __('Weer:') }} {{ \App\Services\Weather::summary($summary['weather']) }}
 @endif
 
 @if ($summary['entries']->isEmpty())

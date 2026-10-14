@@ -6,11 +6,11 @@ use App\Models\Event;
 use App\Models\GatheringResponse;
 use App\Models\Household;
 use App\Models\InboxItem;
-use App\Models\Lift;
 use App\Models\Member;
 use App\Services\Agenda;
 use App\Services\Push;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -53,11 +53,11 @@ class EventController extends Controller
     {
         $event = Event::query()->create($this->validated($request) + ['created_by' => $this->me()->id]);
 
-        if ($event->isGathering()) {
+        if ($event->isGathering() && $push->enabled()) {
             $event->load('hostHousehold');
-            $push->send(Member::query()->drivers()->whereKeyNot($this->me()->id)->get(),
+            $push->send(Member::query()->adults()->whereKeyNot($this->me()->id)->get(),
                 __('Nuwe byeenkoms: :title', ['title' => $event->title]),
-                $event->starts_on->translatedFormat('l j F').($event->timeLabel() ? ' '.$event->timeLabel() : '').($event->hostHousehold ? ' · '.__('by :house', ['house' => $event->hostHousehold->name]) : ''),
+                $event->whenLabel().($event->hostHousehold ? ' · '.__('by :house', ['house' => $event->hostHousehold->name]) : ''),
                 route('events.show', $event));
         }
 
@@ -78,12 +78,9 @@ class EventController extends Controller
     {
         $this->ensureVisible($event);
         $me = $this->me();
-        $event->load(['member.household', 'household', 'hostHousehold', 'feed', 'responses.household', 'items.household']);
-
-        $event->load(['thereDriver', 'backDriver', 'skips']);
-        $liftDates = $event->isForChild() || ($event->repeats() && ! $event->isFromFeed()) ? LiftController::dates($event, $agenda) : [];
-        $lifts = $liftDates === [] ? collect() : $event->lifts()->whereIn('date', array_map(fn ($d) => $d->toDateString(), $liftDates))->get()
-            ->keyBy(fn (Lift $l) => $l->date->toDateString().'|'.$l->direction);
+        $liftDates = $event->hasComingDays() ? $agenda->comingDates($event) : [];
+        $event->load(['member.household', 'household', 'hostHousehold', 'feed', 'responses.household', 'items.household',
+            'thereDriver', 'backDriver', 'skips', 'lifts' => fn ($q) => $q->whereIn('date', array_map(fn ($d) => $d->toDateString(), $liftDates))]);
 
         $responses = $event->responses->keyBy('household_id');
 
@@ -98,8 +95,7 @@ class EventController extends Controller
                 ? Member::query()->children()->whereNotNull('allergies')->where('allergies', '!=', '')->get()
                 : collect(),
             'liftDates' => $liftDates,
-            'lifts' => $lifts,
-            'drivers' => ! $event->isForChild() ? collect() : Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get()
+            'drivers' => ! $event->isForChild() ? collect() : $this->drivers()
                 ->sortBy(fn (Member $m) => $m->household_id === $event->member?->household_id ? 0 : 1)->values(),
         ]);
     }
@@ -133,20 +129,29 @@ class EventController extends Controller
     {
         $this->ensureVisible($event);
         abort_if($event->isFromFeed(), 403, __('Hierdie inskrywing kom uit ’n ingetekende kalender en kan nie hier verander word nie.'));
-        abort_if($this->me()->isHelper() && $event->isFamilyWide(), 403, __('Net die familie kan dit verander.'));
+        abort_unless($event->isEditableBy($this->me()), 403, __('Net die familie kan dit verander.'));
+    }
+
+    /** @return Collection<int, Member> grown-ups who can drive, by household */
+    private function drivers(): Collection
+    {
+        return Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get();
     }
 
     /** @return array<string, mixed> */
     private function formData(Event $event): array
     {
+        $members = Member::query()->with('household')->orderBy('household_id')->orderBy('name')->get();
+
         return [
             'event' => $event,
             'me' => $this->me(),
+            'kinds' => Event::kindsFor($this->me()),
             'households' => Household::query()->orderBy('id')->get(),
-            'members' => Member::query()->with('household')->orderBy('household_id')->orderBy('name')->get(),
-            'drivers' => Member::query()->drivers()->with('household')->orderBy('household_id')->orderBy('name')->get(),
+            'members' => $members,
+            'drivers' => $members->filter(fn (Member $m) => in_array($m->kind, Member::GROWN_UPS, true))->values(),
             // Places used before (the rugby field, the pool), most used first, to pick from.
-            'places' => Event::query()->visibleTo($this->me())->whereNotNull('location')->where('location', '!=', '')
+            'places' => Event::query()->visibleTo($this->me())->whereNull('feed_id')->whereNotNull('location')->where('location', '!=', '')
                 ->selectRaw('location, COUNT(*) AS n')->groupBy('location')->orderByDesc('n')->orderBy('location')->limit(40)->pluck('location'),
         ];
     }
@@ -157,7 +162,7 @@ class EventController extends Controller
         $me = $this->me();
 
         $data = $request->validate([
-            'kind' => ['required', Rule::in($me->isHelper() ? [Event::EVENT, Event::SCHOOL] : Event::KINDS)],
+            'kind' => ['required', Rule::in(Event::kindsFor($me))],
             'title' => ['required', 'string', 'max:255'],
             'starts_on' => ['required', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
@@ -166,8 +171,8 @@ class EventController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'member_id' => ['nullable', Rule::exists('members', 'id')],
-            'there_member_id' => ['nullable', Rule::exists('members', 'id')],
-            'back_member_id' => ['nullable', Rule::exists('members', 'id')],
+            'there_member_id' => ['nullable', Rule::exists('members', 'id')->whereIn('kind', Member::GROWN_UPS)],
+            'back_member_id' => ['nullable', Rule::exists('members', 'id')->whereIn('kind', Member::GROWN_UPS)],
             'host_household_id' => ['nullable', Rule::exists('households', 'id')],
             'share' => ['required', Rule::in(['household', 'family'])],
             'repeats' => ['nullable', Rule::in(Event::REPEATS)],

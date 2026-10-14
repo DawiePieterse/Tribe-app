@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Event;
+use App\Models\Lift;
 use App\Models\Member;
 use Carbon\CarbonImmutable;
 
@@ -21,14 +22,31 @@ final class Occurrence
         public readonly ?Member $member = null,
         public readonly ?string $time = null,
         public readonly ?string $detail = null,
-        /** "Neem: Pa · Haal: ?" for a child's activity, from today on. */
-        public readonly ?string $lift = null,
+        /** A child's activity, from today on: someone takes them there and fetches them. */
+        public readonly bool $needsLift = false,
+        public readonly ?Member $there = null,
+        public readonly ?Member $back = null,
     ) {}
 
     /** Whether someone still has to be found to take or fetch. */
     public function liftOpen(): bool
     {
-        return $this->lift !== null && str_contains($this->lift, '?');
+        return $this->needsLift && ($this->there === null || $this->back === null);
+    }
+
+    /** "Neem: Pa · Haal: ?" */
+    public function liftLine(): ?string
+    {
+        return ! $this->needsLift ? null : __('Neem: :there · Haal: :back', [
+            'there' => $this->there?->firstName() ?? '?',
+            'back' => $this->back?->firstName() ?? '?',
+        ]);
+    }
+
+    /** Who does this leg. */
+    public function driver(string $direction): ?Member
+    {
+        return $direction === Lift::THERE ? $this->there : $this->back;
     }
 
     public function isBirthday(): bool

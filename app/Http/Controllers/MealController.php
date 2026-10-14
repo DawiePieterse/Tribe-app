@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Meal;
 use App\Models\Recipe;
 use App\Models\TodoList;
+use App\Support\Dates;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,7 @@ class MealController extends Controller
 {
     public function week(Request $request): View
     {
-        $monday = $this->monday((string) $request->query('week', ''));
+        $monday = Dates::mondayOf((string) $request->query('week', ''));
         $me = $this->me();
 
         $meals = Meal::query()
@@ -31,7 +32,9 @@ class MealController extends Controller
         return view('meals.week', [
             'monday' => $monday,
             'meals' => $meals,
-            'recipes' => Recipe::query()->visibleTo($me)->withFavourite($me)->orderBy('title')->get(),
+            // For "Stuur": "Ma Spaghetti bolognaise", one line per day with meals.
+            'menuLines' => $meals->map(fn ($day, $date) => Dates::shortDay(CarbonImmutable::parse($date)).' '.$day->map->label()->implode(', '))->values()->all(),
+            'recipes' => Recipe::query()->visibleTo($me)->select(['id', 'title'])->withFavourite($me)->orderByDesc('is_favourite')->orderBy('title')->get(),
             'today' => CarbonImmutable::today(),
         ]);
     }
@@ -75,7 +78,7 @@ class MealController extends Controller
     /** Everything the week's recipes need, to tick off before it goes to a shopping list. */
     public function shopping(Request $request): View
     {
-        $monday = $this->monday((string) $request->query('week', ''));
+        $monday = Dates::mondayOf((string) $request->query('week', ''));
         $me = $this->me();
 
         $meals = Meal::query()
@@ -91,12 +94,5 @@ class MealController extends Controller
             'recipes' => $meals->pluck('recipe')->filter()->unique('id')->values(),
             'lists' => TodoList::query()->shoppingFor($me)->get(),
         ]);
-    }
-
-    private function monday(string $value): CarbonImmutable
-    {
-        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 ? CarbonImmutable::parse($value) : CarbonImmutable::today();
-
-        return $date->startOfWeek(CarbonInterface::MONDAY);
     }
 }

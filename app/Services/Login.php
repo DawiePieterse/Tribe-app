@@ -22,7 +22,7 @@ class Login
     {
         $member = Member::query()
             ->where('email', Str::lower(trim($email)))
-            ->whereIn('kind', [Member::ADULT, Member::HELPER])
+            ->whereIn('kind', Member::GROWN_UPS)
             ->first();
 
         if ($member === null) {

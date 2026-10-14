@@ -64,10 +64,12 @@ class DatePollController extends Controller
             return $poll;
         });
 
-        $push->send(Member::query()->drivers()->whereKeyNot($this->me()->id)->get(),
-            __('Watter datums werk? :title', ['title' => $poll->title]),
-            trans_choice(':count datum om te merk|:count datums om te merk', $options->count()),
-            route('polls.show', $poll));
+        if ($push->enabled()) {
+            $push->send(Member::query()->adults()->whereKeyNot($this->me()->id)->get(),
+                __('Watter datums werk? :title', ['title' => $poll->title]),
+                trans_choice(':count datum om te merk|:count datums om te merk', $options->count()),
+                route('polls.show', $poll));
+        }
 
         return redirect()->route('polls.show', $poll)->with('status', __('Klaar. Merk nou wat vir julle huis werk.'));
     }

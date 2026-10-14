@@ -6,10 +6,10 @@
             <form method="post" action="{{ route('recipes.favourite', $recipe) }}">
                 @csrf
                 <button type="submit" @class(['fav', 'is-on' => $favourite]) aria-pressed="{{ $favourite ? 'true' : 'false' }}" aria-label="{{ $favourite ? __('Haal uit my gunstelinge') : __('Merk as gunsteling') }}">
-                    @include('partials.icon', ['name' => $favourite ? 'heart-filled' : 'heart'])
+                    @include('partials.icon', ['name' => 'heart'])
                 </button>
             </form>
-            <x-message class="button quiet small" :text="__('Resep: :title :link', ['title' => $recipe->title, 'link' => route('recipes.show', $recipe)])" :label="__('Stuur')" />
+            <x-message class="small" :text="__('Resep: :title :link', ['title' => $recipe->title, 'link' => route('recipes.show', $recipe)])" :label="__('Stuur')" />
             <a class="button quiet small" href="{{ route('recipes.edit', $recipe) }}">{{ __('Wysig') }}</a>
         </span>
     </div>
@@ -31,8 +31,8 @@
                 </form>
             @endif
         </div>
-        @if ($people !== null && $people !== $recipe->servingsCount())
-            <p class="muted small">{{ __('Die resep is vir :written geskryf; die hoeveelhede is vir :people aangepas.', ['written' => $recipe->servingsCount(), 'people' => $people]) }}</p>
+        @if ($people !== null && $people !== $written)
+            <p class="muted small">{{ __('Die resep is vir :written geskryf; die hoeveelhede is vir :people aangepas.', ['written' => $written, 'people' => $people]) }}</p>
         @endif
         @include('partials.to-list', ['lines' => $lines, 'lists' => $lists])
     @endif

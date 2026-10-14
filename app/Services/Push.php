@@ -4,35 +4,37 @@ namespace App\Services;
 
 use App\Models\Member;
 use App\Models\PushSubscription;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 
 /**
  * Sends a short notification to members' phones (Web Push with VAPID keys from `tribe:vapid-keys`).
- * Does nothing when the keys aren't set. A device that is gone (404/410, or failing again and again)
- * is forgotten.
+ * Does nothing when the keys aren't set. Notifications are queued and sent together once the page
+ * (or the command) is done, so nobody waits for Apple's servers; a device that is gone (404/410, or
+ * failing again and again) is forgotten. Bound as a singleton; tests swap in `FakePush`.
  */
 class Push
 {
     private const MAX_FAILURES = 5;
 
-    private static bool $faking = false;
+    /** @var list<array{ids: list<int>, payload: string}> */
+    private array $queued = [];
 
-    /** @var list<array{member_id: int, title: string, body: string, url: string}> */
-    public static array $sent = [];
+    private bool $flushing = false;
 
     /** In tests: record instead of sending. */
-    public static function fake(): void
+    public static function fake(): FakePush
     {
-        self::$faking = true;
-        self::$sent = [];
+        $fake = new FakePush;
+        app()->instance(self::class, $fake);
+
+        return $fake;
     }
 
-    public static function enabled(): bool
+    public function enabled(): bool
     {
-        return self::$faking || (filled(config('services.webpush.public_key')) && filled(config('services.webpush.private_key')));
+        return filled(config('services.webpush.public_key')) && filled(config('services.webpush.private_key'));
     }
 
     /**
@@ -40,56 +42,55 @@ class Push
      */
     public function send(iterable|Member $members, string $title, string $body, string $url): void
     {
-        if (! self::enabled()) {
+        if (! $this->enabled()) {
             return;
         }
 
-        $members = $members instanceof Member ? [$members] : $members;
-        $ids = collect($members)->map(fn (Member $m) => $m->id)->unique()->values();
-        if ($ids->isEmpty()) {
+        $ids = collect($members instanceof Member ? [$members] : $members)->map(fn (Member $m) => $m->id)->unique()->values()->all();
+        if ($ids === []) {
             return;
         }
 
-        if (self::$faking) {
-            foreach ($ids as $id) {
-                self::$sent[] = ['member_id' => $id, 'title' => $title, 'body' => $body, 'url' => $url];
-            }
-
-            return;
-        }
-
-        $subscriptions = PushSubscription::query()->whereIn('member_id', $ids)->get();
-        if ($subscriptions->isEmpty()) {
-            return;
-        }
-
-        $this->deliver($subscriptions, (string) json_encode(['title' => $title, 'body' => mb_substr($body, 0, 300), 'url' => $url]));
+        $this->queue($ids, $title, mb_substr($body, 0, 300), $url);
     }
 
-    /** @param  Collection<int, PushSubscription>  $subscriptions */
-    private function deliver(Collection $subscriptions, string $payload): void
+    /** @param  list<int>  $ids */
+    protected function queue(array $ids, string $title, string $body, string $url): void
     {
-        try {
-            // Without the gmp or bcmath extension the library raises a notice (slower maths); that's not an error.
-            set_error_handler(fn () => true, E_USER_NOTICE);
-            try {
-                $webPush = new WebPush(['VAPID' => [
-                    'subject' => (string) (config('services.webpush.subject') ?: 'mailto:'.config('mail.from.address')),
-                    'publicKey' => (string) config('services.webpush.public_key'),
-                    'privateKey' => (string) config('services.webpush.private_key'),
-                ]], ['TTL' => 3600]);
-            } finally {
-                restore_error_handler();
-            }
-            $webPush->setReuseVAPIDHeaders(true);
+        $this->queued[] = ['ids' => $ids, 'payload' => (string) json_encode(['title' => $title, 'body' => $body, 'url' => $url])];
 
-            foreach ($subscriptions as $subscription) {
-                $webPush->queueNotification(Subscription::create([
-                    'endpoint' => $subscription->endpoint,
-                    'publicKey' => $subscription->p256dh,
-                    'authToken' => $subscription->auth,
-                    'contentEncoding' => 'aes128gcm',
-                ]), $payload);
+        if (! $this->flushing) {
+            $this->flushing = true;
+            app()->terminating(fn () => $this->flush());
+        }
+    }
+
+    /** Sends everything queued, on one connection and with one signed VAPID header. */
+    public function flush(): void
+    {
+        $queued = $this->queued;
+        $this->queued = [];
+        $this->flushing = false;
+        if ($queued === []) {
+            return;
+        }
+
+        try {
+            $subscriptions = PushSubscription::query()->whereIn('member_id', array_merge(...array_column($queued, 'ids')))->get();
+            if ($subscriptions->isEmpty()) {
+                return;
+            }
+
+            $webPush = $this->client();
+            foreach ($queued as $notification) {
+                foreach ($subscriptions->whereIn('member_id', $notification['ids']) as $subscription) {
+                    $webPush->queueNotification(Subscription::create([
+                        'endpoint' => $subscription->endpoint,
+                        'publicKey' => $subscription->p256dh,
+                        'authToken' => $subscription->auth,
+                        'contentEncoding' => 'aes128gcm',
+                    ]), $notification['payload']);
+                }
             }
 
             $byEndpoint = $subscriptions->keyBy('endpoint');
@@ -102,10 +103,7 @@ class Push
                     if ($subscription->failures > 0) {
                         $subscription->update(['failures' => 0]);
                     }
-
-                    continue;
-                }
-                if ($report->isSubscriptionExpired() || $subscription->failures + 1 >= self::MAX_FAILURES) {
+                } elseif ($report->isSubscriptionExpired() || $subscription->failures + 1 >= self::MAX_FAILURES) {
                     $subscription->delete();
                 } else {
                     $subscription->increment('failures');
@@ -114,5 +112,22 @@ class Push
         } catch (\Throwable $e) {
             Log::warning('Push: '.$e->getMessage());
         }
+    }
+
+    private function client(): WebPush
+    {
+        // Without the gmp or bcmath extension the library raises a notice (slower maths); that's not an error.
+        set_error_handler(fn () => true, E_USER_NOTICE);
+        try {
+            $webPush = new WebPush(['VAPID' => [
+                'subject' => (string) (config('services.webpush.subject') ?: 'mailto:'.config('mail.from.address')),
+                'publicKey' => (string) config('services.webpush.public_key'),
+                'privateKey' => (string) config('services.webpush.private_key'),
+            ]], ['TTL' => 3600]);
+        } finally {
+            restore_error_handler();
+        }
+
+        return $webPush->setReuseVAPIDHeaders(true);
     }
 }

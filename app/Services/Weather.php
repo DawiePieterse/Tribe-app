@@ -9,16 +9,21 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
- * A day's forecast for a household's town from Open-Meteo (free, no key), kept for half an hour.
- * Each household sets its town under Familie; without one there is no weather.
+ * The forecast for a household's town from Open-Meteo (free, no key): one request covers today and
+ * the next two days, kept for two hours; a failed request is remembered for ten minutes so a slow
+ * Open-Meteo never holds up the home page. Each household sets its town under Familie.
+ *
+ * @phpstan-type Forecast array{min: int, max: int, rain: int, condition: string, flags: list<string>}
  */
 class Weather
 {
-    public const HOT = 28;
+    private const HOT = 28;
 
-    public const COLD = 10;
+    private const COLD = 10;
 
-    public const RAIN = 40;
+    private const RAIN = 40;
+
+    private const DAYS = 3;
 
     /**
      * Finds a town: its name as Open-Meteo knows it, and where it is.
@@ -28,7 +33,7 @@ class Weather
     public function find(string $town): ?array
     {
         try {
-            $response = Http::timeout(10)->get('https://geocoding-api.open-meteo.com/v1/search', [
+            $response = Http::connectTimeout(3)->timeout(5)->get('https://geocoding-api.open-meteo.com/v1/search', [
                 'name' => $town, 'count' => 5, 'language' => 'af', 'format' => 'json',
             ]);
             $results = $response->successful() ? (array) $response->json('results', []) : [];
@@ -50,50 +55,80 @@ class Weather
         ];
     }
 
-    /** @return array{min: int, max: int, rain: int, wind: int, condition: string, flags: list<string>}|null */
+    /** @return Forecast|null */
     public function for(Household $household, CarbonImmutable $date): ?array
     {
         if (! $household->hasWeather()) {
             return null;
         }
 
-        $day = $date->toDateString();
+        return $this->days($household)[$date->toDateString()] ?? null;
+    }
 
-        return Cache::remember('weather.'.$household->lat.','.$household->lon.'.'.$day, now()->addMinutes(30), function () use ($household, $day): ?array {
-            try {
-                $response = Http::timeout(10)->get('https://api.open-meteo.com/v1/forecast', [
-                    'latitude' => $household->lat,
-                    'longitude' => $household->lon,
-                    'daily' => 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,windspeed_10m_max',
-                    'timezone' => Dates::ZONE,
-                    'start_date' => $day,
-                    'end_date' => $day,
-                ]);
-                $d = $response->successful() ? $response->json('daily') : null;
-                if (! is_array($d) || ! isset($d['temperature_2m_min'][0], $d['temperature_2m_max'][0])) {
-                    return null;
-                }
+    /**
+     * Today and the next two days, by date.
+     *
+     * @return array<string, Forecast>
+     */
+    private function days(Household $household): array
+    {
+        $key = 'weather.'.$household->lat.','.$household->lon.'.'.CarbonImmutable::today()->toDateString();
+        $cached = Cache::get($key);
+        if (is_array($cached)) {
+            return $cached;
+        }
 
-                $w = [
-                    'min' => (int) round($d['temperature_2m_min'][0]),
-                    'max' => (int) round($d['temperature_2m_max'][0]),
-                    'rain' => (int) ($d['precipitation_probability_max'][0] ?? 0),
-                    'wind' => (int) round($d['windspeed_10m_max'][0] ?? 0),
-                    'condition' => self::condition($d['weathercode'][0] ?? null),
-                ];
-                $w['flags'] = self::flags($w);
+        $days = $this->fetch($household);
+        // An empty list (Open-Meteo down) is kept for a short while only.
+        Cache::put($key, $days, $days === [] ? now()->addMinutes(10) : now()->addHours(2));
 
-                return $w;
-            } catch (\Throwable) {
-                return null;
+        return $days;
+    }
+
+    /** @return array<string, Forecast> */
+    private function fetch(Household $household): array
+    {
+        $today = CarbonImmutable::today();
+
+        try {
+            $response = Http::connectTimeout(3)->timeout(5)->get('https://api.open-meteo.com/v1/forecast', [
+                'latitude' => $household->lat,
+                'longitude' => $household->lon,
+                'daily' => 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode',
+                'timezone' => Dates::ZONE,
+                'start_date' => $today->toDateString(),
+                'end_date' => $today->addDays(self::DAYS - 1)->toDateString(),
+            ]);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $d = $response->successful() ? $response->json('daily') : null;
+        if (! is_array($d) || ! is_array($d['time'] ?? null)) {
+            return [];
+        }
+
+        $days = [];
+        foreach ($d['time'] as $i => $day) {
+            if (! isset($d['temperature_2m_min'][$i], $d['temperature_2m_max'][$i])) {
+                continue;
             }
-        });
+            $w = [
+                'min' => (int) round($d['temperature_2m_min'][$i]),
+                'max' => (int) round($d['temperature_2m_max'][$i]),
+                'rain' => (int) ($d['precipitation_probability_max'][$i] ?? 0),
+                'condition' => self::condition($d['weathercode'][$i] ?? null),
+            ];
+            $days[(string) $day] = $w + ['flags' => self::flags($w)];
+        }
+
+        return $days;
     }
 
     /**
      * "12–24 °C · reën · reën 60%"
      *
-     * @param  array{min: int, max: int, rain: int, wind: int, condition: string, flags: list<string>}  $w
+     * @param  Forecast  $w
      */
     public static function line(array $w): string
     {
@@ -106,7 +141,17 @@ class Weather
     }
 
     /**
-     * @param  array{min: int, max: int, rain: int, wind: int, condition: string}  $w
+     * The line with what to bring: "9–31 °C · reën · reën 65% · Reën moontlik: reënjas"
+     *
+     * @param  Forecast  $w
+     */
+    public static function summary(array $w): string
+    {
+        return implode(' · ', [self::line($w), ...$w['flags']]);
+    }
+
+    /**
+     * @param  array{min: int, max: int, rain: int, condition: string}  $w
      * @return list<string>
      */
     private static function flags(array $w): array

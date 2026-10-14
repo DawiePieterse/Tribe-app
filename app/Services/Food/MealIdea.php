@@ -13,6 +13,9 @@ final readonly class MealIdea
 
     public const LEVELS = [self::QUICK, self::MEDIUM, self::LONG];
 
+    /** What the cookbook is written for, and what an idea without a number is for. */
+    public const DEFAULT_PEOPLE = 4;
+
     /**
      * @param  list<array{line: string, have: bool}>  $ingredients
      * @param  list<string>  $method
@@ -23,7 +26,7 @@ final readonly class MealIdea
         public string $kids,
         public array $ingredients,
         public array $method,
-        public int $people = 4,
+        public int $people,
     ) {}
 
     /** The same idea with its quantities for this many people. */
@@ -54,11 +57,11 @@ final readonly class MealIdea
      *
      * @return list<self>
      */
-    public static function manyFromArray(mixed $raws): array
+    public static function manyFromArray(mixed $raws, ?int $people = null): array
     {
         $ideas = [];
         foreach ((array) $raws as $raw) {
-            if (is_array($raw) && ($idea = self::fromArray($raw)) !== null) {
+            if (is_array($raw) && ($idea = self::fromArray($people === null ? $raw : ['people' => $people] + $raw)) !== null) {
                 $ideas[] = $idea;
             }
         }
@@ -83,6 +86,6 @@ final readonly class MealIdea
             return null;
         }
 
-        return new self(mb_substr($title, 0, 120), max(5, min(240, (int) ($a['minutes'] ?? 30))), mb_substr(trim((string) ($a['kids'] ?? '')), 0, 300), array_slice($ingredients, 0, 25), array_slice($method, 0, 12), max(1, (int) ($a['people'] ?? 4)));
+        return new self(mb_substr($title, 0, 120), max(5, min(240, (int) ($a['minutes'] ?? 30))), mb_substr(trim((string) ($a['kids'] ?? '')), 0, 300), array_slice($ingredients, 0, 25), array_slice($method, 0, 12), max(1, (int) ($a['people'] ?? self::DEFAULT_PEOPLE)));
     }
 }

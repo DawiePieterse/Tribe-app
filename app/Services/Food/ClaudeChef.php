@@ -17,7 +17,7 @@ final class ClaudeChef
      * @param  list<string>  $have
      * @return list<MealIdea>
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = 4): array
+    public function suggest(array $have, string $level, bool $fromPantry, int $people): array
     {
         $system = implode("\n", [
             'You suggest family dinners for working parents in South Africa who have little time.',
@@ -65,7 +65,7 @@ final class ClaudeChef
             'required' => ['ideas'],
         ], 4000, 60);
 
-        $ideas = array_map(fn (MealIdea $i) => new MealIdea($i->title, $i->minutes, $i->kids, $i->ingredients, $i->method, $people), MealIdea::manyFromArray($input['ideas'] ?? []));
+        $ideas = MealIdea::manyFromArray($input['ideas'] ?? [], $people);
 
         if ($ideas === []) {
             throw new \RuntimeException('Claude gave no usable meal ideas');

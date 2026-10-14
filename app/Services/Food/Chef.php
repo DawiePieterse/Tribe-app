@@ -12,7 +12,7 @@ class Chef
      * @param  list<string>  $have
      * @return array{ideas: list<MealIdea>, source: string}
      */
-    public function suggest(array $have, string $level, bool $fromPantry = false, int $people = 4): array
+    public function suggest(array $have, string $level, bool $fromPantry, int $people): array
     {
         if (Claude::available()) {
             try {

@@ -57,13 +57,14 @@ class MealIdeaController extends Controller
             'bought.*' => ['string', 'max:60'],
             'level' => ['required', Rule::in(MealIdea::LEVELS)],
             'from' => ['nullable', Rule::in(['typed', 'bought'])],
-            'people' => ['required', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
+            'people' => ['nullable', 'integer', 'min:1', 'max:'.Household::MAX_PEOPLE],
             'remember' => ['nullable', 'boolean'],
         ]);
 
         // The household's usual number is the default; guests change it for tonight only, unless asked to keep it.
+        $people = (int) ($data['people'] ?? $this->me()->household->peopleEating());
         if ($request->boolean('remember')) {
-            $this->me()->household->update(['people' => $data['people']]);
+            $this->me()->household->update(['people' => $people]);
         }
 
         $fromPantry = ($data['from'] ?? 'typed') === 'bought';
@@ -77,7 +78,7 @@ class MealIdeaController extends Controller
                 : __('Tik ten minste een ding wat julle het.')]);
         }
 
-        $result = $chef->suggest($have, $data['level'], $fromPantry, (int) $data['people']);
+        $result = $chef->suggest($have, $data['level'], $fromPantry, $people);
 
         $request->session()->put(self::SESSION, [
             'have' => $have,

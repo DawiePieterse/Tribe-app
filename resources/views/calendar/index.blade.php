@@ -7,11 +7,10 @@
     </nav>
 
     @if ($weekView)
-        <div class="month-nav">
-            <a class="button quiet round" href="{{ route('calendar', ['aansig' => 'week', 'week' => $monday->subWeek()->toDateString()] + $query) }}" aria-label="{{ __('Vorige week') }}">@include('partials.icon', ['name' => 'back'])</a>
-            <h1 class="week-title">{{ __(':from tot :to', ['from' => $monday->translatedFormat('j M'), 'to' => $monday->addDays(6)->translatedFormat('j M')]) }}</h1>
-            <a class="button quiet round" href="{{ route('calendar', ['aansig' => 'week', 'week' => $monday->addWeek()->toDateString()] + $query) }}" aria-label="{{ __('Volgende week') }}">@include('partials.icon', ['name' => 'next'])</a>
-        </div>
+        @include('partials.week-nav', [
+            'previous' => route('calendar', ['aansig' => 'week', 'week' => $monday->subWeek()->toDateString()] + $query),
+            'next' => route('calendar', ['aansig' => 'week', 'week' => $monday->addWeek()->toDateString()] + $query),
+        ])
 
         {{-- The week at a glance: a dot per colour on each day. Tap a day to jump to it, or to add to an empty one. --}}
         <div class="week-strip" aria-hidden="true">

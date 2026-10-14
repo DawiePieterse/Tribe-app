@@ -22,10 +22,15 @@ final readonly class EventData
         public ?string $notes = null,
         public string $repeats = Event::ONCE,
         public ?string $repeatUntil = null,
+        /** @var list<string> days (Y-m-d) a repeating event falls away */
+        public array $exdates = [],
     ) {}
 
     public static function fromEvent(Event $event): self
     {
+        $skips = ! $event->repeats() ? [] : ($event->relationLoaded('skips') ? $event->skips : $event->skips()->get())
+            ->map(fn ($s) => $s->date->toDateString())->sort()->values()->all();
+
         return self::make(
             $event->title,
             $event->starts_on->toDateString(),
@@ -36,13 +41,19 @@ final readonly class EventData
             $event->notes,
             $event->repeats,
             $event->repeat_until?->toDateString(),
+            $skips,
         );
     }
 
-    /** Trims, shortens and tidies values from either side so equal events compare equal. */
+    /**
+     * Trims, shortens and tidies values from either side so equal events compare equal.
+     *
+     * @param  list<string>  $exdates
+     */
     public static function make(
         string $title, string $startsOn, ?string $endsOn = null, ?string $startTime = null, ?string $endTime = null,
         ?string $location = null, ?string $notes = null, string $repeats = Event::ONCE, ?string $repeatUntil = null,
+        array $exdates = [],
     ): self {
         $startTime = $startTime !== null && $startTime !== '' ? substr($startTime, 0, 5) : null;
         $endTime = $startTime !== null && $endTime !== null && $endTime !== '' ? substr($endTime, 0, 5) : null;
@@ -59,6 +70,7 @@ final readonly class EventData
             mb_substr(trim(str_replace("\r\n", "\n", (string) $notes)), 0, 5000) ?: null,
             $repeats,
             $repeats === Event::ONCE ? null : $repeatUntil,
+            $repeats === Event::ONCE ? [] : $exdates,
         );
     }
 
@@ -103,9 +115,22 @@ final readonly class EventData
         ];
     }
 
+    /** The days that fall away count too, but only when there are some, so older links keep their hash. */
     public function hash(): string
     {
-        return hash('sha256', (string) json_encode($this->attributes()));
+        return hash('sha256', (string) json_encode($this->attributes() + ($this->exdates === [] ? [] : ['exdates' => $this->exdates])));
+    }
+
+    /**
+     * The days that fall away as iCalendar EXDATE lines (local time for a timed event).
+     *
+     * @return list<string>
+     */
+    public function exdateLines(): array
+    {
+        return array_map(fn (string $day) => $this->isAllDay()
+            ? 'EXDATE;VALUE=DATE:'.str_replace('-', '', $day)
+            : 'EXDATE;TZID='.Dates::ZONE.':'.str_replace('-', '', $day).'T'.str_replace(':', '', (string) $this->startTime).'00', $this->exdates);
     }
 
     public function isAllDay(): bool

@@ -5,7 +5,8 @@
         @foreach ($lines as $line)
             <li>
                 <label><input type="checkbox" name="items[]" value="{{ $line }}" checked> {{ $line }}</label>
-                <a class="shop" href="{{ \App\Services\Food\Checkers::searchUrl($line) }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Soek “:item” by Checkers', ['item' => \App\Services\Food\Checkers::term($line)]) }}">{{ __('Checkers') }}</a>
+                @php($shop = \App\Services\Food\Checkers::link($line))
+                <a class="shop" href="{{ $shop['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Soek “:item” by Checkers', ['item' => $shop['term']]) }}">{{ __('Checkers') }}</a>
             </li>
         @endforeach
     </ul>

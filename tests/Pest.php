@@ -26,6 +26,16 @@ function adult(Household $household, array $attributes = []): Member
     ]);
 }
 
+/**
+ * A nanny or au pair: logs in, sees only the household's calendar.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function helper(Household $household, array $attributes = []): Member
+{
+    return adult($household, $attributes + ['name' => 'Thandi', 'kind' => Member::HELPER, 'email' => 'thandi@example.com']);
+}
+
 /** @param  array<string, mixed>  $attributes */
 function child(Household $household, array $attributes = []): Member
 {

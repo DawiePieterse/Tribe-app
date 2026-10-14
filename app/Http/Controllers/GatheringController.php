@@ -28,7 +28,7 @@ class GatheringController extends Controller
 
         $coming = $data['status'] !== GatheringResponse::NO;
 
-        GatheringResponse::query()->updateOrCreate(
+        $response = GatheringResponse::query()->updateOrCreate(
             ['event_id' => $event->id, 'household_id' => $me->household_id],
             [
                 'status' => $data['status'],
@@ -40,11 +40,11 @@ class GatheringController extends Controller
         );
 
         // The hosts hear who is coming.
-        if ($event->host_household_id !== null && $event->host_household_id !== $me->household_id) {
-            $label = ['yes' => __('kom'), 'maybe' => __('kom dalk'), 'no' => __('kan nie kom nie')][$data['status']];
-            $push->send(Member::query()->drivers()->where('household_id', $event->host_household_id)->get(),
+        if ($push->enabled() && $event->host_household_id !== null && $event->host_household_id !== $me->household_id) {
+            $label = ['yes' => __('kom'), 'maybe' => __('kom dalk'), 'no' => __('kan nie kom nie')][$response->status];
+            $push->send(Member::query()->adults()->where('household_id', $event->host_household_id)->get(),
                 $event->title,
-                __(':house :label', ['house' => $me->household->name, 'label' => $label]).($coming ? ' ('.((int) ($data['adults'] ?? 0) + (int) ($data['children'] ?? 0)).')' : '').(! empty($data['note']) ? ' · '.$data['note'] : ''),
+                __(':house :label', ['house' => $me->household->name, 'label' => $label]).($coming ? ' ('.$response->headcount().')' : '').($response->note ? ' · '.$response->note : ''),
                 route('events.show', $event));
         }
 

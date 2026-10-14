@@ -3,7 +3,7 @@
         <h1>{{ __('Hallo :name', ['name' => $me->firstName()]) }}</h1>
         <p>{{ $today->translatedFormat('l j F') }}</p>
         @if ($weather)
-            <p class="weather">{{ \App\Services\Weather::line($weather) }}@foreach ($weather['flags'] as $flag) <span class="flag">{{ $flag }}</span>@endforeach</p>
+            <div class="weather">{{ \App\Services\Weather::line($weather) }}@foreach ($weather['flags'] as $flag) <span class="flag">{{ $flag }}</span>@endforeach</div>
         @endif
     </header>
 
@@ -36,10 +36,10 @@
             <ul>
                 @foreach ($lifts as $o)
                     <li>
-                        <a class="entry" style="--c: {{ $o->colour }}" href="{{ route('events.show', $o->event) }}#ry">
+                        <a class="entry" style="--c: {{ $o->colour }}" href="{{ route('events.show', $o->event) }}#kere">
                             <strong>{{ $o->title }}@if ($o->event?->member) · {{ $o->event->member->firstName() }}@endif</strong>
-                            <span class="meta">{{ $o->date->isSameDay($today) ? __('vandag') : \App\Support\Dates::shortDay($o->date).' '.$o->date->translatedFormat('j M') }}@if ($o->time) {{ $o->time }}@endif</span>
-                            <span @class(['lift-line', 'open' => $o->liftOpen()])>{{ $o->lift }}</span>
+                            <span class="meta">{{ $o->date->isSameDay($today) ? __('vandag') : \App\Support\Dates::short($o->date) }}@if ($o->time) {{ $o->time }}@endif</span>
+                            @include('partials.lift-line')
                         </a>
                     </li>
                 @endforeach

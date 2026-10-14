@@ -2,7 +2,6 @@
 
 use App\Models\Event;
 use App\Models\Lift;
-use App\Models\Member;
 use App\Models\TodoList;
 
 beforeEach(function () {
@@ -10,7 +9,7 @@ beforeEach(function () {
     $this->other = household('Ander', '#C2185B');
     $this->parent = adult($this->ours);
     $this->child = child($this->ours, ['name' => 'Anri']);
-    $this->nanny = Member::query()->create(['household_id' => $this->ours->id, 'name' => 'Thandi', 'kind' => Member::HELPER, 'email' => 'thandi@example.com']);
+    $this->nanny = helper($this->ours);
 });
 
 it('lets a helper log in and see only their household’s days', function () {

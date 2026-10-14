@@ -24,6 +24,7 @@
     --warn-ink: #6B4A00;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.05);
     --glass: rgba(255, 255, 255, 0.72);
+    --heart: #FF375F;
     --focus: 3px solid color-mix(in srgb, var(--action) 60%, transparent);
     --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
     --sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -54,6 +55,7 @@
         --warn-ink: #FFD98A;
         --shadow: none;
         --glass: rgba(30, 30, 32, 0.72);
+        --heart: #FF4F6E;
     }
 }
 
@@ -122,7 +124,7 @@ p { margin: 0 0 0.8em; }
 .icon { width: 1.4em; height: 1.4em; flex: none; }
 
 /* The card every grouped thing sits in, and the inset lists (16px gutter, rows divided by lines). */
-.panel, .grid, .cards, .menu, dl.facts, .poll > li, .keybox, .idea, p > .card,
+.panel, .grid, .week-strip, .cards, .menu, dl.facts, .poll > li, .keybox, .idea, p > .card,
 .agenda, .items, .rsvp, .ingredients, .week { background: var(--surface); border-radius: var(--card); box-shadow: var(--shadow); }
 .agenda, .items, .rsvp, .ingredients, .week { list-style: none; margin: 0; padding: 0 16px; }
 
@@ -262,14 +264,15 @@ legend { font-weight: 600; font-size: 0.94em; margin-bottom: 8px; padding: 0; }
     display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; text-align: center;
     margin-bottom: 16px; font-size: 0.95em; font-variant-numeric: tabular-nums; padding: 12px 10px;
 }
-.grid .wd { color: var(--ink-soft); font-size: 0.7em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding-bottom: 6px; }
+.grid .wd, .week-strip .wd { color: var(--ink-soft); font-size: 0.7em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.grid .wd { padding-bottom: 6px; }
 .grid a, .grid span.cell {
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; max-width: 100%; margin: 0 auto;
     border-radius: 50%; color: inherit; position: relative;
 }
 .grid a.busy::after { content: ""; position: absolute; left: 50%; bottom: 4px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--ink-faint); }
-.grid .today { background: var(--action); color: var(--on-action); font-weight: 700; }
+.grid .today, .week-strip .today b { background: var(--action); color: var(--on-action); font-weight: 700; }
 .grid .today.busy::after { background: var(--on-action); }
 .filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; margin-bottom: 8px; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
@@ -472,27 +475,28 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .idea .ingredients { box-shadow: none; background: var(--page); }
 .idea .ingredients li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; }
 .idea ol.method { margin: 14px 0 0; }
-.tag-buy { flex: none; font-size: 0.72em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--action); background: color-mix(in srgb, var(--action) 12%, transparent); padding: 2px 8px; border-radius: 999px; }
+.tag-buy, .shop { flex: none; font-size: 0.72em; font-weight: 600; color: var(--action); background: color-mix(in srgb, var(--action) 12%, transparent); padding: 2px 8px; border-radius: 999px; }
+.tag-buy { text-transform: uppercase; letter-spacing: 0.04em; }
 .idea .actions form { margin: 0; }
 .idea form.actions { flex-wrap: nowrap; }
 .idea select { width: auto; min-width: 0; flex: 1; min-height: 36px; padding-top: 6px; padding-bottom: 6px; font-size: 0.9em; }
 details > summary.link { display: inline; font-size: 0.9em; }
 .people { grid-template-columns: 1fr auto; align-items: center; }
 .people .hint { grid-column: 1; grid-row: 2; }
-.people input { grid-column: 2; grid-row: 1 / 3; }
-.people input { width: 5.5em; text-align: center; }
+.people input { grid-column: 2; grid-row: 1 / 3; width: 5.5em; text-align: center; }
 
 /* Favourite recipes. */
 .fav { width: 40px; min-height: 40px; padding: 0; border-radius: 50%; background: var(--fill); color: var(--ink-soft); }
-.fav.is-on { color: #FF375F; background: color-mix(in srgb, #FF375F 12%, transparent); }
+.fav.is-on { color: var(--heart); background: color-mix(in srgb, var(--heart) 12%, transparent); }
 .fav .icon { width: 22px; height: 22px; }
-.fav-mark { display: inline-block; color: #FF375F; vertical-align: -3px; margin-right: 4px; }
-.fav-mark .icon { width: 1em; height: 1em; color: inherit; }
+.fav-mark { display: inline-block; color: var(--heart); vertical-align: -3px; }
+.card .fav-mark .icon { width: 1em; height: 1em; color: inherit; }
+.fav.is-on .icon path, .fav-mark .icon path { fill: currentColor; }
 .for-people { gap: 6px; flex-wrap: nowrap; }
 .for-people input { width: 4.2em; min-height: 36px; padding: 4px 8px; text-align: center; }
 .ingredients li:has(> .shop) { display: flex; align-items: center; gap: 8px; }
 .ingredients li > label { flex: 1; min-width: 0; }
-.shop { flex: none; font-size: 0.78em; font-weight: 600; color: var(--action); background: color-mix(in srgb, var(--action) 12%, transparent); padding: 4px 10px; border-radius: 999px; }
+.shop { padding: 4px 10px; }
 
 /* Wie ry?: a row per day, take and fetch. */
 .lifts { list-style: none; margin: 0; padding: 0 16px; display: grid; }
@@ -500,24 +504,22 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .lifts > li:first-child { border-top: 0; }
 .lifts .when { font-weight: 600; line-height: 1.2; }
 .lifts .when span { display: block; font-weight: 400; font-size: 0.8em; color: var(--ink-soft); }
-.lifts label { display: grid; gap: 2px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+.lifts label { gap: 2px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
 .lifts select { min-height: 40px; padding: 6px 30px 6px 10px; font-size: 0.95em; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink); }
 .lift-line { display: block; font-size: 0.85em; color: var(--ink-soft); }
-.lift-line .open { color: var(--danger); font-weight: 600; }
+.lift-line.open { color: var(--danger); font-weight: 600; }
 .lifts.no-lifts > li { grid-template-columns: 1fr auto; }
 .lifts > li > .skip-day { grid-column: 1 / -1; justify-self: start; min-height: 0; padding: 2px 0; }
 .lifts.no-lifts > li > .skip-day { grid-column: 2; grid-row: 1; }
 .lifts > li.is-skipped .when { text-decoration: line-through; color: var(--ink-soft); }
 .lifts > li .skip-note { grid-column: 2 / -1; }
-.greeting .weather { order: 1; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 0.95em; margin: 6px 0 0; }
+.greeting .weather { font-size: 0.95em; margin-top: 6px; }
 .greeting .flag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-ink); font-size: 0.85em; font-weight: 600; }
 
 /* Week strip: Monday to Sunday, a dot per colour. */
 .week-title { font-size: 1.35em; text-align: center; text-transform: none; }
-.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px 6px; margin-bottom: 16px; background: var(--surface); border-radius: var(--card); box-shadow: var(--shadow); }
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px 6px; margin-bottom: 16px; }
 .week-strip a { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 12px; color: inherit; }
-.week-strip .wd { font-size: 0.68em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
 .week-strip b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-weight: 600; font-variant-numeric: tabular-nums; }
-.week-strip .today b { background: var(--action); color: var(--on-action); }
 .week-strip .dots { display: flex; gap: 3px; min-height: 6px; }
 .week-strip .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }

@@ -32,20 +32,18 @@ class Recipe extends Model
     /** @return BelongsToMany<Member, $this> */
     public function favouredBy(): BelongsToMany
     {
-        return $this->belongsToMany(Member::class, 'recipe_favourites')->withPivot('created_at');
+        return $this->belongsToMany(Member::class, 'recipe_favourites');
     }
 
     /**
-     * Adds `is_favourite` for this member, and puts their favourites first.
+     * Adds `is_favourite` for this member.
      *
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
     public function scopeWithFavourite(Builder $query, Member $member): Builder
     {
-        return $query
-            ->selectRaw('recipes.*, EXISTS (SELECT 1 FROM recipe_favourites f WHERE f.recipe_id = recipes.id AND f.member_id = ?) AS is_favourite', [$member->id])
-            ->orderByDesc('is_favourite');
+        return $query->withExists(['favouredBy as is_favourite' => fn ($q) => $q->whereKey($member->id)]);
     }
 
     public function isFavouriteOf(Member $member): bool
@@ -70,12 +68,9 @@ class Recipe extends Model
      *
      * @return list<string>
      */
-    public function ingredientLinesFor(int $people): array
+    public function ingredientLinesFor(int $written, int $people): array
     {
-        $written = $this->servingsCount();
-
-        return $written === null ? $this->ingredientLines()
-            : array_map(fn (string $line) => Portions::scale($line, $written, $people), $this->ingredientLines());
+        return array_map(fn (string $line) => Portions::scale($line, $written, $people), $this->ingredientLines());
     }
 
     /** @return list<string> */

@@ -51,14 +51,14 @@ it('reads Google events: all-day, timed, repeating and its own copies', function
 it('writes Google events with local times, the repeat rule and a Tribe marker', function () {
     Http::fake(['*' => fn (Request $r) => Http::response(['id' => 'new', 'etag' => '"9"'] + $r->data())]);
 
-    $remote = app(GoogleCalendar::class)->create(connection('google'), EventData::make('Rugby', '2026-11-07', null, '15:00', null, null, null, Event::FORTNIGHTLY), 12);
+    $remote = app(GoogleCalendar::class)->create(connection('google'), EventData::make('Rugby', '2026-11-07', null, '15:00', null, null, null, Event::FORTNIGHTLY, null, ['2026-11-21']), 12);
 
     Http::assertSent(function (Request $r) {
         return $r->method() === 'POST'
             && $r->hasHeader('Authorization', 'Bearer tok')
             && $r['start'] === ['dateTime' => '2026-11-07T15:00:00', 'timeZone' => 'Africa/Johannesburg']
             && $r['end']['dateTime'] === '2026-11-07T16:00:00'
-            && $r['recurrence'] === ['RRULE:FREQ=WEEKLY;INTERVAL=2']
+            && $r['recurrence'] === ['RRULE:FREQ=WEEKLY;INTERVAL=2', 'EXDATE;TZID=Africa/Johannesburg:20261121T150000']
             && $r['extendedProperties']['private']['tribe'] === TwoWaySync::marker(12);
     });
     expect($remote->id)->toBe('new')->and($remote->version)->toBe('"9"');

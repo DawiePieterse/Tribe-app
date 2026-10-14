@@ -3,19 +3,19 @@
 namespace App\Mail;
 
 use App\Models\Member;
-use App\Support\Occurrence;
-use Carbon\CarbonImmutable;
+use App\Services\EveningSummary;
+use App\Support\Dates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Support\Collection;
 
+/** @phpstan-import-type Summary from EveningSummary */
 class EveningSummaryMail extends Mailable
 {
     use Queueable;
 
-    /** @param  array{date: CarbonImmutable, entries: Collection<int, Occurrence>, mine: list<string>, open: list<string>, weather: array{min: int, max: int, rain: int, wind: int, condition: string, flags: list<string>}|null}  $summary */
+    /** @param  Summary  $summary */
     public function __construct(public Member $member, public array $summary) {}
 
     public function envelope(): Envelope
@@ -24,7 +24,7 @@ class EveningSummaryMail extends Mailable
 
         return new Envelope(subject: $n === 0
             ? __('Môre lyk rustig')
-            : __('Môre: :n', ['n' => trans_choice(':count ding|:count dinge', $n)]).' · '.$this->summary['date']->translatedFormat('D j M'));
+            : __('Môre: :n', ['n' => trans_choice(':count ding|:count dinge', $n)]).' · '.Dates::short($this->summary['date']));
     }
 
     public function content(): Content
