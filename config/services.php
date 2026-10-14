@@ -37,7 +37,7 @@ return [
     // Where a shopping-list item's "Checkers" link goes (%s is the search words). Change it in .env if
     // the site's search address changes.
     'checkers' => [
-        'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search/all?q=%s'),
+        'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search?Search=%s'),
     ],
 
     // Push notifications (Web Push). Make the keys once with `php artisan tribe:vapid-keys`.
