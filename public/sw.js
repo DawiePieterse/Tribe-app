@@ -3,7 +3,7 @@
  * so the calendar and lists can be read with no signal. Static files: cache first.
  * Only plain GET pages are kept; nothing is cached for other origins.
  */
-const VERSION = 'tribe-v2';
+const VERSION = 'tribe-v3';
 const STATIC = ['/css/app.css', '/js/app.js', '/js/lists.js', '/icons/icon-192.png', '/offline.html'];
 
 self.addEventListener('install', (event) => {
@@ -48,11 +48,13 @@ self.addEventListener('fetch', (event) => {
 
     if (/^\/(css|js|icons)\//.test(url.pathname)) {
         event.respondWith(
-            caches.match(request, { ignoreSearch: true }).then((cached) => cached || fetch(request).then((response) => {
+            // Pages ask for /css/app.css?v=<file time>, so a changed file has a new address and is fetched
+            // fresh. Only with no signal is an older copy (any ?v=) better than nothing.
+            caches.match(request).then((cached) => cached || fetch(request).then((response) => {
                 const copy = response.clone();
                 caches.open(VERSION).then((cache) => cache.put(request, copy));
                 return response;
-            })),
+            }).catch(() => caches.match(request, { ignoreSearch: true }))),
         );
     }
 });
