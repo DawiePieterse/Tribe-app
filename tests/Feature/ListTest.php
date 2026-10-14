@@ -44,6 +44,7 @@ it('offers a Checkers search on open shopping-list items only', function () {
 
     $this->actingAs($this->me)->get(route('lists.show', $this->list))
         ->assertSee('https://www.checkers.co.za/search?Search=milk', false)
+        ->assertSee('https://www.woolworths.co.za/browse?searchterm=milk&amp;fr=1', false)
         ->assertDontSee('Search=bread', false);
 
     $this->actingAs($this->me)->get(route('lists.show', $tasks))->assertDontSee('checkers.co.za', false);

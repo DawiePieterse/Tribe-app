@@ -124,7 +124,7 @@
                             <p>
                                 <x-message class="small" :title="__('Inkopies vir :title', ['title' => $idea->title])" :lines="$missing" />
                             </p>
-                            <p class="muted small">{{ __('Sixty60 kan nie ’n lys invoer nie: tik “Checkers” by ’n item om dit daar te soek.') }}</p>
+                            <p class="muted small">{{ __('Sixty60 en Woolies kan nie ’n lys invoer nie: tik “Checkers” of “Woolies” by ’n item om dit daar te soek.') }}</p>
                         </details>
                     @endif
                 </article>

@@ -13,9 +13,12 @@
         @endif
     </span>
     @if (! empty($shopping) && ! $item->done)
-        @php($shop = \App\Services\Food\Checkers::link($item->title))
-        <a class="shop" href="{{ $shop['url'] }}" target="_blank" rel="noopener noreferrer"
-           aria-label="{{ __('Soek “:item” by Checkers', ['item' => $shop['term']]) }}">{{ __('Checkers') }}</a>
+        <span class="shops">
+            @foreach (\App\Services\Food\Checkers::links($item->title) as $shop)
+            <a @class(['shop', 'has-logo' => $shop['logo']]) style="--shop: {{ $shop['colour'] ?: 'var(--action)' }}" href="{{ $shop['url'] }}" target="_blank" rel="noopener noreferrer"
+               aria-label="{{ __('Soek “:item” by :shop', ['item' => $shop['term'], 'shop' => $shop['label']]) }}">@if ($shop['logo'])<img src="{{ $shop['logo'] }}" alt="{{ $shop['label'] }}">@else{{ $shop['name'] }}@endif</a>
+            @endforeach
+        </span>
     @endif
     <form method="post" action="{{ route('items.destroy', $item) }}">
         @csrf @method('delete')
