@@ -26,7 +26,8 @@
     --glass: rgba(255, 255, 255, 0.72);
     --heart: #FF375F;
     --focus: 3px solid color-mix(in srgb, var(--action) 60%, transparent);
-    --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+    /* Apple's own San Francisco throughout: Display for titles and dates, Text for everything else. */
+    --display: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --rounded: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     --size: 17px;
@@ -92,7 +93,7 @@ a { color: var(--action); text-decoration: none; }
 /* Large titles in New York, everything else in SF Pro. */
 h1, h2, h3 { margin: 0; }
 h2, h3 { line-height: 1.15; }
-h1 { font: 700 2em/1.1 var(--serif); letter-spacing: -0.02em; }
+h1 { font: 700 2em/1.12 var(--display); letter-spacing: -0.025em; }
 h2 { font-size: 1.25em; font-weight: 700; letter-spacing: -0.02em; margin-top: 1.7em; margin-bottom: 0.55em; }
 h3 { font-size: 1.05em; font-weight: 600; }
 p { margin: 0 0 0.8em; }
@@ -225,7 +226,7 @@ legend { font-weight: 600; font-size: 0.94em; margin-bottom: 8px; padding: 0; }
 .day { display: grid; grid-template-columns: 2.9em 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
 .day:first-child { border-top: 0; }
 .date { text-align: center; line-height: 1; padding-top: 4px; }
-.date b { display: block; font: 600 1.6em/1 var(--serif); letter-spacing: -0.02em; }
+.date b { display: block; font: 600 1.6em/1 var(--display); letter-spacing: -0.02em; }
 .date span { display: block; margin-top: 4px; font-size: 0.72em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
 .day.is-today .date b, .day.is-today .date span { color: var(--action); }
 .entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -330,7 +331,7 @@ li.card { padding-right: 16px; }
     width: 72px; height: 72px; border-radius: 50%; flex: none;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(150deg, color-mix(in srgb, var(--c) 70%, #fff), var(--c));
-    color: #fff; font: 600 1.9em/1 var(--serif);
+    color: #fff; font: 600 1.9em/1 var(--display);
     box-shadow: 0 6px 16px color-mix(in srgb, var(--c) 30%, transparent);
 }
 dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 0 16px; margin: 0; padding: 4px 16px; }
@@ -393,7 +394,7 @@ dl.facts dd.notes, .notes { white-space: pre-line; }
 .login { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; max-width: 420px; margin: 0 auto; }
 .login > .muted:first-of-type { font-size: 1.1em; margin-bottom: 28px; }
 .wordmark {
-    font: 700 3.2em/1 var(--serif); letter-spacing: -0.035em; margin-bottom: 10px;
+    font: 700 3.2em/1 var(--display); letter-spacing: -0.035em; margin-bottom: 10px;
     background: linear-gradient(120deg, var(--primary) 30%, var(--action));
     -webkit-background-clip: text; background-clip: text; color: transparent;
 }
@@ -420,7 +421,7 @@ dl.facts dd.notes, .notes { white-space: pre-line; }
 .ingredients input { width: 22px; height: 22px; accent-color: var(--action); flex: none; }
 ol.method { padding-left: 1.5em; display: grid; gap: 12px; }
 ol.method li { padding-left: 4px; }
-ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(--action); }
+ol.method li::marker { font-family: var(--display); font-weight: 700; color: var(--action); }
 
 /* Week menu. */
 .week > li { padding: 14px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 2.9em 1fr; gap: 14px; }
@@ -439,7 +440,7 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .poll > li { padding: 14px 16px; display: grid; gap: 10px; border: 2px solid transparent; }
 .poll > li.is-best { border-color: var(--action); }
 .poll-date { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.poll-date strong { font: 600 1.15em/1.2 var(--serif); }
+.poll-date strong { font: 600 1.15em/1.2 var(--display); }
 .tag { background: var(--action); color: var(--on-action); border-radius: 999px; padding: 3px 10px; font-size: 0.75em; font-weight: 600; letter-spacing: 0.01em; }
 .poll-votes { display: grid; gap: 2px; font-size: 0.85em; color: var(--ink-soft); }
 .vote-yes { color: var(--ok); }
@@ -450,7 +451,7 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .inbox-item .entry { flex: 1; }
 .inbox-item form { margin: 0; }
 .steps { padding-left: 1.4em; display: grid; gap: 12px; }
-.steps li::marker { font-family: var(--serif); font-weight: 700; color: var(--action); }
+.steps li::marker { font-family: var(--display); font-weight: 700; color: var(--action); }
 .steps code, .keybox code { font-size: 0.85em; background: var(--fill); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
 .keybox { border: 2px solid var(--action); padding: 16px; margin: 12px 0; }
 
@@ -467,7 +468,7 @@ ol.method li::marker { font-family: var(--serif); font-weight: 700; color: var(-
 .levels span { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; line-height: 1.15; padding: 6px 4px; min-height: 52px; border-radius: 14px; font-size: 0.8em; }
 .levels span b { font-size: 1.06em; }
 .idea { padding: 16px; margin: 0 0 14px; display: grid; gap: 12px; }
-.idea h3 { font: 600 1.25em/1.2 var(--serif); letter-spacing: -0.01em; }
+.idea h3 { font: 600 1.25em/1.2 var(--display); letter-spacing: -0.01em; }
 .idea .recipe-meta { margin: 6px 0 0; font-size: 0.85em; }
 .idea .kids { margin: 8px 0 0; color: var(--ink-soft); font-style: italic; }
 .idea details summary { color: var(--action); font-weight: 500; padding: 2px 0; }

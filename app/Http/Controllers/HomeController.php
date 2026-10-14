@@ -18,7 +18,8 @@ class HomeController extends Controller
         $me = $this->me();
         $today = CarbonImmutable::today();
 
-        $upcoming = $agenda->between($me, $today, $today->addDays(42));
+        // The home screen is this week only; the calendar shows further ahead.
+        $upcoming = $agenda->between($me, $today, $today->addDays(6));
         $family = $me->can('family');
 
         // The coming week's lifts for the children, the ones still without a driver first.

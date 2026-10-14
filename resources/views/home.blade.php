@@ -106,12 +106,12 @@
     @endif
 
     <div class="head">
-        <h2>{{ __('Wat kom') }}</h2>
+        <h2>{{ __('Die komende week') }}</h2>
         <a class="button small" href="{{ route('events.create') }}">@include('partials.icon', ['name' => 'plus']) {{ __('Nuwe') }}</a>
     </div>
 
     @if ($days->isEmpty())
-        <p class="empty">{{ __('Niks op die kalender vir die volgende ses weke nie.') }} <a href="{{ route('events.create') }}">{{ __('Beplan iets') }}</a></p>
+        <p class="empty">{{ __('Niks op die kalender vir die volgende sewe dae nie.') }} <a href="{{ route('events.create') }}">{{ __('Beplan iets') }}</a></p>
     @else
         @include('partials.agenda', ['days' => $days, 'today' => $today])
     @endif

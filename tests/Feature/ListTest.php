@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Event;
 use App\Models\TodoList;
 
 beforeEach(function () {
@@ -46,4 +47,13 @@ it('offers a Checkers search on open shopping-list items only', function () {
         ->assertDontSee('Search=bread', false);
 
     $this->actingAs($this->me)->get(route('lists.show', $tasks))->assertDontSee('checkers.co.za', false);
+});
+
+it('shows only the coming week on the home screen', function () {
+    Event::query()->create(['title' => 'Oor drie dae', 'starts_on' => today()->addDays(3), 'household_id' => $this->me->household_id]);
+    Event::query()->create(['title' => 'Oor tien dae', 'starts_on' => today()->addDays(10), 'household_id' => $this->me->household_id]);
+
+    $this->actingAs($this->me)->get(route('home'))
+        ->assertSee('Oor drie dae')
+        ->assertDontSee('Oor tien dae');
 });

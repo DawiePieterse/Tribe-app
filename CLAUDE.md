@@ -27,8 +27,9 @@ deployed on Afrihost cPanel (`docs/DEPLOY-AFRIHOST.md`). The spec is the "Tribe:
 
 - All user-facing text is Afrikaans inside `__()`; routes are Afrikaans paths (`/kalender`, `/lyste`).
 - Household colours carry the design on an Apple-like base: grouped white cards on `#F5F5F7` (black in dark mode),
-  floating glass tab bar, graphite buttons, sapphire tint (`--action`) for the app's own controls; SF Pro text
-  (`--sans`) and New York (`--serif`, `ui-serif`) for titles and dates, both system fonts; 17px body.
+  floating glass tab bar, graphite buttons, sapphire tint (`--action`) for the app's own controls; Apple's San
+  Francisco only: SF Pro Text (`--sans`) for body, SF Pro Display (`--display`) for titles and dates, both system
+  fonts, no serif (the family found it old-fashioned); 17px body.
 - Models declare `$attributes` defaults; lazy loading throws outside production, so eager-load.
 - Never put real family details in seeders or tests; `DemoSeeder` is a made-up family.
 - Use `Support\Dates::shortDay()` for short weekday names (Carbon's Afrikaans ones are wrong), and

@@ -30,7 +30,7 @@ it('subscribes to a calendar and copies its events', function () {
         ->and($feed->events()->pluck('title')->all())->toBe(['Kwartaal 4 begin']);
 
     Http::assertSent(fn ($request) => $request->url() === 'https://93.184.215.14/skool.ics');
-    $this->get(route('home'))->assertSee('Kwartaal 4 begin');
+    $this->get(route('calendar', ['maand' => today()->addDays(10)->format('Y-m')]))->assertSee('Kwartaal 4 begin');
 });
 
 it('updates and removes events on the next sync', function () {
