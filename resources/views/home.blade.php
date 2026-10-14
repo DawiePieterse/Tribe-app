@@ -3,7 +3,7 @@
         <h1>{{ __('Hallo :name', ['name' => $me->firstName()]) }}</h1>
         <p>{{ $today->translatedFormat('l j F') }}</p>
         @if ($weather)
-            <div class="weather">{{ \App\Services\Weather::line($weather) }}@foreach ($weather['flags'] as $flag) <span class="flag">{{ $flag }}</span>@endforeach</div>
+            <div class="weather">@if ($me->household->townName())<strong>{{ $me->household->townName() }}:</strong> @endif{{ \App\Services\Weather::line($weather) }}@foreach ($weather['flags'] as $flag) <span class="flag">{{ $flag }}</span>@endforeach</div>
         @endif
     </header>
 

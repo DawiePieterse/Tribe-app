@@ -35,6 +35,14 @@ class Household extends Model
         return $this->hasMany(Member::class)->where('kind', Member::ADULT);
     }
 
+    /** "Langebaan, Wes-Kaap" as stored → "Langebaan", for short labels like the home page's weather. */
+    public function townName(): ?string
+    {
+        $name = trim(explode(',', (string) $this->town)[0]);
+
+        return $name === '' ? null : $name;
+    }
+
     public function hasWeather(): bool
     {
         return $this->lat !== null && $this->lon !== null;

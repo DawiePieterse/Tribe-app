@@ -101,3 +101,16 @@ it('remembers a failed forecast briefly instead of asking on every page', functi
 
     Http::assertSentCount(1);
 });
+
+it('names the town before the weather on the home page', function () {
+    $this->ours->update(['town' => 'Langebaan, Western Cape', 'lat' => '-33.09000', 'lon' => '18.03000']);
+    Http::fake(['api.open-meteo.com/*' => Http::response(['daily' => [
+        'time' => [today()->toDateString()], 'temperature_2m_min' => [14], 'temperature_2m_max' => [15],
+        'precipitation_probability_max' => [0], 'weathercode' => [3],
+    ]])]);
+
+    $this->actingAs(adult($this->ours))->get(route('home'))
+        ->assertOk()
+        ->assertSeeInOrder(['Langebaan:', '14–15 °C'], false)
+        ->assertDontSee('Langebaan, Western Cape');
+});
