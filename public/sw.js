@@ -2,8 +2,11 @@
  * Tribe's service worker. Pages: network first, falling back to the last copy kept on this device,
  * so the calendar and lists can be read with no signal. Static files: cache first.
  * Only plain GET pages are kept; nothing is cached for other origins.
+ *
+ * Navigation preload: the page request leaves the moment a link is tapped, while this worker is still
+ * waking up (iOS puts it to sleep between screens), instead of waiting for it.
  */
-const VERSION = 'tribe-v3';
+const VERSION = 'tribe-v4';
 const STATIC = ['/css/app.css', '/js/app.js', '/js/lists.js', '/icons/icon-192.png', '/offline.html'];
 
 self.addEventListener('install', (event) => {
@@ -12,9 +15,10 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys()
-            .then((keys) => Promise.all(keys.filter((key) => key !== VERSION).map((key) => caches.delete(key))))
-            .then(() => self.clients.claim()),
+        Promise.all([
+            self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null,
+            caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== VERSION).map((key) => caches.delete(key)))),
+        ]).then(() => self.clients.claim()),
     );
 });
 
@@ -32,7 +36,8 @@ self.addEventListener('fetch', (event) => {
 
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
+            Promise.resolve(event.preloadResponse)
+                .then((preloaded) => preloaded || fetch(request))
                 .then((response) => {
                     // Keep successful, logged-in pages; never the login pages or redirects.
                     if (response.ok && !response.redirected && !url.pathname.startsWith('/aanmeld') && !url.pathname.startsWith('/uitnodiging')) {

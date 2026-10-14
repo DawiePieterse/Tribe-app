@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Dates;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,7 +30,7 @@ class Meal extends Model
     /** The week page, scrolled to that day. */
     public static function weekUrl(CarbonImmutable $date): string
     {
-        return route('meals.week', ['week' => $date->startOfWeek(CarbonInterface::MONDAY)->toDateString()]).'#d'.$date->toDateString();
+        return route('meals.week', ['week' => Dates::weekStart($date)->toDateString()]).'#d'.$date->toDateString();
     }
 
     protected function casts(): array

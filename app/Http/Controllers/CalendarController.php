@@ -19,7 +19,7 @@ class CalendarController extends Controller
         // The week is the default; a month shows when asked for (the Maand switch and month links carry ?maand=).
         $weekView = $request->query('aansig') === 'week'
             || ($request->query('aansig') !== 'maand' && ! $request->has('maand'));
-        $monday = Dates::mondayOf((string) $request->query('week', ''));
+        $weekStart = Dates::weekStartOf((string) $request->query('week', ''));
 
         $filter = [
             'household' => $request->integer('huis') ?: null,
@@ -27,14 +27,14 @@ class CalendarController extends Controller
         ];
 
         $occurrences = $weekView
-            ? $agenda->between($me, $monday, $monday->addDays(6), $filter)
+            ? $agenda->between($me, $weekStart, $weekStart->addDays(6), $filter)
             : $agenda->between($me, $month, $month->endOfMonth(), $filter);
 
         $days = $occurrences->groupBy(fn ($o) => $o->date->toDateString());
 
         return view('calendar.index', [
             'weekView' => $weekView,
-            'monday' => $monday,
+            'weekStart' => $weekStart,
             // The colours on each day of the week strip (a child's ballet, a family gathering).
             'weekDots' => $weekView ? $days->map(fn ($day) => $day->pluck('colour')->unique()->take(4)->values()) : collect(),
             'month' => $month,

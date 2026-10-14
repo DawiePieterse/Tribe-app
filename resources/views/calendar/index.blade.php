@@ -2,20 +2,20 @@
     @php($query = array_filter(['huis' => $filter['household'], 'wie' => $filter['member']]))
 
     <nav class="segments" aria-label="{{ __('Aansig') }}">
-        <a href="{{ route('calendar', ['maand' => $monday->format('Y-m')] + $query) }}" @class(['is-active' => ! $weekView])>{{ __('Maand') }}</a>
+        <a href="{{ route('calendar', ['maand' => $weekStart->format('Y-m')] + $query) }}" @class(['is-active' => ! $weekView])>{{ __('Maand') }}</a>
         <a href="{{ route('calendar', ['aansig' => 'week', 'week' => $month->isSameMonth($today) ? $today->toDateString() : $month->toDateString()] + $query) }}" @class(['is-active' => $weekView])>{{ __('Week') }}</a>
     </nav>
 
     @if ($weekView)
         @include('partials.week-nav', [
-            'previous' => route('calendar', ['aansig' => 'week', 'week' => $monday->subWeek()->toDateString()] + $query),
-            'next' => route('calendar', ['aansig' => 'week', 'week' => $monday->addWeek()->toDateString()] + $query),
+            'previous' => route('calendar', ['aansig' => 'week', 'week' => $weekStart->subWeek()->toDateString()] + $query),
+            'next' => route('calendar', ['aansig' => 'week', 'week' => $weekStart->addWeek()->toDateString()] + $query),
         ])
 
         {{-- The week at a glance: a dot per colour on each day. Tap a day to jump to it, or to add to an empty one. --}}
         <div class="week-strip" aria-hidden="true">
             @for ($i = 0; $i < 7; $i++)
-                @php($day = $monday->addDays($i))
+                @php($day = $weekStart->addDays($i))
                 @php($dots = $weekDots->get($day->toDateString(), collect()))
                 <a href="{{ $dots->isNotEmpty() ? '#d'.$day->toDateString() : route('events.create', ['datum' => $day->toDateString()]) }}" @class(['today' => $day->isSameDay($today), 'past' => $day->lessThan($today)]) tabindex="-1">
                     <span class="wd">{{ \App\Support\Dates::shortDay($day) }}</span>
@@ -33,10 +33,10 @@
 
     {{-- Month at a glance; a dot marks a day with something on. Tap a day to add to it. --}}
     <div class="grid" aria-hidden="true">
-        @foreach (['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Sa', 'So'] as $wd)
-            <span class="wd">{{ __($wd) }}</span>
+        @foreach (\App\Support\Dates::weekdayNames() as $wd)
+            <span class="wd">{{ $wd }}</span>
         @endforeach
-        @for ($i = 1; $i < $month->dayOfWeekIso; $i++)
+        @for ($i = 0; $i < \App\Support\Dates::offsetInWeek($month); $i++)
             <span class="cell"></span>
         @endfor
         @for ($d = 1; $d <= $month->daysInMonth; $d++)
@@ -50,7 +50,7 @@
     @endif
 
     <nav class="filters" aria-label="{{ __('Wys net') }}">
-        @php($keep = $weekView ? ['aansig' => 'week', 'week' => $monday->toDateString()] : ['maand' => $month->format('Y-m')])
+        @php($keep = $weekView ? ['aansig' => 'week', 'week' => $weekStart->toDateString()] : ['maand' => $month->format('Y-m')])
         <a href="{{ route('calendar', $keep) }}" @class(['is-active' => ! $query])>{{ __('Almal') }}</a>
         @foreach ($households as $household)
             <a href="{{ route('calendar', $keep + ['huis' => $household->id]) }}"

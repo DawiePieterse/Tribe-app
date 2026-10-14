@@ -32,8 +32,8 @@ deployed on Afrihost cPanel (`docs/DEPLOY-AFRIHOST.md`). The spec is the "Tribe:
   fonts, no serif (the family found it old-fashioned); 17px body.
 - Models declare `$attributes` defaults; lazy loading throws outside production, so eager-load.
 - Never put real family details in seeders or tests; `DemoSeeder` is a made-up family.
-- Use `Support\Dates::shortDay()` for short weekday names (Carbon's Afrikaans ones are wrong), and
-  `startOfWeek(CarbonInterface::MONDAY)` (the af locale would start on Sunday).
+- Use `Support\Dates::shortDay()` for short weekday names (Carbon's Afrikaans ones are wrong). Weeks run Sunday to
+  Saturday (the family's choice): use `Dates::weekStart()` / `weekStartOf()`, never a bare `startOfWeek()`.
 - Record route parameters are constrained to digits in `routes/web.php`; add new ones to that list.
 - Never `pkill -f` a pattern that also appears in your own command line (it kills the shell).
 

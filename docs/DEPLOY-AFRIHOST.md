@@ -78,7 +78,21 @@ only for `php artisan` commands.
 1. Build a new zip (`scripts/build-afrihost.sh`).
 2. Upload it to `~/tribe` and Extract, replacing the old files. `.env` and `storage/` are kept (the zip
    has neither a `.env` nor any stored files).
-3. In the Terminal: `cd ~/tribe && php artisan migrate --force && php artisan config:cache && php artisan view:clear`
+3. In the Terminal: `cd ~/tribe && php artisan migrate --force && php artisan optimize`
+   (`optimize` caches the settings, routes, events and views, so each screen starts faster; run it again
+   after any change to `.env`).
+
+## Speed check
+
+Tribe itself needs 5–40 ms per screen. If moving between screens feels slow, time the server from the
+cPanel Terminal:
+
+```bash
+for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{time_starttransfer}s\n" https://tribe.bowlsbuddy.co.za/up; done
+```
+
+Under about 0.3 s is fine. Much more than that usually means PHP starts from scratch on every request:
+cPanel > Select PHP Version > Extensions, tick `opcache` (and keep PHP on 8.3), then time it again.
 
 ## Backups
 

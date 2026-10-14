@@ -7,7 +7,6 @@ use App\Models\Recipe;
 use App\Models\TodoList;
 use App\Support\Dates;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,19 +17,19 @@ class MealController extends Controller
 {
     public function week(Request $request): View
     {
-        $monday = Dates::mondayOf((string) $request->query('week', ''));
+        $weekStart = Dates::weekStartOf((string) $request->query('week', ''));
         $me = $this->me();
 
         $meals = Meal::query()
             ->with('recipe')
             ->where('household_id', $me->household_id)
-            ->whereBetween('date', [$monday->toDateString(), $monday->addDays(6)->toDateString()])
+            ->whereBetween('date', [$weekStart->toDateString(), $weekStart->addDays(6)->toDateString()])
             ->orderByRaw("FIELD(slot, 'breakfast', 'lunch', 'dinner')")
             ->get()
             ->groupBy(fn (Meal $m) => $m->date->toDateString());
 
         return view('meals.week', [
-            'monday' => $monday,
+            'weekStart' => $weekStart,
             'meals' => $meals,
             // For "Stuur": "Ma Spaghetti bolognaise", one line per day with meals.
             'menuLines' => $meals->map(fn ($day, $date) => Dates::shortDay(CarbonImmutable::parse($date)).' '.$day->map->label()->implode(', '))->values()->all(),
@@ -69,28 +68,28 @@ class MealController extends Controller
     public function destroy(Meal $meal): RedirectResponse
     {
         abort_unless($meal->household_id === $this->me()->household_id, 404);
-        $monday = $meal->date->startOfWeek(CarbonInterface::MONDAY);
+        $weekStart = Dates::weekStart($meal->date);
         $meal->delete();
 
-        return redirect()->route('meals.week', ['week' => $monday->toDateString()]);
+        return redirect()->route('meals.week', ['week' => $weekStart->toDateString()]);
     }
 
     /** Everything the week's recipes need, to tick off before it goes to a shopping list. */
     public function shopping(Request $request): View
     {
-        $monday = Dates::mondayOf((string) $request->query('week', ''));
+        $weekStart = Dates::weekStartOf((string) $request->query('week', ''));
         $me = $this->me();
 
         $meals = Meal::query()
             ->with('recipe')
             ->where('household_id', $me->household_id)
             ->whereNotNull('recipe_id')
-            ->whereBetween('date', [$monday->toDateString(), $monday->addDays(6)->toDateString()])
+            ->whereBetween('date', [$weekStart->toDateString(), $weekStart->addDays(6)->toDateString()])
             ->orderBy('date')
             ->get();
 
         return view('meals.shopping', [
-            'monday' => $monday,
+            'weekStart' => $weekStart,
             'recipes' => $meals->pluck('recipe')->filter()->unique('id')->values(),
             'lists' => TodoList::query()->shoppingFor($me)->get(),
         ]);

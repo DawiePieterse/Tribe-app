@@ -3,21 +3,21 @@
     @include('partials.food-tabs')
 
     @include('partials.week-nav', [
-        'previous' => route('meals.week', ['week' => $monday->subWeek()->toDateString()]),
-        'next' => route('meals.week', ['week' => $monday->addWeek()->toDateString()]),
+        'previous' => route('meals.week', ['week' => $weekStart->subWeek()->toDateString()]),
+        'next' => route('meals.week', ['week' => $weekStart->addWeek()->toDateString()]),
     ])
 
     <p class="actions">
         <a class="button" href="{{ route('ideas.index') }}">{{ __('Wat maak ons vanaand?') }}</a>
-        <a class="button quiet" href="{{ route('meals.shopping', ['week' => $monday->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
+        <a class="button quiet" href="{{ route('meals.shopping', ['week' => $weekStart->toDateString()]) }}">@include('partials.icon', ['name' => 'list']) {{ __('Inkopies vir die week') }}</a>
         @if ($meals->isNotEmpty())
-            <x-message :title="__('Weekmenu :week', ['week' => \App\Support\Dates::weekRange($monday)])" :lines="$menuLines" :label="__('Stuur')" />
+            <x-message :title="__('Weekmenu :week', ['week' => \App\Support\Dates::weekRange($weekStart)])" :lines="$menuLines" :label="__('Stuur')" />
         @endif
     </p>
 
     <ol class="week">
         @for ($i = 0; $i < 7; $i++)
-            @php($day = $monday->addDays($i))
+            @php($day = $weekStart->addDays($i))
             @php($dayMeals = $meals->get($day->toDateString(), collect()))
             <li id="d{{ $day->toDateString() }}" @class(['is-today' => $day->isSameDay($today)])>
                 <div class="date" aria-hidden="true">

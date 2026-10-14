@@ -4,8 +4,8 @@ use App\Models\Meal;
 use App\Models\Recipe;
 use App\Models\TodoList;
 use App\Services\RecipeImporter;
+use App\Support\Dates;
 use App\Support\SafeUrl;
-use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -150,18 +150,18 @@ it('will not add to another household’s list', function () {
 
 it('plans meals per household and gathers the week’s ingredients', function () {
     $recipe = Recipe::query()->create(['title' => 'Bobotie', 'ingredients' => "500 g maalvleis\n- 1 ui"]);
-    $monday = today()->startOfWeek(CarbonInterface::MONDAY);
+    $weekStart = Dates::weekStart(today()->toImmutable());
 
     $this->actingAs($this->me);
-    $this->post(route('meals.store'), ['date' => $monday->addDays(2)->toDateString(), 'slot' => 'dinner', 'recipe_id' => $recipe->id])->assertRedirect();
-    $this->post(route('meals.store'), ['date' => $monday->toDateString(), 'slot' => 'dinner', 'title' => 'Braai'])->assertRedirect();
+    $this->post(route('meals.store'), ['date' => $weekStart->addDays(2)->toDateString(), 'slot' => 'dinner', 'recipe_id' => $recipe->id])->assertRedirect();
+    $this->post(route('meals.store'), ['date' => $weekStart->toDateString(), 'slot' => 'dinner', 'title' => 'Braai'])->assertRedirect();
 
-    $this->get(route('meals.week', ['week' => $monday->toDateString()]))->assertSee('Bobotie')->assertSee('Braai');
-    $this->get(route('meals.shopping', ['week' => $monday->toDateString()]))->assertSee('500 g maalvleis')->assertSee('1 ui');
+    $this->get(route('meals.week', ['week' => $weekStart->toDateString()]))->assertSee('Bobotie')->assertSee('Braai');
+    $this->get(route('meals.shopping', ['week' => $weekStart->toDateString()]))->assertSee('500 g maalvleis')->assertSee('1 ui');
 
     // Another household doesn't see or remove our meals.
     $other = adult(household('Hulle'));
-    $this->actingAs($other)->get(route('meals.week', ['week' => $monday->toDateString()]))->assertDontSee('Braai');
+    $this->actingAs($other)->get(route('meals.week', ['week' => $weekStart->toDateString()]))->assertDontSee('Braai');
     $this->actingAs($other)->delete(route('meals.destroy', Meal::query()->first()))->assertNotFound();
 });
 

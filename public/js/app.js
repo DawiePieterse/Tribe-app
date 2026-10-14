@@ -105,3 +105,19 @@ document.addEventListener('click', (e) => {
     rows.appendChild(row);
     row.querySelector('input').focus();
 });
+
+// A tap on a link to another Tribe screen: after a moment, a thin bar at the top shows the next screen
+// is on its way (app.css, html.is-leaving). Cleared when a page is shown again from the back button.
+document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const link = e.target.closest('a[href]');
+    if (!link || link.target || link.hasAttribute('download')) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search && url.hash)) return;
+    if (/\.ics$/.test(url.pathname)) return;
+    setTimeout(() => document.documentElement.classList.add('is-leaving'), 150);
+});
+document.addEventListener('submit', (e) => {
+    if (!e.defaultPrevented && !e.target.target) setTimeout(() => document.documentElement.classList.add('is-leaving'), 150);
+});
+window.addEventListener('pageshow', () => document.documentElement.classList.remove('is-leaving'));
