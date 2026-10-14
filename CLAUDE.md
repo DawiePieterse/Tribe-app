@@ -17,11 +17,12 @@ deployed on Afrihost cPanel (`docs/DEPLOY-AFRIHOST.md`). The spec is the "Tribe:
 | `app/Services/DaySummary.php` | "Vandag in kort" on Home: today's weather, entries (over or not), lifts, shopping list, gathering items, tomorrow. Claude writes it (cached per member per day by a hash of the facts; Home shows the plain version and `app.js` fetches `/vandag` until it exists); plain sentences without a key or when Claude fails. |
 | `app/Services/EveningSummary.php`, `Weather.php` | Tomorrow per member (entries, own lifts, open lifts, Open-Meteo weather for the member's household's town, set under Familie); `tribe:remind` sends it as push and/or `EveningSummaryMail`. |
 | `app/Services/Push.php` | Web Push (minishlink/web-push, VAPID keys in `.env`); a singleton that sends at the end of the request; `Push::fake()` binds `FakePush` in tests; `PushSubscription` per device; `public/js/push.js` + `sw.js` on the client; `tribe:remind` nightly. Does nothing without keys. |
+| `app/Services/Food/Checkers.php` | Shop search buttons on shopping lines: `term()` turns Afrikaans names into English shelf names; `links()` gives one per shop in `config('services.shops')` (Checkers "C" on teal, Woolworths "W" on black, `partials/shop-button`). |
 | `app/Services/RecipeImporter.php` | Reads schema.org/Recipe JSON-LD from a page; without it (Shopify blogs such as Paarman's), Claude reads the page text, else the lines under Ingredients/Method headings are taken. |
 | `app/Services/Messages/*` | "Stuur na Tribe": `MessageReader` uses `ClaudeReader` (forced tool call) when `ANTHROPIC_API_KEY` is set, else `SimpleReader`; both return a `Suggestion`. The Shortcut posts to `/api/stuur` with a per-member Bearer key (stored hashed). The family uses Messages (iMessage), not WhatsApp: `<x-message :text>` opens Messages prefilled (`sms:&body=`). |
 | `app/Support/SafeUrl.php` | Every server-side fetch of a user-supplied URL goes through it (public http(s) hosts only, redirects re-checked). |
 | `resources/views` | Blade, mobile-first, `<x-layout>`; icons in `partials/icon.blade.php`. |
-| `public/css/app.css`, `public/js/*.js`, `public/sw.js` | No build step. The CSP forbids inline scripts: use data attributes handled in `app.js`. |
+| `public/css/app.css`, `public/js/*.js`, `public/sw.js` | No build step. The CSP forbids inline scripts: use data attributes handled in `app.js`. Assets are linked with `?v=<filemtime>`; `sw.js` serves pages network-first with navigation preload (bump `VERSION` when its logic changes). `app.js` shows a thin top bar when a tap takes a moment; screens cross-fade (`@view-transition`). |
 | `public/js/lists.js` | Offline queue for list ticks and new items (localStorage, replayed when online). |
 
 ## Conventions
@@ -37,6 +38,16 @@ deployed on Afrihost cPanel (`docs/DEPLOY-AFRIHOST.md`). The spec is the "Tribe:
   Saturday (the family's choice): use `Dates::weekStart()` / `weekStartOf()`, never a bare `startOfWeek()`.
 - Record route parameters are constrained to digits in `routes/web.php`; add new ones to that list.
 - Never `pkill -f` a pattern that also appears in your own command line (it kills the shell).
+
+## Deploying and git
+
+- Live at https://tribe.bowlsbuddy.co.za (Afrihost cPanel, no Composer there). `scripts/build-afrihost.sh` builds
+  `build/afrihost/tribe.zip` from `HEAD` (commit first); the user uploads and extracts it in `~/tribe`, then runs
+  `php artisan migrate --force && php artisan optimize` (again after any `.env` change). Steps and the speed check
+  are in `docs/DEPLOY-AFRIHOST.md`.
+- One branch: `claude/tribe-skeleton` is the default and only branch; commit and push straight to it.
+  The proxy here can't delete remote branches; the user does that on GitHub.
+- The family's Afrikaans quick-start guide is a Claude doc ("Tribe: Vinnige begingids"); update it when screens change.
 
 ## Checks (run before committing)
 
