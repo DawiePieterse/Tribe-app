@@ -523,3 +523,6 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .week-strip b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-weight: 600; font-variant-numeric: tabular-nums; }
 .week-strip .dots { display: flex; gap: 3px; min-height: 6px; }
 .week-strip .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+
+/* Checkers button on a shopping-list line: a comfortable tap target beside the bin. */
+.item .shop { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; text-decoration: none; }

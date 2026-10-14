@@ -12,6 +12,11 @@
             <span class="meta">{{ implode(' · ', array_filter([$item->assignee?->firstName(), $item->due_on?->translatedFormat('j M')])) }}</span>
         @endif
     </span>
+    @if (! empty($shopping) && ! $item->done)
+        @php($shop = \App\Services\Food\Checkers::link($item->title))
+        <a class="shop" href="{{ $shop['url'] }}" target="_blank" rel="noopener noreferrer"
+           aria-label="{{ __('Soek “:item” by Checkers', ['item' => $shop['term']]) }}">{{ __('Checkers') }}</a>
+    @endif
     <form method="post" action="{{ route('items.destroy', $item) }}">
         @csrf @method('delete')
         <button type="submit" class="remove" aria-label="{{ __('Verwyder “:title”', ['title' => $item->title]) }}">@include('partials.icon', ['name' => 'trash'])</button>

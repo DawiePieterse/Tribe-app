@@ -44,7 +44,7 @@
 
         <ul class="items" data-open>
             @foreach ($open as $item)
-                @include('lists.item', ['item' => $item])
+                @include('lists.item', ['item' => $item, 'shopping' => $list->isShopping()])
             @endforeach
         </ul>
         @if ($open->isEmpty())
@@ -55,7 +55,7 @@
             <h2>{{ __('Klaar') }}</h2>
             <ul class="items" data-done>
                 @foreach ($done as $item)
-                    @include('lists.item', ['item' => $item])
+                    @include('lists.item', ['item' => $item, 'shopping' => $list->isShopping()])
                 @endforeach
             </ul>
             <form method="post" action="{{ route('lists.clear', $list) }}" style="margin-top: 12px">

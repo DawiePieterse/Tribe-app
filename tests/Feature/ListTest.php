@@ -34,3 +34,16 @@ it('clears ticked items', function () {
 it('shows every main page', function (string $route) {
     $this->actingAs($this->me)->get(route($route))->assertOk();
 })->with(['home', 'calendar', 'lists.index', 'grandchildren.index', 'contacts.index', 'more', 'settings', 'events.create']);
+
+it('offers a Checkers search on open shopping-list items only', function () {
+    $this->list->items()->create(['title' => '1 l melk']);
+    $this->list->items()->create(['title' => 'Brood', 'done' => true]);
+    $tasks = TodoList::query()->create(['household_id' => $this->me->household_id, 'name' => 'Take', 'kind' => TodoList::TASKS]);
+    $tasks->items()->create(['title' => 'Sny die gras']);
+
+    $this->actingAs($this->me)->get(route('lists.show', $this->list))
+        ->assertSee('https://www.checkers.co.za/search?Search=milk', false)
+        ->assertDontSee('Search=bread', false);
+
+    $this->actingAs($this->me)->get(route('lists.show', $tasks))->assertDontSee('checkers.co.za', false);
+});
