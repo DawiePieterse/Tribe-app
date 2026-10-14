@@ -17,7 +17,7 @@
             @for ($i = 0; $i < 7; $i++)
                 @php($day = $monday->addDays($i))
                 @php($dots = $weekDots->get($day->toDateString(), collect()))
-                <a href="{{ $dots->isNotEmpty() ? '#d'.$day->toDateString() : route('events.create', ['datum' => $day->toDateString()]) }}" @class(['today' => $day->isSameDay($today)]) tabindex="-1">
+                <a href="{{ $dots->isNotEmpty() ? '#d'.$day->toDateString() : route('events.create', ['datum' => $day->toDateString()]) }}" @class(['today' => $day->isSameDay($today), 'past' => $day->lessThan($today)]) tabindex="-1">
                     <span class="wd">{{ \App\Support\Dates::shortDay($day) }}</span>
                     <b>{{ $day->day }}</b>
                     <span class="dots">@foreach ($dots as $colour)<i style="--c: {{ $colour }}"></i>@endforeach</span>
@@ -42,7 +42,7 @@
         @for ($d = 1; $d <= $month->daysInMonth; $d++)
             @php($date = $month->setDay($d))
             <a href="{{ in_array($d, $busyDays) ? '#d'.$date->toDateString() : route('events.create', ['datum' => $date->toDateString()]) }}"
-               @class(['busy' => in_array($d, $busyDays), 'today' => $date->isSameDay($today)])
+               @class(['busy' => in_array($d, $busyDays), 'today' => $date->isSameDay($today), 'past' => $date->lessThan($today)])
                tabindex="-1">{{ $d }}</a>
         @endfor
     </div>

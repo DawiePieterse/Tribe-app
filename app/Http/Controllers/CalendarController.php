@@ -16,7 +16,9 @@ class CalendarController extends Controller
     {
         $me = $this->me();
         $month = $this->month((string) $request->query('maand', ''));
-        $weekView = $request->query('aansig') === 'week';
+        // The week is the default; a month shows when asked for (the Maand switch and month links carry ?maand=).
+        $weekView = $request->query('aansig') === 'week'
+            || ($request->query('aansig') !== 'maand' && ! $request->has('maand'));
         $monday = Dates::mondayOf((string) $request->query('week', ''));
 
         $filter = [

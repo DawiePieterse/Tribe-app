@@ -260,7 +260,7 @@ legend { font-weight: 600; font-size: 0.94em; margin-bottom: 8px; padding: 0; }
 
 /* Calendar: month in a card. */
 .month-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
-.month-nav h1 { font-size: 1.7em; text-transform: capitalize; }
+.month-nav h1 { font-size: 1.7em; }
 .grid {
     display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; text-align: center;
     margin-bottom: 16px; font-size: 0.95em; font-variant-numeric: tabular-nums; padding: 12px 10px;
@@ -527,3 +527,7 @@ details > summary.link { display: inline; font-size: 0.9em; }
 
 /* Checkers button on a shopping-list line: a comfortable tap target beside the bin. */
 .item .shop { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; text-decoration: none; }
+
+/* What's already over on the calendar steps back: earlier days, and today's entries once they've ended. */
+.day.is-past .date, .entry.is-over { opacity: 0.45; }
+.grid a.past:not(.today), .week-strip a.past:not(.today) { opacity: 0.4; }

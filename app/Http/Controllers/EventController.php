@@ -118,10 +118,10 @@ class EventController extends Controller
     public function destroy(Event $event): RedirectResponse
     {
         $this->ensureEditable($event);
-        $month = $event->starts_on->format('Y-m');
+        $week = $event->starts_on->toDateString();
         $event->delete();
 
-        return redirect()->route('calendar', ['maand' => $month])->with('status', __('Verwyder.'));
+        return redirect()->route('calendar', ['week' => $week])->with('status', __('Verwyder.'));
     }
 
     /** Entries from a subscribed calendar change at the source, not here; helpers change only their household's own. */

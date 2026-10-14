@@ -3,7 +3,7 @@
     $kindLabel = ['event' => __('Afspraak'), 'gathering' => __('Byeenkoms'), 'anniversary' => __('Herdenking'), 'school' => __('Skool')];
 @endphp
 <x-layout :title="$event->title">
-    <a class="back" href="{{ route('calendar', ['maand' => $event->starts_on->format('Y-m')]) }}">@include('partials.icon', ['name' => 'back']) {{ __('Kalender') }}</a>
+    <a class="back" href="{{ route('calendar', ['week' => $event->starts_on->toDateString()]) }}">@include('partials.icon', ['name' => 'back']) {{ __('Kalender') }}</a>
 
     <div class="head">
         <div>

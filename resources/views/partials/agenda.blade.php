@@ -1,8 +1,9 @@
-{{-- $days: occurrences grouped by Y-m-d; $today --}}
+{{-- $days: occurrences grouped by Y-m-d; $today. What's already over is faded. --}}
+@php($now = now())
 <ol class="agenda">
     @foreach ($days as $date => $occurrences)
         @php($day = \Carbon\CarbonImmutable::parse($date))
-        <li id="d{{ $date }}" @class(['day', 'is-today' => $day->isSameDay($today)])>
+        <li id="d{{ $date }}" @class(['day', 'is-today' => $day->isSameDay($today), 'is-past' => $day->lessThan($today)])>
             <div class="date" aria-hidden="true">
                 <b>{{ $day->day }}</b>
                 <span>{{ __(['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Sa', 'So'][$day->dayOfWeekIso - 1]) }}</span>
@@ -13,7 +14,7 @@
                     @foreach ($occurrences as $o)
                         <li>
                             @php($href = $o->event ? route('events.show', $o->event) : ($o->member?->isChild() && auth()->user()?->can('family') ? route('grandchildren.show', $o->member) : null))
-                            <{{ $href ? 'a' : 'div' }} class="entry" style="--c: {{ $o->colour }}" @if ($href) href="{{ $href }}" @endif>
+                            <{{ $href ? 'a' : 'div' }} @class(['entry', 'is-over' => $o->isOver($now)]) style="--c: {{ $o->colour }}" @if ($href) href="{{ $href }}" @endif>
                                 <strong>
                                     @if ($o->isBirthday())@include('partials.icon', ['name' => 'cake'])@endif
                                     {{ $o->title }}

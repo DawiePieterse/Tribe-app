@@ -49,6 +49,28 @@ final class Occurrence
         return $direction === Lift::THERE ? $this->there : $this->back;
     }
 
+    /**
+     * Already over: an earlier day, or today once its end time (or an hour after its start) has passed.
+     * All-day entries today aren't over until tomorrow.
+     */
+    public function isOver(CarbonImmutable $now): bool
+    {
+        if ($this->date->lessThan($now->startOfDay())) {
+            return true;
+        }
+
+        if (! $this->date->isSameDay($now) || $this->time === null) {
+            return false;
+        }
+
+        $parts = explode('–', $this->time);
+        $end = isset($parts[1])
+            ? $parts[1]
+            : CarbonImmutable::createFromFormat('H:i', substr($parts[0], 0, 5))?->addHour()->format('H:i');
+
+        return $end !== null && substr($end, 0, 5) <= $now->format('H:i');
+    }
+
     public function isBirthday(): bool
     {
         return $this->kind === 'birthday';

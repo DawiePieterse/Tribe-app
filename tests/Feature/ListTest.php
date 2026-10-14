@@ -57,3 +57,23 @@ it('shows only the coming week on the home screen', function () {
         ->assertSee('Oor drie dae')
         ->assertDontSee('Oor tien dae');
 });
+
+it('opens the calendar on the week, and on the month when asked', function () {
+    $this->actingAs($this->me)->get(route('calendar'))->assertOk()->assertSee('class="week-strip"', false);
+    $this->actingAs($this->me)->get(route('calendar', ['maand' => today()->format('Y-m')]))->assertOk()->assertDontSee('class="week-strip"', false);
+});
+
+it('fades what is already over on the calendar', function () {
+    $this->travelTo(today()->setTime(12, 0));
+    Event::query()->create(['title' => 'Gister', 'starts_on' => today()->subDay(), 'household_id' => $this->me->household_id]);
+    Event::query()->create(['title' => 'Vanoggend', 'starts_on' => today(), 'start_time' => '08:00', 'end_time' => '09:00', 'household_id' => $this->me->household_id]);
+    Event::query()->create(['title' => 'Vanmiddag', 'starts_on' => today(), 'start_time' => '15:00', 'household_id' => $this->me->household_id]);
+
+    $html = $this->actingAs($this->me)->get(route('calendar', ['maand' => today()->format('Y-m')]))->getContent();
+
+    expect($html)->toMatch('/class="entry is-over"[^>]*>\s*<strong>\s*Vanoggend/')
+        ->and($html)->not->toMatch('/class="entry is-over"[^>]*>\s*<strong>\s*Vanmiddag/');
+    if (today()->day > 1) {
+        expect($html)->toMatch('/class="entry is-over"[^>]*>\s*<strong>\s*Gister/');
+    }
+});
