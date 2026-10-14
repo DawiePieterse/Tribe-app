@@ -40,12 +40,12 @@ return [
         'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search?Search=%s'),
     ],
 
-    // The shops a shopping-list item can be looked up at, in button order: name and colour of the button,
-    // and the search address (%s is the search words). An empty address leaves that shop's button out.
-    // A logo saved as public/icons/shops/<key>.png (or .svg) is shown on the button instead of the name.
+    // The shops a shopping-list item can be looked up at, in button order: the shop's name, the letter
+    // on its button and the button's colour, and the search address (%s is the search words). An empty
+    // address leaves that shop's button out.
     'shops' => [
-        ['key' => 'checkers', 'name' => 'Checkers', 'colour' => '#00A19A', 'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search?Search=%s')],
-        ['key' => 'woolworths', 'name' => 'Woolies', 'label' => 'Woolworths', 'colour' => '#000000', 'search' => env('WOOLWORTHS_SEARCH_URL', 'https://www.woolworths.co.za/browse?searchterm=%s&fr=1')],
+        ['key' => 'checkers', 'name' => 'Checkers', 'letter' => 'C', 'colour' => '#00A19A', 'search' => env('CHECKERS_SEARCH_URL', 'https://www.checkers.co.za/search?Search=%s')],
+        ['key' => 'woolworths', 'name' => 'Woolworths', 'letter' => 'W', 'colour' => '#000000', 'search' => env('WOOLWORTHS_SEARCH_URL', 'https://www.woolworths.co.za/browse?searchterm=%s&fr=1')],
     ],
 
     // Push notifications (Web Push). Make the keys once with `php artisan tribe:vapid-keys`.

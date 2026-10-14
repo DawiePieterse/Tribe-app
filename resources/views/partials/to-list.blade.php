@@ -7,8 +7,7 @@
                 <label><input type="checkbox" name="items[]" value="{{ $line }}" checked> {{ $line }}</label>
                 <span class="shops">
                     @foreach (\App\Services\Food\Checkers::links($line) as $shop)
-                        <a @class(['shop', 'has-logo' => $shop['logo']]) style="--shop: {{ $shop['colour'] ?: 'var(--action)' }}" href="{{ $shop['url'] }}" target="_blank" rel="noopener noreferrer"
-                           aria-label="{{ __('Soek “:item” by :shop', ['item' => $shop['term'], 'shop' => $shop['label']]) }}">@if ($shop['logo'])<img src="{{ $shop['logo'] }}" alt="{{ $shop['label'] }}">@else{{ $shop['name'] }}@endif</a>
+                        @include('partials.shop-button')
                     @endforeach
                 </span>
             </li>
