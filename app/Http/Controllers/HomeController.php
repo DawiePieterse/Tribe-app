@@ -7,16 +7,19 @@ use App\Models\Event;
 use App\Models\InboxItem;
 use App\Models\TodoList;
 use App\Services\Agenda;
+use App\Services\DaySummary;
 use App\Services\Weather;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function __invoke(Agenda $agenda, Weather $weather): View
+    public function __invoke(Agenda $agenda, Weather $weather, DaySummary $summary): View
     {
         $me = $this->me();
         $today = CarbonImmutable::today();
+        $facts = $summary->facts($me, CarbonImmutable::now());
 
         // The home screen is this week only; the calendar shows further ahead.
         $upcoming = $agenda->between($me, $today, $today->addDays(6));
@@ -60,6 +63,19 @@ class HomeController extends Controller
             'lifts' => $lifts,
             'weather' => $weather->for($me->household, $today),
             'shopping' => $shopping,
+            // "Vandag in kort": Claude's text when written already, else the plain one (and the page fetches Claude's).
+            'summary' => $summary->cached($facts) ?? $facts['plain'],
+            'summaryPending' => $summary->pending($me, $facts),
         ]);
+    }
+
+    /** Claude's "Vandag in kort", for the home page to fetch when it wasn't ready yet. */
+    public function summary(DaySummary $summary): JsonResponse
+    {
+        $now = CarbonImmutable::now();
+        $facts = $summary->facts($this->me(), $now);
+
+        return response()->json(['text' => $summary->text($this->me(), $now, $facts)])
+            ->header('Cache-Control', 'no-store');
     }
 }

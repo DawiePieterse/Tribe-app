@@ -121,3 +121,17 @@ document.addEventListener('submit', (e) => {
     if (!e.defaultPrevented && !e.target.target) setTimeout(() => document.documentElement.classList.add('is-leaving'), 150);
 });
 window.addEventListener('pageshow', () => document.documentElement.classList.remove('is-leaving'));
+
+// "Vandag in kort" on the home screen: when Claude's version wasn't ready, Tribe's own shows first and
+// Claude's replaces it as soon as it is written (a second or two).
+(() => {
+    const box = document.querySelector('[data-day-summary]');
+    if (!box) return;
+    const text = box.querySelector('p');
+    box.classList.add('is-writing');
+    fetch(box.dataset.daySummary, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => { if (data && data.text) text.textContent = data.text; })
+        .catch(() => {})
+        .finally(() => box.classList.remove('is-writing'));
+})();

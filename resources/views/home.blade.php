@@ -7,6 +7,12 @@
         @endif
     </header>
 
+    {{-- Vandag in kort: the day in a few sentences. Claude's when ready; until then Tribe's own, swapped by app.js. --}}
+    <section class="day-summary" aria-live="polite" @if ($summaryPending) data-day-summary="{{ route('home.summary') }}" @endif>
+        <h2>@include('partials.icon', ['name' => 'sparkle']) {{ __('Vandag in kort') }}</h2>
+        <p>{{ $summary }}</p>
+    </section>
+
     @if ($inbox->isNotEmpty())
         <section class="panel">
             <h2>{{ __('Gestuur na Tribe') }}</h2>

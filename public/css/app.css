@@ -528,6 +528,12 @@ details > summary.link { display: inline; font-size: 0.9em; }
 .lifts > li.is-skipped .when { text-decoration: line-through; color: var(--ink-soft); }
 .lifts > li .skip-note { grid-column: 2 / -1; }
 .greeting .weather { font-size: 0.95em; margin-top: 6px; }
+.day-summary { margin: -6px 0 22px; padding: 14px 16px 15px; border-radius: 18px; background: color-mix(in srgb, var(--action) 8%, var(--surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--action) 18%, transparent); }
+.day-summary h2 { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 0.78em; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--action); }
+.day-summary h2 .icon { width: 1.1em; height: 1.1em; }
+.day-summary p { margin: 0; line-height: 1.45; }
+.day-summary.is-writing p { opacity: 0.6; transition: opacity .3s ease; }
 .greeting .flag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-ink); font-size: 0.85em; font-weight: 600; }
 
 /* Week strip: Monday to Sunday, a dot per colour. */

@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/afmeld', [LoginController::class, 'logout'])->name('logout');
 
     Route::get('/', HomeController::class)->name('home');
+    Route::get('/vandag', [HomeController::class, 'summary'])->middleware('throttle:20,1')->name('home.summary');
 
     Route::get('/kalender', CalendarController::class)->name('calendar');
     Route::get('/kalender/nuut', [EventController::class, 'create'])->name('events.create');
