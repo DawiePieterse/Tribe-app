@@ -9,6 +9,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
+    config(['services.anthropic.key' => null]);
     $this->me = adult(household());
     $this->list = TodoList::query()->create(['household_id' => $this->me->household_id, 'name' => 'Inkopies']);
 });
@@ -43,6 +44,66 @@ it('reads a schema.org recipe from a page', function () {
         'ingredients' => "1 l melk\n2 eiers",
         'method' => "Kors:\nRol die deeg uit.\nBak 20 minute.",
     ]);
+});
+
+/** A shop's blog post with the recipe only as text (no JSON-LD), shown twice, as Shopify themes do. */
+function blogRecipePage(): string
+{
+    $recipe = <<<'HTML'
+        <div class="recipe">
+          <p><strong>Serves 4</strong></p>
+          <h3>You Will Need:</h3>
+          <p><em>Sauce</em></p>
+          <ul><li>2 T butter</li><li>1 onion, chopped</li></ul>
+          <p><em>Pasta</em></p>
+          <ul><li>500&nbsp;g penne</li><li>1 t <a href="/products/salt">Sea Salt</a></li></ul>
+          <h3>Method:</h3>
+          <ol><li>Fry the onion in the butter.</li><li>Cook the penne in salted water.</li></ol>
+        </div>
+        HTML;
+
+    return '<html><head><title>Kitchen | Easy Penne</title><meta property="og:title" content="Easy Penne">'
+        .'<script>var ingredients = "nope";</script><style>.x{}</style></head><body>'
+        .'<header><nav><ul><li>Shop</li><li>Recipes</li><li>Ingredients</li></ul></nav></header>'
+        .'<article><h1>Easy Penne</h1>'.$recipe.$recipe.'<p>Share</p><p>Tags: pasta</p></article>'
+        .'<footer><p>Method of payment</p></footer></body></html>';
+}
+
+it('reads a recipe written as text under its headings when the page has no recipe data', function () {
+    expect(app(RecipeImporter::class)->fromHtml(blogRecipePage()))->toBe([
+        'title' => 'Easy Penne',
+        'servings' => '4 porsies',
+        'time' => null,
+        'ingredients' => "Sauce\n2 T butter\n1 onion, chopped\nPasta\n500 g penne\n1 t Sea Salt",
+        'method' => "Fry the onion in the butter.\nCook the penne in salted water.",
+    ]);
+});
+
+it('has Claude read a recipe from the page text when the key is set', function () {
+    config(['services.anthropic.key' => 'test-key']);
+    Http::fake(['api.anthropic.com/*' => Http::response(['content' => [['type' => 'tool_use', 'name' => 'recipe', 'input' => [
+        'found' => true, 'title' => 'Easy Penne', 'servings' => '4', 'time' => '',
+        'ingredients' => ['Sauce:', '2 T butter', '1 onion, chopped'], 'method' => ['Fry the onion in the butter.'],
+    ]]]])]);
+
+    expect(app(RecipeImporter::class)->fromHtml(blogRecipePage()))->toBe([
+        'title' => 'Easy Penne',
+        'servings' => '4 porsies',
+        'time' => null,
+        'ingredients' => "Sauce:\n2 T butter\n1 onion, chopped",
+        'method' => 'Fry the onion in the butter.',
+    ]);
+    Http::assertSent(fn ($r) => $r['tool_choice']['name'] === 'recipe'
+        && str_contains($r['messages'][0]['content'], 'Fry the onion')
+        && ! str_contains($r['messages'][0]['content'], 'nope'));
+});
+
+it('falls back to the headings when Claude does not answer', function () {
+    config(['services.anthropic.key' => 'test-key']);
+    Http::fake(['api.anthropic.com/*' => Http::response('error', 500)]);
+
+    expect(app(RecipeImporter::class)->fromHtml(blogRecipePage())['method'])
+        ->toBe("Fry the onion in the butter.\nCook the penne in salted water.");
 });
 
 it('imports a recipe from a link into the form, unsaved', function () {
